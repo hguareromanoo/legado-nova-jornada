@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Simulation from "./pages/Simulation";
 import Login from "./pages/Login";
 import Members from "./pages/Members";
+import RoadmapProgress from "./pages/RoadmapProgress";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/simulation" element={<Simulation />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/roadmap-progress" element={<RoadmapProgress />} />
           <Route path="/members" element={<Members />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

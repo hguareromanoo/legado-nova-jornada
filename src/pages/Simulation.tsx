@@ -1,378 +1,283 @@
-
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
-import { ChevronRight, BarChart2, Home, Car, Plane, Clock, Users } from "lucide-react";
-import { 
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowRight, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Simulation = () => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    totalAssets: "",
-    monthlyRentalIncome: "",
-    businessIncome: "",
-    familyMembers: "",
-  });
-  const [taxSavings, setTaxSavings] = useState<number | null>(null);
-  const [showReport, setShowReport] = useState(false);
+  const [propertyValue, setPropertyValue] = useState('');
+  const [hasChildren, setHasChildren] = useState<string | null>(null);
+  const [numProperties, setNumProperties] = useState('1');
+  const [showResults, setShowResults] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const calculateTaxSavings = () => {
-    // Mock calculation - would be more sophisticated in real implementation
-    const totalAssets = parseFloat(formData.totalAssets) || 0;
-    const monthlyRental = parseFloat(formData.monthlyRentalIncome) || 0;
-    const businessIncome = parseFloat(formData.businessIncome) || 0;
+  const calculateSavings = () => {
+    const value = parseFloat(propertyValue.replace(/[^0-9]/g, ''));
     
-    // Simple calculation for demo purposes
-    const estimatedSavings = (totalAssets * 0.02) + (monthlyRental * 12 * 0.15) + (businessIncome * 0.08);
-    setTaxSavings(estimatedSavings);
-  };
-
-  const nextStep = () => {
-    if (step < 3) {
-      setStep(step + 1);
-      if (step === 2) {
-        calculateTaxSavings();
-      }
-    } else if (step === 3 && !showReport) {
-      // Show the visual report after user clicks on the last step
-      setShowReport(true);
-    } else {
-      // For demonstration, we'll just redirect to the login page
-      navigate('/login');
-    }
-  };
-
-  const prevStep = () => {
-    if (step > 1 && !showReport) {
-      setStep(step - 1);
-    } else if (showReport) {
-      setShowReport(false);
-    }
-  };
-
-  // Data for charts
-  const assetDistributionData = [
-    { name: 'Imóveis', value: 65 },
-    { name: 'Investimentos', value: 20 },
-    { name: 'Empresas', value: 10 },
-    { name: 'Outros', value: 5 }
-  ];
-
-  const savingsProjectionData = [
-    { year: '2025', withoutHolding: 50000, withHolding: 120000 },
-    { year: '2026', withoutHolding: 52000, withHolding: 130000 },
-    { year: '2027', withoutHolding: 54000, withHolding: 142000 },
-    { year: '2028', withoutHolding: 56000, withHolding: 156000 },
-    { year: '2029', withoutHolding: 58000, withHolding: 170000 },
-  ];
-
-  const COLORS = ['#5ADBB5', '#36B37E', '#00875A', '#00C781'];
-
-  // Savings objectives based on the tax savings
-  const generateSavingsObjectives = (savings: number) => {
-    const carValue = savings * 0.3;
-    const travelValue = savings * 0.2;
-    const familyTimeValue = savings * 0.5;
-    
-    const cars = Math.floor(carValue / 80000);
+    // Basic calculation (simplified for demonstration)
+    const withoutHolding = value * 0.04; // 4% ITCMD tax example
+    const withHolding = value * 0.015; // 1.5% with holding structure
+    const savings = withoutHolding - withHolding;
     
     return {
-      cars: cars > 0 ? cars : 1,
-      travel: true,
-      familyTime: Math.floor(familyTimeValue / 20000) // Time measured in months
+      withoutHolding: withoutHolding,
+      withHolding: withHolding,
+      savings: savings
     };
   };
 
-  const objectives = taxSavings ? generateSavingsObjectives(taxSavings) : { cars: 0, travel: false, familyTime: 0 };
+  const handleNextStep = () => {
+    if (step === 1 && !propertyValue) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, informe o valor aproximado do seu patrimônio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (step === 2 && !hasChildren) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, informe se você tem filhos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      // Show results after completing all steps
+      setShowResults(true);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const formatCurrency = (value: string) => {
+    const onlyNumbers = value.replace(/\D/g, '');
+    if (!onlyNumbers) return '';
+    
+    const number = parseInt(onlyNumbers, 10) / 100;
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(number);
+  };
+
+  const handlePropertyValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatCurrency(e.target.value);
+    setPropertyValue(formattedValue);
+  };
+
+  const savings = calculateSavings();
+
+  const handleContinue = () => {
+    // Navigate to login page after showing results
+    navigate('/login');
+  };
+
+  const savingsObjectives = [
+    { title: "Viagem para Europa", value: (savings.savings * 0.2), icon: "✈️" },
+    { title: "Investimentos", value: (savings.savings * 0.4), icon: "📈" },
+    { title: "Educação dos filhos", value: (savings.savings * 0.3), icon: "🎓" },
+    { title: "Renovação de veículos", value: (savings.savings * 0.1), icon: "🚗" }
+  ];
 
   return (
-    <div className="min-h-screen bg-w1-primary-dark text-w1-text-light">
-      {/* Simple header with home button */}
-      <div className="p-4 flex justify-between items-center border-b border-gray-700">
-        <a href="/" className="flex items-center text-w1-text-light">
-          <Home size={20} className="mr-2" />
-          <span className="font-bold">W1 Consultoria</span>
-        </a>
-      </div>
-      
-      <div className="w1-container py-12">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8 text-center">Simulação de Holding</h1>
-          
-          {!showReport ? (
-            <>
-              {/* Progress bar */}
-              <div className="w-full bg-gray-700 h-2 rounded-full mb-8">
-                <div 
-                  className="bg-w1-primary-accent h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${(step / 3) * 100}%` }}
-                ></div>
-              </div>
-              
-              {/* Form steps */}
-              <div className="bg-gray-800 rounded-lg p-8 shadow-lg">
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="w1-container">
+        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="p-8">
+            <Link to="/" className="text-w1-primary-dark font-bold text-2xl mb-8 inline-block hover:opacity-80">
+              W1
+            </Link>
+            
+            {!showResults ? (
+              <>
+                <div className="mb-8">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Simulação de Holding Familiar</h1>
+                  <p className="text-gray-600">
+                    Descubra quanto você pode economizar em impostos com uma estrutura de holding personalizada.
+                  </p>
+                </div>
+                
+                <div className="flex items-center mb-8">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center">
+                      <div 
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          i <= step ? 'bg-w1-primary-accent text-w1-primary-dark' : 'bg-gray-200 text-gray-500'
+                        } font-semibold`}
+                      >
+                        {i < step ? <CheckCircle size={16} /> : i}
+                      </div>
+                      {i < 3 && (
+                        <div 
+                          className={`h-1 w-16 ${i < step ? 'bg-w1-primary-accent' : 'bg-gray-200'}`}
+                        ></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Step 1: Property Value */}
                 {step === 1 && (
-                  <div className="space-y-6 animate-fade-in">
-                    <h2 className="text-2xl font-semibold mb-4">Informações de Patrimônio</h2>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <Label htmlFor="totalAssets">Valor total estimado dos ativos (R$)</Label>
-                        <Input 
-                          id="totalAssets"
-                          name="totalAssets"
-                          type="number" 
-                          placeholder="Ex: 5000000"
-                          value={formData.totalAssets}
-                          onChange={handleInputChange}
-                          className="bg-gray-700 border-gray-600 text-white"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="monthlyRentalIncome">Renda mensal com aluguéis (R$)</Label>
-                        <Input 
-                          id="monthlyRentalIncome"
-                          name="monthlyRentalIncome"
-                          type="number" 
-                          placeholder="Ex: 20000"
-                          value={formData.monthlyRentalIncome}
-                          onChange={handleInputChange}
-                          className="bg-gray-700 border-gray-600 text-white"
-                        />
-                      </div>
+                  <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Qual o valor aproximado do seu patrimônio?</h2>
+                    <p className="text-gray-600 text-sm">
+                      Incluindo imóveis, investimentos, participações societárias e outros bens.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="property-value">Valor</Label>
+                      <Input
+                        id="property-value"
+                        placeholder="R$ 0,00"
+                        value={propertyValue}
+                        onChange={handlePropertyValueChange}
+                        className="text-lg"
+                      />
                     </div>
                   </div>
                 )}
-
+                
+                {/* Step 2: Family Information */}
                 {step === 2 && (
-                  <div className="space-y-6 animate-fade-in">
-                    <h2 className="text-2xl font-semibold mb-4">Informações Adicionais</h2>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <Label htmlFor="businessIncome">Renda empresarial anual (R$)</Label>
-                        <Input 
-                          id="businessIncome"
-                          name="businessIncome"
-                          type="number" 
-                          placeholder="Ex: 500000"
-                          value={formData.businessIncome}
-                          onChange={handleInputChange}
-                          className="bg-gray-700 border-gray-600 text-white"
-                        />
+                  <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Você tem filhos?</h2>
+                    <RadioGroup value={hasChildren || ""} onValueChange={setHasChildren}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="has-children-yes" />
+                        <Label htmlFor="has-children-yes">Sim</Label>
                       </div>
-                      
-                      <div>
-                        <Label htmlFor="familyMembers">Número de membros familiares para sucessão</Label>
-                        <Input 
-                          id="familyMembers"
-                          name="familyMembers"
-                          type="number" 
-                          placeholder="Ex: 3"
-                          value={formData.familyMembers}
-                          onChange={handleInputChange}
-                          className="bg-gray-700 border-gray-600 text-white"
-                        />
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="has-children-no" />
+                        <Label htmlFor="has-children-no">Não</Label>
                       </div>
-                    </div>
+                    </RadioGroup>
                   </div>
                 )}
-
+                
+                {/* Step 3: Property Details */}
                 {step === 3 && (
-                  <div className="space-y-6 animate-fade-in">
-                    <h2 className="text-2xl font-semibold mb-4">Resultado da Simulação</h2>
-                    
-                    <div className="text-center py-6">
-                      <BarChart2 size={60} className="mx-auto mb-4 text-w1-primary-accent" />
-                      <h3 className="text-xl font-medium mb-2">Economia Estimada em Impostos</h3>
-                      <p className="text-4xl font-bold text-w1-primary-accent mb-4">
-                        {taxSavings ? `R$ ${taxSavings.toLocaleString('pt-BR', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}` : "Calculando..."}
-                      </p>
-                      <p className="text-gray-400">anualmente</p>
-                    </div>
-
-                    <div className="bg-gray-700/50 rounded p-4 text-sm">
-                      <p className="mb-3">Para acessar seu relatório completo e começar o processo de criação da sua holding, registre-se ou faça login.</p>
-                      <p>Nossa equipe especializada está pronta para auxiliá-lo em cada etapa do processo.</p>
-                    </div>
+                  <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Quantos imóveis compõem seu patrimônio?</h2>
+                    <RadioGroup value={numProperties} onValueChange={setNumProperties}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="1" id="properties-1" />
+                        <Label htmlFor="properties-1">1 imóvel</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="2-3" id="properties-2-3" />
+                        <Label htmlFor="properties-2-3">2 a 3 imóveis</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="4+" id="properties-4+" />
+                        <Label htmlFor="properties-4+">4 ou mais imóveis</Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 )}
-
-                {/* Navigation buttons */}
-                <div className="mt-8 flex justify-between">
+                
+                <div className="flex justify-between mt-8">
                   {step > 1 && (
                     <Button 
                       variant="outline" 
-                      onClick={prevStep}
-                      className="text-w1-text-light border-gray-600"
+                      onClick={handlePrevStep}
                     >
                       Voltar
                     </Button>
                   )}
-                  <div className={step === 1 ? "ml-auto" : ""}>
-                    <Button 
-                      onClick={nextStep}
-                      className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90"
-                    >
-                      {step === 3 ? (
-                        <span className="flex items-center">
-                          Ver relatório detalhado <ChevronRight size={16} className="ml-1" />
-                        </span>
-                      ) : (
-                        <span className="flex items-center">
-                          Próximo <ChevronRight size={16} className="ml-1" />
-                        </span>
-                      )}
-                    </Button>
+                  <Button 
+                    className="ml-auto bg-w1-primary-dark text-white hover:bg-opacity-90"
+                    onClick={handleNextStep}
+                  >
+                    {step < 3 ? 'Avançar' : 'Ver resultados'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              // Results screen with visual report
+              <div className="space-y-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Excelente Oportunidade!</h2>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <p className="text-xl font-semibold text-green-800 mb-2">
+                      Você pode economizar aproximadamente
+                    </p>
+                    <p className="text-4xl font-bold text-green-700">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(savings.savings)}
+                    </p>
+                    <p className="text-sm text-green-600 mt-2">em impostos com uma estrutura de holding familiar</p>
                   </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            /* Visual Report */
-            <div className="animate-fade-in">
-              <div className="bg-gray-800 rounded-lg p-8 shadow-lg mb-6">
-                <h2 className="text-2xl font-semibold mb-6 text-center">Relatório de Economia Tributária</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4 text-center">Distribuição de Ativos</h3>
-                    <div className="h-64 flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={assetDistributionData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {assetDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h3 className="font-semibold mb-3">Sem Holding</h3>
+                    <p className="text-2xl font-bold text-red-600">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(savings.withoutHolding)}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">em impostos sobre herança (ITCMD)</p>
                   </div>
                   
-                  <div>
-                    <h3 className="text-lg font-medium mb-4 text-center">Projeção de Economia (5 anos)</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={savingsProjectionData}
-                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="year" />
-                          <YAxis />
-                          <Tooltip formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR')}`]} />
-                          <Bar name="Sem Holding" dataKey="withoutHolding" fill="#8884d8" />
-                          <Bar name="Com Holding" dataKey="withHolding" fill="#5ADBB5" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h3 className="font-semibold mb-3">Com Holding</h3>
+                    <p className="text-2xl font-bold text-green-600">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(savings.withHolding)}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">em impostos com planejamento</p>
                   </div>
                 </div>
                 
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium mb-4 text-center">O Que Você Pode Fazer Com Sua Economia</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gray-700/50 p-6 rounded-lg text-center">
-                      <div className="bg-w1-primary-accent/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Car className="text-w1-primary-accent" size={32} />
+                <Separator className="my-6" />
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">O que você poderia fazer com essa economia:</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {savingsObjectives.map((objective, index) => (
+                      <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-2xl">{objective.icon}</div>
+                          <div>
+                            <h4 className="font-medium">{objective.title}</h4>
+                            <p className="text-w1-primary-accent font-bold">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(objective.value)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <h4 className="font-medium text-lg mb-2">
-                        {objectives.cars} {objectives.cars > 1 ? 'Carros de Luxo' : 'Carro de Luxo'}
-                      </h4>
-                      <p className="text-gray-400 text-sm">
-                        Renovados a cada 2 anos
-                      </p>
-                    </div>
-                    
-                    <div className="bg-gray-700/50 p-6 rounded-lg text-center">
-                      <div className="bg-w1-primary-accent/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Plane className="text-w1-primary-accent" size={32} />
-                      </div>
-                      <h4 className="font-medium text-lg mb-2">Viagens Internacionais</h4>
-                      <p className="text-gray-400 text-sm">
-                        Uma viagem à Europa por ano
-                      </p>
-                    </div>
-                    
-                    <div className="bg-gray-700/50 p-6 rounded-lg text-center">
-                      <div className="bg-w1-primary-accent/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Users className="text-w1-primary-accent" size={32} />
-                      </div>
-                      <h4 className="font-medium text-lg mb-2">Tempo com a Família</h4>
-                      <p className="text-gray-400 text-sm">
-                        {objectives.familyTime} meses adicionais de lazer
-                      </p>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 
-                <div className="bg-gray-700/30 p-6 rounded-lg mb-8">
-                  <h3 className="text-lg font-medium mb-3">Próximos Passos para Criar Sua Holding</h3>
-                  <p className="text-gray-300 mb-4">
-                    Ao criar sua holding personalizada, você terá acesso a todas essas vantagens e mais. Nossa equipe de especialistas irá guiá-lo em cada etapa do processo.
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mt-6">
+                  <h3 className="font-semibold mb-2">Próximo passo</h3>
+                  <p className="text-gray-700 mb-4">
+                    Crie sua conta para acompanhar o passo a passo da criação da sua holding familiar.
                   </p>
-                  <div className="flex justify-center">
-                    <Button 
-                      onClick={() => navigate('/login')}
-                      className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90 px-8"
-                      size="lg"
-                    >
-                      Criar minha conta e iniciar o processo
-                    </Button>
-                  </div>
+                  <Button
+                    className="w-full bg-w1-primary-dark text-white hover:bg-opacity-90"
+                    onClick={handleContinue}
+                  >
+                    Continuar para cadastro
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              
-              {/* Navigation */}
-              <div className="flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={prevStep}
-                  className="text-w1-text-light border-gray-600"
-                >
-                  Voltar à simulação
-                </Button>
-                
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90"
-                >
-                  Criar minha conta
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
