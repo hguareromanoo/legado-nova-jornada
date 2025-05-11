@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// W1 Consultoria Patrimonial custom colors
+				w1: {
+					'primary-dark': '#0F1923',
+					'secondary-dark': '#4A5568',
+					'primary-accent': '#5ADBB5',
+					'text-light': '#FFFFFF',
+					'text-dark': '#1A202C',
+					'secondary-text': '#718096',
+					'bg-light': '#F7FAFC',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +95,27 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.6s ease-out forwards',
+				'slide-in-right': 'slide-in-right 0.6s ease-out',
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+			},
+			backgroundImage: {
+				'gradient-dark': 'linear-gradient(180deg, #0F1923 0%, #1A2C3E 100%)',
 			}
 		}
 	},
