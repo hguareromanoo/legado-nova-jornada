@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
@@ -34,22 +34,12 @@ const Navbar = () => {
           <a href="/" className="text-w1-text-light font-bold text-2xl">W1</a>
         </div>
 
-        <div className="hidden md:flex items-center space-x-8">
-          <a href="#ecosystem" className="text-w1-text-light hover:text-w1-primary-accent transition">
-            Nosso ecossistema
-          </a>
-          <a href="#careers" className="text-w1-text-light hover:text-w1-primary-accent transition">
-            Carreiras
-          </a>
-          <a href="#about" className="text-w1-text-light hover:text-w1-primary-accent transition">
-            Sobre nós
-          </a>
-          <a href="#services" className="text-w1-text-light hover:text-w1-primary-accent transition">
-            Atendimento
-          </a>
-          
-          <Button variant="ghost" className="text-w1-primary-accent hover:bg-w1-primary-accent/10">
-            Fale com um especialista <ChevronRight className="h-4 w-4 ml-1" />
+        <div className="hidden md:flex items-center space-x-4">
+          <Button variant="ghost" className="text-w1-text-light hover:bg-w1-primary-accent/10">
+            Login
+          </Button>
+          <Button className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90">
+            Cadastro
           </Button>
         </div>
 
@@ -64,41 +54,18 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-w1-primary-dark/95 backdrop-blur-sm absolute top-full left-0 w-full py-4 shadow-lg">
           <div className="w1-container flex flex-col space-y-4">
-            <a 
-              href="#ecosystem" 
-              className="text-w1-text-light hover:text-w1-primary-accent transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Nosso ecossistema
-            </a>
-            <a 
-              href="#careers" 
-              className="text-w1-text-light hover:text-w1-primary-accent transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Carreiras
-            </a>
-            <a 
-              href="#about" 
-              className="text-w1-text-light hover:text-w1-primary-accent transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sobre nós
-            </a>
-            <a 
-              href="#services" 
-              className="text-w1-text-light hover:text-w1-primary-accent transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Atendimento
-            </a>
-            
             <Button 
               variant="ghost" 
-              className="text-w1-primary-accent hover:bg-w1-primary-accent/10 justify-start"
+              className="text-w1-text-light hover:bg-w1-primary-accent/10 justify-center"
               onClick={() => setIsMenuOpen(false)}
             >
-              Fale com um especialista <ChevronRight className="h-4 w-4 ml-1" />
+              Login
+            </Button>
+            <Button 
+              className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90 justify-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Cadastro
             </Button>
           </div>
         </div>

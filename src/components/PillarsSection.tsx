@@ -1,60 +1,14 @@
 
-import { Shield, Users, Building2, ReceiptText, Home } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useState, useEffect, useRef } from 'react';
+import { Shield, Users, Building2, Coins, Home } from 'lucide-react';
 
-interface PillarCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  delay?: number;
-}
-
-const PillarCard = ({ title, description, icon, delay = 0 }: PillarCardProps) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            setIsVisible(true);
-          }, delay);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
-
-    return () => {
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current);
-      }
-    };
-  }, [delay]);
-
+const PillarCard = ({ icon: Icon, title, description }: { icon: any; title: string; description: string }) => {
   return (
-    <div
-      ref={cardRef}
-      className={`transform transition-all duration-700 ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-      }`}
-    >
-      <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-        <CardHeader className="pb-2">
-          <div className="w-12 h-12 rounded-full bg-w1-primary-accent/10 flex items-center justify-center text-w1-primary-accent mb-4 group-hover:bg-w1-primary-accent group-hover:text-w1-primary-dark transition-colors duration-300">
-            {icon}
-          </div>
-          <h3 className="text-xl font-semibold">{title}</h3>
-        </CardHeader>
-        <CardContent>
-          <p className="text-w1-secondary-text">{description}</p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center p-6 rounded-lg bg-gradient-to-b from-w1-primary-dark/90 to-w1-primary-dark border border-w1-primary-accent/20 transition-all hover:border-w1-primary-accent/50 hover:shadow-lg hover:shadow-w1-primary-accent/10 group">
+      <div className="w-16 h-16 rounded-full bg-w1-primary-accent/10 flex items-center justify-center mb-4 group-hover:bg-w1-primary-accent/20 transition-all">
+        <Icon className="w-8 h-8 text-w1-primary-accent" />
+      </div>
+      <h3 className="text-xl font-semibold mb-3 text-w1-text-light group-hover:text-w1-primary-accent transition-all">{title}</h3>
+      <p className="text-w1-text-light/80 text-center">{description}</p>
     </div>
   );
 };
@@ -62,56 +16,71 @@ const PillarCard = ({ title, description, icon, delay = 0 }: PillarCardProps) =>
 const PillarsSection = () => {
   const pillars = [
     {
+      icon: Shield,
       title: "Proteção",
-      description: "Segurança completa para seus ativos físicos com cobertura de seguros personalizados que protegem seu patrimônio contra imprevistos.",
-      icon: <Shield className="h-6 w-6" />,
+      description: "Garantia de segurança para seus ativos físicos e cobertura de seguro abrangente."
     },
     {
+      icon: Users,
       title: "Prevenção de Conflitos",
-      description: "Planejamento sucessório detalhado que estabelece regras claras para a distribuição de ativos, evitando disputas familiares.",
-      icon: <Users className="h-6 w-6" />,
+      description: "Planejamento sucessório e estratégias eficientes de distribuição de ativos."
     },
     {
+      icon: Building2,
       title: "Estrutura de Holding",
-      description: "Criamos regras definidas de sucessão e transferência de ações da holding, garantindo uma transição patrimonial suave e segura.",
-      icon: <Building2 className="h-6 w-6" />,
+      description: "Regras de sucessão definidas e transferência eficiente de participações da holding."
     },
     {
+      icon: Coins,
       title: "Redução Tributária",
-      description: "Estratégias inteligentes e legais para minimização ou eliminação de carga tributária, maximizando o valor do seu patrimônio.",
-      icon: <ReceiptText className="h-6 w-6" />,
+      description: "Estratégias para minimização ou isenção de impostos sobre seu patrimônio."
     },
     {
-      title: "Rendimento de Aluguel",
-      description: "Implementação de estratégias específicas para redução significativa de impostos sobre receitas provenientes de imóveis alugados.",
-      icon: <Home className="h-6 w-6" />,
-    },
+      icon: Home,
+      title: "Renda de Aluguel",
+      description: "Significativa redução de impostos sobre propriedades e rendas de aluguel."
+    }
   ];
 
   return (
-    <section className="w1-section bg-white" id="pillars">
-      <div className="w1-container">
-        <div className="text-center mb-12">
-          <span className="text-w1-primary-accent uppercase tracking-wider">Preservar e Perpetuar</span>
-          <h2 className="text-w1-text-dark mt-2 mb-4">
-            Os 5 Pilares do Nosso Serviço Patrimonial
-          </h2>
-          <p className="text-w1-secondary-text max-w-3xl mx-auto">
-            Nossa abordagem abrangente se baseia em cinco pilares fundamentais que garantem a proteção, 
-            o crescimento e a transferência eficiente do seu patrimônio.
+    <section className="bg-gradient-to-b from-w1-primary-dark to-w1-primary-dark/90 py-20 relative overflow-hidden">
+      {/* Digital tree background element */}
+      <div className="absolute right-0 top-0 w-full h-full opacity-10 pointer-events-none">
+        <div 
+          className="absolute right-0 h-full w-1/2"
+          style={{ 
+            backgroundImage: 'url("https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80")', 
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }} 
+        />
+      </div>
+
+      <div className="w1-container relative z-10">
+        <div className="text-center mb-16">
+          <h2 className="text-w1-primary-accent mb-4">Os 5 Pilares da Consultoria Patrimonial</h2>
+          <p className="text-w1-text-light/90 max-w-3xl mx-auto">
+            Nosso sistema completo para administração de bens e direitos, desenvolvido para 
+            maximizar a proteção e o crescimento do seu patrimônio.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 relative">
           {pillars.map((pillar, index) => (
-            <PillarCard
-              key={index}
-              title={pillar.title}
+            <PillarCard 
+              key={index} 
+              icon={pillar.icon} 
+              title={pillar.title} 
               description={pillar.description}
-              icon={pillar.icon}
-              delay={index * 100}
             />
           ))}
+        </div>
+
+        <div className="mt-16 text-center">
+          <blockquote className="text-w1-text-light/80 text-xl italic">
+            "Colhemos o que plantamos. Conquistamos o que planejamos."
+          </blockquote>
+          <p className="text-w1-primary-accent mt-2">— Filosofia W1</p>
         </div>
       </div>
     </section>
