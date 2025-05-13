@@ -82,8 +82,8 @@ const Simulation = () => {
   const savings = calculateSavings();
 
   const handleContinue = () => {
-    // Navigate to login page after showing results
-    navigate('/login');
+    // Navigate to onboarding page instead of login
+    navigate('/onboarding');
   };
 
   const savingsObjectives = [
@@ -265,13 +265,13 @@ const Simulation = () => {
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mt-6">
                   <h3 className="font-semibold mb-2">Próximo passo</h3>
                   <p className="text-gray-700 mb-4">
-                    Crie sua conta para acompanhar o passo a passo da criação da sua holding familiar.
+                    Escolha como você deseja prosseguir com a criação da sua holding familiar.
                   </p>
                   <Button
                     className="w-full bg-w1-primary-dark text-white hover:bg-opacity-90"
                     onClick={handleContinue}
                   >
-                    Continuar para cadastro
+                    Quero abrir uma holding
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
