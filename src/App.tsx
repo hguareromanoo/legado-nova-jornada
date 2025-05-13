@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Members from "./pages/Members";
 import RoadmapProgress from "./pages/RoadmapProgress";
 import Onboarding from "./pages/Onboarding";
+import OnboardingChat from "./pages/OnboardingChat";
 import ScheduleConsultant from "./pages/ScheduleConsultant";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/simulation" element={<Simulation />} />
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/onboarding/chat" element={<OnboardingChat />} />
           <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
           <Route path="/roadmap-progress" element={<RoadmapProgress />} />
           <Route path="/members" element={<Members />} />

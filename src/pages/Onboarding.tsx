@@ -18,7 +18,7 @@ const Onboarding = () => {
     
     // Navigate based on selection
     if (path === 'self') {
-      navigate('/roadmap-progress');
+      navigate('/onboarding/chat');
     } else {
       navigate('/onboarding/schedule');
     }
