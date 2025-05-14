@@ -163,8 +163,8 @@ const OnboardingChat = () => {
       if (nextStep < questions.length) {
         setMessages(prev => [...prev, questions[nextStep]]);
       } else {
-        // Navigate to the next page when all questions are answered
-        navigate('/roadmap-progress');
+        // Navigate to the document collection page when all questions are answered
+        navigate('/documents');
       }
     }, 1000);
   };
