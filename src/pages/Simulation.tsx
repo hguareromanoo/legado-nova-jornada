@@ -739,22 +739,30 @@ const StepContact = ({ email, phone, onChange, onSubmit, savingsData, taxBreakdo
               />
               <YAxis 
                 tickFormatter={(value) => {
-                  return new Intl.NumberFormat('pt-BR', {
-                    notation: 'compact',
-                    compactDisplay: 'short',
-                    style: 'currency',
-                    currency: 'BRL',
-                    maximumFractionDigits: 0,
-                  }).format(value);
+                  if (typeof value === 'number' || typeof value === 'bigint') {
+                    return new Intl.NumberFormat('pt-BR', {
+                      notation: 'compact',
+                      compactDisplay: 'short',
+                      style: 'currency',
+                      currency: 'BRL',
+                      maximumFractionDigits: 0,
+                    }).format(value);
+                  }
+                  return String(value);
                 }} 
               />
               <Tooltip 
                 content={<ChartTooltipContent />} 
-                formatter={(value) => new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                  maximumFractionDigits: 0,
-                }).format(value)} 
+                formatter={(value) => {
+                  if (typeof value === 'number' || typeof value === 'bigint') {
+                    return new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                      maximumFractionDigits: 0,
+                    }).format(value);
+                  }
+                  return String(value);
+                }} 
               />
               <Legend />
               <Bar dataKey="withHolding" name="Com Holding" fill="var(--color-holding)" />
