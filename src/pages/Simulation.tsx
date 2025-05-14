@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -9,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CircleCheck, CircleDollarSign } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Simulation = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const Simulation = () => {
   const [simulationData, setSimulationData] = useState({
     netWorth: '',
     realEstateShare: 0,
-    rentalIncome: '',
+    rentalIncome: 0, // Changed to numeric value for slider
     heirs: '',
     maritalStatus: '',
     state: '',
@@ -69,8 +70,56 @@ const Simulation = () => {
     }
   };
 
+  // Calculate estimated savings based on simulation data
+  const estimatedSavings = useMemo(() => {
+    let baseValue = 0;
+    
+    // Adjust based on net worth
+    switch(simulationData.netWorth) {
+      case 'under500k': baseValue = 50000; break;
+      case '500kTo2m': baseValue = 200000; break;
+      case '2mTo5m': baseValue = 500000; break;
+      case '5mTo10m': baseValue = 1000000; break;
+      case 'above10m': baseValue = 2000000; break;
+      default: baseValue = 0;
+    }
+    
+    // Adjust based on rental income
+    baseValue += (simulationData.rentalIncome * 1000);
+    
+    // Adjust based on real estate share
+    baseValue = baseValue * (1 + simulationData.realEstateShare / 100);
+    
+    // Generate 10-year projection
+    return Array.from({ length: 10 }, (_, i) => ({
+      year: new Date().getFullYear() + i,
+      withHolding: Math.round(baseValue * (1 + i * 0.08)), // 8% growth with holding
+      withoutHolding: Math.round(baseValue * (1 + i * 0.04) * 0.6), // 4% growth without holding, 40% less due to taxes
+    }));
+  }, [simulationData.netWorth, simulationData.rentalIncome, simulationData.realEstateShare]);
+
+  // Calculate tax breakdown for the final year
+  const taxBreakdown = useMemo(() => {
+    if (!estimatedSavings.length) return { incomeTax: 0, successionTax: 0, total: 0 };
+    
+    const finalYear = estimatedSavings[estimatedSavings.length - 1];
+    const totalSavings = finalYear.withHolding - finalYear.withoutHolding;
+    
+    // Approximate breakdown based on common distribution
+    return {
+      incomeTax: Math.round(totalSavings * 0.65), // 65% from income tax savings
+      successionTax: Math.round(totalSavings * 0.35), // 35% from succession tax savings
+      total: totalSavings
+    };
+  }, [estimatedSavings]);
+
   const handleSubmit = () => {
     setIsComplete(true);
+    // Store simulation data and calculated savings in localStorage
+    localStorage.setItem('simulationData', JSON.stringify(simulationData));
+    localStorage.setItem('estimatedSavings', JSON.stringify(estimatedSavings));
+    localStorage.setItem('taxBreakdown', JSON.stringify(taxBreakdown));
+    
     // Here you would typically send the data to your backend
     console.log("Simulation data:", simulationData);
     
@@ -84,6 +133,14 @@ const Simulation = () => {
     hidden: { opacity: 0, x: 50 },
     visible: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -50 }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
@@ -180,6 +237,8 @@ const Simulation = () => {
                       phone={simulationData.phone}
                       onChange={(field, value) => handleInputChange(field, value)} 
                       onSubmit={handleSubmit}
+                      savingsData={estimatedSavings}
+                      taxBreakdown={taxBreakdown}
                     />
                   )}
                 </Card>
@@ -323,12 +382,16 @@ const StepRealEstate = ({ value, onChange }) => {
 };
 
 const StepRentalIncome = ({ value, onChange }) => {
-  const options = [
-    { label: 'Sem renda de aluguel', value: 'none', icon: '🚫' },
-    { label: 'Até R$ 5 mil/mês', value: 'under5k', icon: '💰' },
-    { label: 'R$ 5 mil a R$ 15 mil/mês', value: '5kTo15k', icon: '💰💰' },
-    { label: 'Acima de R$ 15 mil/mês', value: 'above15k', icon: '💰💰💰' },
-  ];
+  const handleSliderChange = (values) => {
+    onChange(values[0]);
+  };
+
+  const formatRentalIncome = (value) => {
+    if (value === 0) return "Sem renda de aluguel";
+    if (value <= 5) return `R$ ${value} mil/mês`;
+    if (value <= 15) return `R$ ${value} mil/mês`;
+    return `R$ ${value} mil/mês`;
+  };
 
   return (
     <div>
@@ -339,21 +402,26 @@ const StepRentalIncome = ({ value, onChange }) => {
         Você recebe regularmente renda de aluguel?
       </p>
       
-      <div className="grid grid-cols-2 gap-3">
-        {options.map(option => (
-          <div 
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className={`p-4 border rounded-lg cursor-pointer transition-all text-center ${
-              value === option.value 
-                ? 'border-w1-primary-accent bg-w1-primary-accent/10' 
-                : 'border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <div className="text-2xl mb-2">{option.icon}</div>
-            <div className="text-sm">{option.label}</div>
-          </div>
-        ))}
+      <div className="px-2 mb-10">
+        <Slider 
+          defaultValue={[value]} 
+          max={30} 
+          step={1} 
+          onValueChange={handleSliderChange} 
+        />
+      </div>
+      
+      <div className="flex justify-between text-sm text-gray-500">
+        <div>0</div>
+        <div>5k</div>
+        <div>15k</div>
+        <div>30k+</div>
+      </div>
+      
+      <div className="mt-6 text-center">
+        <div className="inline-block bg-w1-primary-accent/10 rounded-full px-4 py-2 text-w1-primary-dark font-medium">
+          {formatRentalIncome(value)}
+        </div>
       </div>
     </div>
   );
@@ -627,7 +695,7 @@ const StepGoals = ({ selectedGoals, onChange }) => {
   );
 };
 
-const StepContact = ({ email, phone, onChange, onSubmit }) => {
+const StepContact = ({ email, phone, onChange, onSubmit, savingsData, taxBreakdown }) => {
   return (
     <div>
       <div className="mb-6">
@@ -643,6 +711,93 @@ const StepContact = ({ email, phone, onChange, onSubmit }) => {
         <p className="text-center text-gray-600 mb-6">
           Com base no seu perfil, uma holding familiar pode ajudar você a reduzir impostos, evitar custos legais futuros e planejar uma sucessão tranquila.
         </p>
+      </div>
+      
+      {/* Savings Chart */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <h3 className="text-lg font-medium mb-3 text-w1-primary-dark">
+          Economia estimada nos próximos 10 anos
+        </h3>
+        
+        <div className="h-[240px] w-full">
+          <ChartContainer 
+            config={{
+              holding: {
+                label: "Com Holding",
+                color: "#0F4C81" // w1-primary-dark
+              },
+              noHolding: {
+                label: "Sem Holding",
+                color: "#E5E7EB" // gray-200
+              }
+            }}
+          >
+            <BarChart data={savingsData}>
+              <XAxis 
+                dataKey="year" 
+                tickFormatter={(value) => `${value.toString().slice(2)}`} 
+              />
+              <YAxis 
+                tickFormatter={(value) => {
+                  return new Intl.NumberFormat('pt-BR', {
+                    notation: 'compact',
+                    compactDisplay: 'short',
+                    style: 'currency',
+                    currency: 'BRL',
+                    maximumFractionDigits: 0,
+                  }).format(value);
+                }} 
+              />
+              <Tooltip 
+                content={<ChartTooltipContent />} 
+                formatter={(value) => new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                  maximumFractionDigits: 0,
+                }).format(value)} 
+              />
+              <Legend />
+              <Bar dataKey="withHolding" name="Com Holding" fill="var(--color-holding)" />
+              <Bar dataKey="withoutHolding" name="Sem Holding" fill="var(--color-noHolding)" />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </div>
+      
+      {/* Tax Breakdown */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white p-3 rounded-lg shadow-sm">
+            <p className="text-gray-600 text-sm">Economia em IRPF → IRPJ</p>
+            <p className="text-xl font-bold text-w1-primary-dark">
+              {new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                maximumFractionDigits: 0,
+              }).format(taxBreakdown.incomeTax)}
+            </p>
+          </div>
+          <div className="bg-white p-3 rounded-lg shadow-sm">
+            <p className="text-gray-600 text-sm">Economia em ITCMD</p>
+            <p className="text-xl font-bold text-w1-primary-dark">
+              {new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                maximumFractionDigits: 0,
+              }).format(taxBreakdown.successionTax)}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 bg-w1-primary-accent/10 p-3 rounded-lg">
+          <p className="text-sm text-gray-600">Economia total estimada</p>
+          <p className="text-2xl font-bold text-w1-primary-dark">
+            {new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+              maximumFractionDigits: 0,
+            }).format(taxBreakdown.total)}
+          </p>
+        </div>
       </div>
       
       <div className="space-y-4">
@@ -675,7 +830,7 @@ const StepContact = ({ email, phone, onChange, onSubmit }) => {
           className="w-full bg-w1-primary-dark hover:bg-opacity-90 mt-2"
           disabled={!email || !phone}
         >
-          Receber Meu Diagnóstico Grátis
+          Receber Meu Diagnóstico Detalhado
         </Button>
       </div>
       
