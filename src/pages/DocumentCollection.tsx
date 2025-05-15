@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import VerticalRoadmap, { RoadmapStep } from '@/components/VerticalRoadmap';
-import DocumentUploadChat from '@/components/DocumentUploadChat';
+import ChatModal from '@/components/ChatModal';
 
 const DocumentCollection = () => {
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ const DocumentCollection = () => {
           title: "Todos os documentos enviados!",
           description: "Parabéns! Vamos agendar sua reunião com um consultor.",
         });
-        navigate('/roadmap-progress');
+        navigate('/onboarding/schedule');
       }
     }, 1000);
   };
@@ -109,6 +109,13 @@ const DocumentCollection = () => {
     }
   };
   
+  const handlePreviousDocument = () => {
+    if (currentStep > 0) {
+      const prevDoc = documents[currentStep - 1];
+      setSelectedDocument(prevDoc);
+    }
+  };
+  
   const handleContinue = () => {
     // Find the first non-completed document
     const currentDoc = documents.find(doc => doc.status === 'current');
@@ -116,7 +123,7 @@ const DocumentCollection = () => {
       handleStepSelect(currentDoc.id);
     } else if (progress === 100) {
       // All documents completed, navigate to next page
-      navigate('/roadmap-progress');
+      navigate('/onboarding/schedule');
     }
   };
   
@@ -208,39 +215,37 @@ const DocumentCollection = () => {
           
           {/* Main Content Area - Right Side */}
           <div className="w-full md:w-2/3 bg-white p-8 flex items-center justify-center">
-            {chatOpen ? (
-              <div className="w-full h-full">
-                <DocumentUploadChat 
-                  document={selectedDocument} 
-                  onBack={() => setChatOpen(false)}
-                  onClose={() => setChatOpen(false)}
-                  onComplete={handleDocumentComplete}
-                  onNext={handleNextDocument}
-                />
-              </div>
-            ) : (
-              <div className="text-center max-w-md mx-auto">
-                <div className="mb-6">
-                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                    <FileText size={32} className="text-w1-primary-dark" />
-                  </div>
+            <div className="text-center max-w-md mx-auto">
+              <div className="mb-6">
+                <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                  <FileText size={32} className="text-w1-primary-dark" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-w1-primary-dark">Envie seus documentos</h3>
-                <p className="text-gray-600 mb-6">
-                  Selecione um documento da lista ao lado para iniciar o processo de upload.
-                  Cada documento é necessário para validarmos e personalizarmos sua holding.
-                </p>
-                <Button
-                  onClick={handleContinue}
-                  className="bg-w1-primary-dark hover:bg-opacity-90"
-                >
-                  Continuar
-                </Button>
               </div>
-            )}
+              <h3 className="text-xl font-semibold mb-3 text-w1-primary-dark">Envie seus documentos</h3>
+              <p className="text-gray-600 mb-6">
+                Selecione um documento da lista ao lado para iniciar o processo de upload.
+                Cada documento é necessário para validarmos e personalizarmos sua holding.
+              </p>
+              <Button
+                onClick={handleContinue}
+                className="bg-w1-primary-dark hover:bg-opacity-90"
+              >
+                Continuar
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+      
+      {/* Chat Modal using Sheet for center positioning */}
+      <ChatModal
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        selectedDocument={selectedDocument}
+        onDocumentComplete={handleDocumentComplete}
+        onNextDocument={handleNextDocument}
+        onPreviousDocument={handlePreviousDocument}
+      />
     </div>
   );
 };
