@@ -24,7 +24,7 @@ const ChatModal = ({
 }: ChatModalProps) => {
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="center" className="sm:max-w-md h-[80vh] flex flex-col overflow-hidden">
+      <SheetContent side="right" className="sm:max-w-md h-[80vh] mx-auto inset-x-0 flex flex-col overflow-hidden">
         <DocumentUploadChat
           document={selectedDocument}
           onBack={onPreviousDocument}
