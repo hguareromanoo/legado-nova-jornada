@@ -49,16 +49,19 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                   <div 
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center z-10",
-                      isCompleted ? "bg-green-100" : 
+                      isCompleted ? "bg-blue-100" : 
                       isCurrent ? "bg-w1-primary-accent/20 ring-2 ring-w1-primary-accent" :
                       "bg-gray-100"
                     )}
                   >
                     {isCompleted ? (
-                      <Check size={20} className="text-green-600" />
+                      <Check size={20} className="text-blue-600" />
                     ) : (
                       <div className="text-center">
-                        {step.icon || <span className="text-gray-500 text-sm font-medium">{index + 1}</span>}
+                        {step.icon || <span className={cn(
+                          "text-sm font-medium",
+                          isCurrent ? "text-w1-primary-dark" : "text-gray-500"
+                        )}>{index + 1}</span>}
                       </div>
                     )}
                   </div>
@@ -70,21 +73,25 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                   )}>
                     <p className={cn(
                       "font-medium mb-0.5 text-sm",
-                      isCurrent ? "text-w1-primary-accent" : "text-w1-primary-dark"
+                      isCompleted ? "text-blue-600" : 
+                      isCurrent ? "text-w1-primary-dark font-semibold" : 
+                      "text-gray-500"
                     )}>
                       {step.name}
                     </p>
                     <p className="text-xs text-gray-500">{step.description}</p>
                   </div>
                   
-                  {/* Status indicator */}
+                  {/* Continue button for current step */}
                   {isCurrent && (
                     <div className="flex-shrink-0">
                       <Button 
                         size="sm" 
-                        variant="ghost" 
-                        className="h-7 text-xs text-w1-primary-accent hover:text-w1-primary-dark p-0"
-                        onClick={() => onStepSelect(step.id)}
+                        className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStepSelect(step.id);
+                        }}
                       >
                         Continuar
                         <ChevronRight size={14} className="ml-1" />

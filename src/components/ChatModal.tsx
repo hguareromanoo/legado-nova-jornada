@@ -1,6 +1,5 @@
 
-import React, { useState } from 'react';
-import { X, ArrowLeft, ArrowRight } from 'lucide-react';
+import React from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import DocumentUploadChat from './DocumentUploadChat';
 import { RoadmapStep } from './VerticalRoadmap';
