@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { RoadmapStep } from './VerticalRoadmap';
+import { Progress } from '@/components/ui/progress';
 
 interface DocumentUploadChatProps {
   document: RoadmapStep | null;
@@ -107,12 +108,7 @@ const DocumentUploadChat = ({
         {isUploading && (
           <div className="bg-white p-4 rounded-lg shadow-sm mb-4 mx-auto max-w-md">
             <p className="text-sm text-gray-600 mb-2">Enviando arquivo: {uploadedFile?.name}</p>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-w1-primary-accent h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
+            <Progress value={uploadProgress} className="h-2" />
           </div>
         )}
         
