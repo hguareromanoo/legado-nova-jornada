@@ -14,83 +14,86 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from '@/components/ui/sidebar';
-import { Home, FileText, BarChart2, Settings, Users, User, LogIn, Calendar, CircleCheck } from 'lucide-react';
+import { Home, FileText, BarChart2, Settings, Users, User, LogIn, Calendar, CircleCheck, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import VerticalRoadmap, { RoadmapStep } from '@/components/VerticalRoadmap';
+import ChatModal from '@/components/ChatModal';
+import { useToast } from '@/hooks/use-toast';
 
-// Mock data for the dashboard
-const mockAssetData = [
-  { name: 'Imóveis', value: 65 },
-  { name: 'Investimentos', value: 20 },
-  { name: 'Empresas', value: 10 },
-  { name: 'Outros', value: 5 }
-];
-
-const COLORS = ['#5ADBB5', '#36B37E', '#00875A', '#00C781'];
-
-const roadmapSteps = [
-  { id: 1, title: 'Simulação', complete: true },
-  { id: 2, title: 'Cadastro', complete: true },
-  { id: 3, title: 'Envio de Documentos', complete: false },
-  { id: 4, title: 'Análise Jurídica', complete: false },
-  { id: 5, title: 'Estruturação da Holding', complete: false },
-  { id: 6, title: 'Assinatura de Contrato', complete: false },
-  { id: 7, title: 'Holding Estabelecida', complete: false },
-];
-
-// Additional mock data for charts
-const monthlyIncomeData = [
-  { month: 'Jan', income: 15000 },
-  { month: 'Fev', income: 16000 },
-  { month: 'Mar', income: 15500 },
-  { month: 'Abr', income: 17000 },
-  { month: 'Mai', income: 16500 },
-  { month: 'Jun', income: 18000 },
-  { month: 'Jul', income: 19000 },
-  { month: 'Ago', income: 19500 },
-  { month: 'Set', income: 20000 },
-  { month: 'Out', income: 21000 },
-  { month: 'Nov', income: 22000 },
-  { month: 'Dez', income: 23000 },
-];
-
-const taxComparisonData = [
-  { year: '2024', withHolding: 25000, withoutHolding: 75000 },
-  { year: '2025', withHolding: 26000, withoutHolding: 78000 },
-  { year: '2026', withHolding: 27000, withoutHolding: 81000 },
-  { year: '2027', withHolding: 28000, withoutHolding: 84000 },
-  { year: '2028', withHolding: 29000, withoutHolding: 87000 },
-];
-
-const cumulativeSavingsData = [
-  { year: '2024', value: 50000 },
-  { year: '2025', value: 102000 },
-  { year: '2026', value: 156000 },
-  { year: '2027', value: 212000 },
-  { year: '2028', value: 270000 },
-];
-
-const savingsObjectivesData = [
-  { name: 'Viagens', value: 30 },
-  { name: 'Investimentos', value: 40 },
-  { name: 'Patrimônio', value: 20 },
-  { name: 'Família', value: 10 },
-];
-
-const upcomingEventsData = [
-  { date: '15/06/2025', event: 'Reunião Anual de Planejamento' },
-  { date: '30/07/2025', event: 'Vencimento ITCMD' },
-  { date: '15/08/2025', event: 'Revisão de Contrato' },
-  { date: '20/10/2025', event: 'Auditoria Contábil' },
+// Mock roadmap steps for document collection
+const documentSteps: RoadmapStep[] = [
+  {
+    id: 'identity',
+    name: 'Documentos de Identidade',
+    description: 'RG e CPF de todos os sócios',
+    icon: <User size={16} className="text-w1-primary-dark" />,
+    status: 'completed'
+  },
+  {
+    id: 'address',
+    name: 'Comprovante de Endereço',
+    description: 'Conta de luz, água ou telefone',
+    icon: <Home size={16} className="text-w1-primary-dark" />,
+    status: 'current'
+  },
+  {
+    id: 'company',
+    name: 'Contrato Social',
+    description: 'Ou estatuto da empresa',
+    icon: <FileText size={16} className="text-w1-primary-dark" />,
+    status: 'locked'
+  },
+  {
+    id: 'realestate',
+    name: 'Documentos dos Imóveis',
+    description: 'Escrituras e matrículas',
+    icon: <Building size={16} className="text-w1-primary-dark" />,
+    status: 'locked'
+  }
 ];
 
 const Members = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [currentStep, setCurrentStep] = useState(1);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<RoadmapStep | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleDocumentSelect = (documentId: string) => {
+    const document = documentSteps.find(step => step.id === documentId);
+    if (document) {
+      setSelectedDocument(document);
+      setChatModalOpen(true);
+    }
+  };
+
+  const handleDocumentComplete = (documentId: string) => {
+    toast({
+      title: "Documento enviado com sucesso!",
+      description: "Seu documento foi recebido e está em análise.",
+    });
+    
+    // In a real app, we would update the status on the server
+    // For now, we'll just close the modal
+    setChatModalOpen(false);
+  };
+
+  const handleNextDocument = () => {
+    const currentIndex = documentSteps.findIndex(doc => doc.id === selectedDocument?.id);
+    if (currentIndex < documentSteps.length - 1) {
+      setSelectedDocument(documentSteps[currentIndex + 1]);
+    }
+  };
+
+  const handlePreviousDocument = () => {
+    const currentIndex = documentSteps.findIndex(doc => doc.id === selectedDocument?.id);
+    if (currentIndex > 0) {
+      setSelectedDocument(documentSteps[currentIndex - 1]);
+    }
+  };
 
   const handleLogout = () => {
-    // In a real app, this would clear the authentication token
-    // localStorage.removeItem('token');
     navigate('/');
   };
 
@@ -113,10 +116,10 @@ const Members = () => {
                   <SidebarMenuButton 
                     isActive={activeTab === 'dashboard'} 
                     onClick={() => setActiveTab('dashboard')}
-                    tooltip="Dashboard"
+                    tooltip="Sua Holding"
                   >
                     <Home />
-                    <span>Dashboard</span>
+                    <span>Sua Holding</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 
@@ -128,6 +131,17 @@ const Members = () => {
                   >
                     <BarChart2 />
                     <span>Ativos</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeTab === 'assistant'} 
+                    onClick={() => setActiveTab('assistant')}
+                    tooltip="Chat Assistente"
+                  >
+                    <MessageSquare />
+                    <span>Chat Assistente</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 
@@ -205,16 +219,18 @@ const Members = () => {
             <header className="flex justify-between items-center mb-8">
               <div>
                 <h1 className="text-2xl font-bold">
-                  {activeTab === 'dashboard' && 'Dashboard'}
+                  {activeTab === 'dashboard' && 'Sua Holding'}
                   {activeTab === 'assets' && 'Gestão de Ativos'}
+                  {activeTab === 'assistant' && 'Chat Assistente'}
                   {activeTab === 'documents' && 'Documentos'}
                   {activeTab === 'structure' && 'Estrutura Societária'}
                   {activeTab === 'profile' && 'Perfil'}
                   {activeTab === 'settings' && 'Configurações'}
                 </h1>
                 <p className="text-gray-400">
-                  {activeTab === 'dashboard' && 'Visão geral do seu patrimônio'}
+                  {activeTab === 'dashboard' && 'Acompanhe o processo de abertura da sua holding'}
                   {activeTab === 'assets' && 'Gerencie seus ativos'}
+                  {activeTab === 'assistant' && 'Tire suas dúvidas com nosso assistente'}
                   {activeTab === 'documents' && 'Documentos necessários para sua holding'}
                   {activeTab === 'structure' && 'Visualize a estrutura societária'}
                   {activeTab === 'profile' && 'Suas informações pessoais'}
@@ -224,183 +240,58 @@ const Members = () => {
               <SidebarTrigger />
             </header>
             
-            {/* Dashboard Content */}
+            {/* Dashboard Content with Roadmap */}
             {activeTab === 'dashboard' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Processo de Criação da Holding</h2>
-                  <div className="space-y-4">
-                    {roadmapSteps.map(step => (
-                      <div key={step.id} className="flex items-center">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${
-                          step.complete ? 'bg-w1-primary-accent text-w1-primary-dark' : 'bg-gray-700 text-gray-300'
-                        }`}>
-                          {step.complete ? '✓' : step.id}
-                        </div>
-                        <div className="flex-1">
-                          <p className={`${step.complete ? 'text-w1-primary-accent' : 'text-gray-300'}`}>
-                            {step.title}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-6">
-                    <Button className="bg-w1-primary-accent text-w1-primary-dark hover:opacity-90">
-                      Próximo Passo: Enviar Documentos
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Distribuição de Ativos</h2>
-                  <div className="h-64 flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={mockAssetData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {mockAssetData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Economia Fiscal</h2>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={taxComparisonData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`]} />
-                        <Legend />
-                        <Bar name="Com Holding" dataKey="withHolding" fill="#5ADBB5" />
-                        <Bar name="Sem Holding" dataKey="withoutHolding" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Evolução da Renda Mensal</h2>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={monthlyIncomeData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`]} />
-                        <Area type="monotone" dataKey="income" stroke="#5ADBB5" fill="#5ADBB5" fillOpacity={0.3} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg col-span-1 lg:col-span-2">
-                  <h2 className="text-xl font-semibold mb-4">Economia Acumulada ao Longo do Tempo</h2>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={cumulativeSavingsData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`]} />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          name="Economia Acumulada" 
-                          stroke="#5ADBB5" 
-                          strokeWidth={2} 
-                          dot={{ r: 5 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Objetivos de Economia</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={savingsObjectivesData}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={60}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {savingsObjectivesData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div>
-                      <div className="space-y-4">
-                        <div className="flex items-start p-2 bg-gray-700/30 rounded">
-                          <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
-                            <CircleCheck size={18} className="text-w1-primary-accent" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Viagem à Europa</p>
-                            <p className="text-sm text-gray-400">Julho 2025</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start p-2 bg-gray-700/30 rounded">
-                          <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
-                            <CircleCheck size={18} className="text-w1-primary-accent" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Novo Investimento</p>
-                            <p className="text-sm text-gray-400">Setembro 2025</p>
-                          </div>
-                        </div>
-                      </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h2 className="text-xl font-semibold mb-4">Processo de Criação da Holding</h2>
+                    <p className="text-gray-400 mb-6">
+                      Estamos no processo de envio de documentos. Por favor, envie todos os documentos solicitados.
+                    </p>
+                    
+                    <div className="bg-gray-700/50 rounded-lg p-6">
+                      <VerticalRoadmap 
+                        steps={documentSteps}
+                        currentStep={currentStep}
+                        onStepSelect={handleDocumentSelect}
+                      />
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Próximos Eventos</h2>
-                  <div className="space-y-4">
-                    {upcomingEventsData.map((event, index) => (
-                      <div key={index} className="flex items-start">
+                <div className="lg:col-span-1">
+                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h2 className="text-xl font-semibold mb-4">Próximos Passos</h2>
+                    <div className="space-y-4">
+                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
                         <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
                           <Calendar size={18} className="text-w1-primary-accent" />
                         </div>
                         <div>
-                          <p className="font-medium">{event.event}</p>
-                          <p className="text-sm text-gray-400">{event.date}</p>
+                          <p className="font-medium">Reunião com Consultor</p>
+                          <p className="text-sm text-gray-400">15/06/2025 • 14:00</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-4">
-                    <Button variant="outline" size="sm" className="text-w1-primary-accent border-w1-primary-accent/50 hover:bg-w1-primary-accent/10">
-                      Ver Calendário Completo
-                    </Button>
+                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
+                        <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
+                          <FileText size={18} className="text-w1-primary-accent" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Revisão de Contrato</p>
+                          <p className="text-sm text-gray-400">Pendente</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
+                        <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
+                          <CircleCheck size={18} className="text-w1-primary-accent" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Finalizar Documentação</p>
+                          <p className="text-sm text-gray-400">Em andamento</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -422,6 +313,16 @@ const Members = () => {
           </div>
         </SidebarInset>
       </div>
+      
+      {/* Chat Modal for Document Upload */}
+      <ChatModal 
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        selectedDocument={selectedDocument}
+        onDocumentComplete={handleDocumentComplete}
+        onNextDocument={handleNextDocument}
+        onPreviousDocument={handlePreviousDocument}
+      />
     </SidebarProvider>
   );
 };
