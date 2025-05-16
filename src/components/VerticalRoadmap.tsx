@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, ChevronRight, FileText, Home, Building, User } from 'lucide-react';
+import { Check, ChevronRight, FileText, Home, Building2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -20,15 +20,15 @@ interface VerticalRoadmapProps {
 
 const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapProps) => {
   return (
-    <div className="h-full py-6 px-4 border-r bg-gray-50">
-      <div className="mb-6 text-center">
-        <h3 className="text-lg font-medium text-w1-primary-dark mb-1">Documentos Necessários</h3>
-        <p className="text-sm text-gray-500">Complete as etapas para prosseguir</p>
+    <div className="py-6 px-4">
+      <div className="mb-6">
+        <h3 className="text-lg font-medium text-white mb-1">Documentos Necessários</h3>
+        <p className="text-sm text-gray-400">Complete as etapas para prosseguir</p>
       </div>
       
       <div className="relative">
         {/* Vertical line */}
-        <div className="absolute left-5 top-6 bottom-10 w-0.5 bg-gray-200 z-0" />
+        <div className="absolute left-5 top-6 bottom-10 w-0.5 bg-gray-700/50 z-0" />
         
         {/* Steps */}
         <div className="space-y-8 relative z-10">
@@ -49,18 +49,18 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                   <div 
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center z-10",
-                      isCompleted ? "bg-blue-100" : 
-                      isCurrent ? "bg-w1-primary-accent/20 ring-2 ring-w1-primary-accent" :
-                      "bg-gray-100"
+                      isCompleted ? "bg-blue-500/30" : 
+                      isCurrent ? "bg-blue-500/20 ring-2 ring-blue-400" :
+                      "bg-gray-800/70"
                     )}
                   >
                     {isCompleted ? (
-                      <Check size={20} className="text-blue-600" />
+                      <Check size={20} className="text-blue-400" />
                     ) : (
                       <div className="text-center">
                         {step.icon || <span className={cn(
                           "text-sm font-medium",
-                          isCurrent ? "text-w1-primary-dark" : "text-gray-500"
+                          isCurrent ? "text-blue-400" : "text-gray-400"
                         )}>{index + 1}</span>}
                       </div>
                     )}
@@ -72,14 +72,14 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                     step.status === 'locked' ? "opacity-60" : ""
                   )}>
                     <p className={cn(
-                      "font-medium mb-0.5 text-sm",
-                      isCompleted ? "text-blue-600" : 
-                      isCurrent ? "text-w1-primary-dark font-semibold" : 
-                      "text-gray-500"
+                      "font-medium mb-0.5",
+                      isCompleted ? "text-blue-400" : 
+                      isCurrent ? "text-white font-semibold" : 
+                      "text-gray-400"
                     )}>
                       {step.name}
                     </p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
+                    <p className="text-sm text-gray-400">{step.description}</p>
                   </div>
                   
                   {/* Continue button for current step */}
@@ -87,7 +87,7 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                     <div className="flex-shrink-0">
                       <Button 
                         size="sm" 
-                        className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                        className="h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                         onClick={(e) => {
                           e.stopPropagation();
                           onStepSelect(step.id);
@@ -110,16 +110,16 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
               currentStep === steps.length ? "opacity-100" : "opacity-60"
             )}>
               <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center bg-w1-primary-dark z-10",
-                currentStep === steps.length && "ring-2 ring-w1-primary-dark"
+                "w-10 h-10 rounded-full flex items-center justify-center bg-blue-600/20 z-10",
+                currentStep === steps.length && "ring-2 ring-blue-500"
               )}>
-                <User size={18} className="text-white" />
+                <User size={18} className="text-blue-400" />
               </div>
               <div>
-                <p className="font-medium mb-0.5 text-sm text-w1-primary-dark">
+                <p className="font-medium mb-0.5 text-white">
                   Finalizar com Consultor
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-400">
                   Agende sua consultoria personalizada
                 </p>
               </div>

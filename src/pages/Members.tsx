@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -76,7 +75,6 @@ const Members = () => {
     });
     
     // In a real app, we would update the status on the server
-    // For now, we'll just close the modal
     setChatModalOpen(false);
   };
 
@@ -100,7 +98,7 @@ const Members = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-w1-primary-dark text-w1-text-light">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
         <Sidebar>
           <SidebarHeader>
             <div className="p-4">
@@ -215,77 +213,64 @@ const Members = () => {
           </SidebarFooter>
         </Sidebar>
         
-        <SidebarInset className="bg-gray-900">
-          <div className="p-6">
-            <header className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {activeTab === 'dashboard' && 'Sua Holding'}
-                  {activeTab === 'assets' && 'Gestão de Ativos'}
-                  {activeTab === 'assistant' && 'Chat Assistente'}
-                  {activeTab === 'documents' && 'Documentos'}
-                  {activeTab === 'structure' && 'Estrutura Societária'}
-                  {activeTab === 'profile' && 'Perfil'}
-                  {activeTab === 'settings' && 'Configurações'}
-                </h1>
-                <p className="text-gray-400">
-                  {activeTab === 'dashboard' && 'Acompanhe o processo de abertura da sua holding'}
-                  {activeTab === 'assets' && 'Gerencie seus ativos'}
-                  {activeTab === 'assistant' && 'Tire suas dúvidas com nosso assistente'}
-                  {activeTab === 'documents' && 'Documentos necessários para sua holding'}
-                  {activeTab === 'structure' && 'Visualize a estrutura societária'}
-                  {activeTab === 'profile' && 'Suas informações pessoais'}
-                  {activeTab === 'settings' && 'Configure sua conta'}
+        <SidebarInset className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+          {/* Dashboard Content */}
+          {activeTab === 'dashboard' && (
+            <div className="p-6">
+              <header className="flex justify-between items-center mb-8">
+                <div>
+                  <h1 className="text-2xl font-bold">Sua Holding</h1>
+                  <p className="text-gray-400">
+                    Acompanhe o processo de abertura da sua holding
+                  </p>
+                </div>
+                <SidebarTrigger />
+              </header>
+
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Processo de Criação da Holding</h2>
+                <p className="text-gray-400 mb-6">
+                  Estamos no processo de envio de documentos. Por favor, envie todos os documentos solicitados.
                 </p>
               </div>
-              <SidebarTrigger />
-            </header>
-            
-            {/* Dashboard Content with Roadmap */}
-            {activeTab === 'dashboard' && (
+              
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">Processo de Criação da Holding</h2>
-                    <p className="text-gray-400 mb-6">
-                      Estamos no processo de envio de documentos. Por favor, envie todos os documentos solicitados.
-                    </p>
-                    
-                    <div className="bg-gray-700/50 rounded-lg p-6">
-                      <VerticalRoadmap 
-                        steps={documentSteps}
-                        currentStep={currentStep}
-                        onStepSelect={handleDocumentSelect}
-                      />
-                    </div>
+                  {/* Document Roadmap - Removed the box as requested */}
+                  <div className="rounded-lg">
+                    <VerticalRoadmap 
+                      steps={documentSteps}
+                      currentStep={currentStep}
+                      onStepSelect={handleDocumentSelect}
+                    />
                   </div>
                 </div>
                 
                 <div className="lg:col-span-1">
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                  <div className="bg-gray-800/30 p-6 rounded-lg backdrop-blur-sm border border-gray-700/30">
                     <h2 className="text-xl font-semibold mb-4">Próximos Passos</h2>
                     <div className="space-y-4">
-                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
-                        <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
-                          <Calendar size={18} className="text-w1-primary-accent" />
+                      <div className="flex items-start p-3 bg-gray-700/20 rounded-lg border border-gray-700/30">
+                        <div className="bg-blue-500/20 p-2 rounded-lg mr-3">
+                          <Calendar size={18} className="text-blue-400" />
                         </div>
                         <div>
                           <p className="font-medium">Reunião com Consultor</p>
                           <p className="text-sm text-gray-400">15/06/2025 • 14:00</p>
                         </div>
                       </div>
-                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
-                        <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
-                          <FileText size={18} className="text-w1-primary-accent" />
+                      <div className="flex items-start p-3 bg-gray-700/20 rounded-lg border border-gray-700/30">
+                        <div className="bg-blue-500/20 p-2 rounded-lg mr-3">
+                          <FileText size={18} className="text-blue-400" />
                         </div>
                         <div>
                           <p className="font-medium">Revisão de Contrato</p>
                           <p className="text-sm text-gray-400">Pendente</p>
                         </div>
                       </div>
-                      <div className="flex items-start p-2 bg-gray-700/30 rounded">
-                        <div className="bg-w1-primary-accent/20 p-2 rounded mr-3">
-                          <CircleCheck size={18} className="text-w1-primary-accent" />
+                      <div className="flex items-start p-3 bg-gray-700/20 rounded-lg border border-gray-700/30">
+                        <div className="bg-blue-500/20 p-2 rounded-lg mr-3">
+                          <CircleCheck size={18} className="text-blue-400" />
                         </div>
                         <div>
                           <p className="font-medium">Finalizar Documentação</p>
@@ -296,22 +281,222 @@ const Members = () => {
                   </div>
                 </div>
               </div>
-            )}
-            
-            {/* Other tabs would have their own content here */}
-            {activeTab !== 'dashboard' && (
-              <div className="bg-gray-800 p-6 rounded-lg shadow-lg flex items-center justify-center h-64">
-                <div className="text-center">
-                  <h3 className="text-xl font-medium text-gray-400 mb-2">
-                    Conteúdo de {activeTab} em desenvolvimento
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Esta seção será implementada em breve.
-                  </p>
+            </div>
+          )}
+          
+          {/* Assets Tab - Following the reference design */}
+          {activeTab === 'assets' && (
+            <div className="p-6">
+              <header className="flex justify-between items-center mb-8">
+                <div>
+                  <h1 className="text-2xl font-bold">Ativos</h1>
+                  <p className="text-gray-400">Gerencie seus ativos patrimoniais</p>
+                </div>
+                <SidebarTrigger />
+              </header>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="col-span-1 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl p-5 backdrop-blur-sm border border-blue-500/30">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center">
+                      <div className="bg-blue-500/30 p-2 rounded-lg">
+                        <Building2 className="text-blue-300" />
+                      </div>
+                    </div>
+                    <button className="text-gray-400">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="1" fill="currentColor" />
+                        <circle cx="10" cy="6" r="1" fill="currentColor" />
+                        <circle cx="10" cy="14" r="1" fill="currentColor" />
+                      </svg>
+                    </button>
+                  </div>
+                  <h3 className="text-3xl font-bold text-white mb-1">R$ 3.254.895</h3>
+                  <p className="text-gray-400 text-sm mb-4">Patrimônio total</p>
+                  <div className="flex items-center text-sm">
+                    <span className="text-green-400 flex items-center">
+                      <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      8.34%
+                    </span>
+                    <span className="text-gray-400 ml-2">este mês</span>
+                  </div>
+                </div>
+                
+                <div className="col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-gray-400 text-sm">Imóveis</div>
+                      <button className="text-gray-400">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="10" cy="10" r="1" fill="currentColor" />
+                          <circle cx="10" cy="6" r="1" fill="currentColor" />
+                          <circle cx="10" cy="14" r="1" fill="currentColor" />
+                        </svg>
+                      </button>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">R$ 1.750.000</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm">3 imóveis</span>
+                      <span className="text-green-400 text-sm flex items-center">
+                        <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        5.2%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-gray-400 text-sm">Investimentos</div>
+                      <button className="text-gray-400">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="10" cy="10" r="1" fill="currentColor" />
+                          <circle cx="10" cy="6" r="1" fill="currentColor" />
+                          <circle cx="10" cy="14" r="1" fill="currentColor" />
+                        </svg>
+                      </button>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">R$ 1.243.895</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm">8 ativos</span>
+                      <span className="text-green-400 text-sm flex items-center">
+                        <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        12.8%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-gray-400 text-sm">Outros</div>
+                      <button className="text-gray-400">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="10" cy="10" r="1" fill="currentColor" />
+                          <circle cx="10" cy="6" r="1" fill="currentColor" />
+                          <circle cx="10" cy="14" r="1" fill="currentColor" />
+                        </svg>
+                      </button>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">R$ 261.000</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm">2 ativos</span>
+                      <span className="text-red-400 text-sm flex items-center">
+                        <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M6 9.5V2.5M6 9.5L3 6.5M6 9.5L9 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        1.3%
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+              
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Ativos principais</h2>
+                  <div className="flex items-center space-x-2">
+                    <select className="bg-gray-800/50 border border-gray-700/50 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                      <option>Semana</option>
+                      <option>Mês</option>
+                      <option>Ano</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-400 border-b border-gray-800">
+                        <th className="text-left px-4 py-3 font-medium">Nome do Ativo</th>
+                        <th className="text-left px-4 py-3 font-medium">Categoria</th>
+                        <th className="text-right px-4 py-3 font-medium">Valor</th>
+                        <th className="text-right px-4 py-3 font-medium">Variação</th>
+                        <th className="text-right px-4 py-3 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-800">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-blue-500/20 p-2 rounded-lg mr-3">
+                              <Building2 size={16} className="text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Imóvel Alphaville</p>
+                              <p className="text-gray-400 text-xs">São Paulo, SP</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-300">Imóveis</td>
+                        <td className="px-4 py-4 text-right">R$ 980.000</td>
+                        <td className="px-4 py-4 text-right text-green-400">+3.2%</td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">Ativo</span>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-800">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-purple-500/20 p-2 rounded-lg mr-3">
+                              <BarChart2 size={16} className="text-purple-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Ações PETR4</p>
+                              <p className="text-gray-400 text-xs">Petrobras</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-300">Investimentos</td>
+                        <td className="px-4 py-4 text-right">R$ 354.780</td>
+                        <td className="px-4 py-4 text-right text-green-400">+8.7%</td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">Ativo</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-blue-500/20 p-2 rounded-lg mr-3">
+                              <Building2 size={16} className="text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Sala Comercial</p>
+                              <p className="text-gray-400 text-xs">Rio de Janeiro, RJ</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-300">Imóveis</td>
+                        <td className="px-4 py-4 text-right">R$ 420.000</td>
+                        <td className="px-4 py-4 text-right text-red-400">-1.2%</td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full text-xs">Pendente</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Other tabs would have their own content here */}
+          {activeTab !== 'dashboard' && activeTab !== 'assets' && (
+            <div className="p-6 h-full flex items-center justify-center">
+              <div className="text-center">
+                <h3 className="text-xl font-medium text-gray-400 mb-2">
+                  Conteúdo de {activeTab} em desenvolvimento
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Esta seção será implementada em breve.
+                </p>
+              </div>
+            </div>
+          )}
         </SidebarInset>
       </div>
       

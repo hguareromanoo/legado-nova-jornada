@@ -66,38 +66,38 @@ const DocumentUploadChat = ({
   if (!document) return null;
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-900">
       {/* Chat header */}
-      <div className="flex justify-between items-center p-4 border-b">
+      <div className="flex justify-between items-center p-4 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+          <Button variant="ghost" size="icon" onClick={onBack} className="text-gray-400 hover:text-white hover:bg-gray-800">
             <ArrowLeft size={18} />
           </Button>
-          <span className="font-medium text-w1-primary-dark">Upload de Documento</span>
+          <span className="font-medium text-white">Upload de Documento</span>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onNext}>
+          <Button variant="ghost" size="icon" onClick={onNext} className="text-gray-400 hover:text-white hover:bg-gray-800">
             <ArrowRight size={18} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white hover:bg-gray-800">
             <X size={18} />
           </Button>
         </div>
       </div>
       
       {/* Chat window */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-900">
         {/* Assistant message */}
         <div className="flex gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-w1-primary-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-w1-primary-dark font-bold">R</span>
+          <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center flex-shrink-0">
+            <span className="text-blue-300 font-bold">R</span>
           </div>
-          <div className="bg-white p-4 rounded-lg rounded-tl-none shadow-sm max-w-[80%]">
-            <p className="text-gray-800">
+          <div className="bg-gray-800/80 p-4 rounded-lg rounded-tl-none shadow-sm max-w-[80%] text-white border border-gray-700/50">
+            <p className="text-gray-200">
               Olá! Por favor, envie seu <strong>{document.name}</strong> para continuarmos.
               <br /><br />
-              <span className="text-sm text-gray-600">{document.description}</span>
+              <span className="text-sm text-gray-400">{document.description}</span>
               <br />
               <span className="text-sm text-gray-500">Formatos aceitos: PDF, JPG, PNG</span>
             </p>
@@ -106,16 +106,16 @@ const DocumentUploadChat = ({
         
         {/* Upload progress or completed message */}
         {isUploading && (
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-4 mx-auto max-w-md">
-            <p className="text-sm text-gray-600 mb-2">Enviando arquivo: {uploadedFile?.name}</p>
-            <Progress value={uploadProgress} className="h-2" />
+          <div className="bg-gray-800/50 p-4 rounded-lg shadow-sm mb-4 mx-auto max-w-md border border-gray-700/30">
+            <p className="text-sm text-gray-300 mb-2">Enviando arquivo: {uploadedFile?.name}</p>
+            <Progress value={uploadProgress} className="h-2 bg-gray-700" />
           </div>
         )}
         
         {uploadedFile && !isUploading && (
           <div className="flex justify-end mb-4">
-            <div className="bg-w1-primary-accent p-3 rounded-lg rounded-tr-none max-w-[80%]">
-              <p className="text-w1-primary-dark">
+            <div className="bg-blue-600/20 p-3 rounded-lg rounded-tr-none max-w-[80%] border border-blue-500/30">
+              <p className="text-blue-300">
                 Documento enviado: {uploadedFile.name}
               </p>
             </div>
@@ -124,7 +124,7 @@ const DocumentUploadChat = ({
       </div>
       
       {/* Upload area */}
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 border-t border-gray-800 bg-gray-900">
         <div className="flex flex-col gap-3">
           <input
             ref={fileInputRef}
@@ -135,7 +135,7 @@ const DocumentUploadChat = ({
           />
           <Button 
             onClick={triggerFileInput}
-            className="w-full bg-w1-primary-dark hover:bg-opacity-90 gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
             disabled={isUploading}
           >
             <Upload size={18} />
@@ -145,27 +145,27 @@ const DocumentUploadChat = ({
           {/* Help button */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="mx-auto text-gray-500 hover:text-gray-700">
+              <Button variant="ghost" size="sm" className="mx-auto text-gray-400 hover:text-gray-200">
                 <HelpCircle size={14} className="mr-1" />
                 Preciso de ajuda com este documento
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md bg-gray-900 border-gray-800">
               <DialogHeader>
-                <DialogTitle>Ajuda com Documentos</DialogTitle>
+                <DialogTitle className="text-white">Ajuda com Documentos</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <h3 className="font-medium text-w1-primary-dark">Dúvidas sobre {document.name}?</h3>
-                <p className="text-gray-600">
+                <h3 className="font-medium text-blue-400">Dúvidas sobre {document.name}?</h3>
+                <p className="text-gray-300">
                   Este documento é necessário para validar sua identidade e garantir a segurança do processo.
                   Se você tiver dificuldades para obter este documento, aqui estão algumas opções:
                 </p>
-                <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                <ul className="list-disc pl-5 space-y-2 text-gray-300">
                   <li>Você pode enviar uma versão digitalizada do documento original</li>
                   <li>O documento deve estar legível e com todas as informações visíveis</li>
                   <li>Você pode tirar uma foto com seu celular, desde que a qualidade seja boa</li>
                 </ul>
-                <p className="text-gray-600 mt-4">
+                <p className="text-gray-300 mt-4">
                   Para mais ajuda, entre em contato com nossa equipe de suporte pelo chat ou telefone.
                 </p>
               </div>
