@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Simulation from "./pages/Simulation";
 import Login from "./pages/Login";
 import Members from "./pages/Members";
+import Assets from "./pages/Assets";
 import Onboarding from "./pages/Onboarding";
 import OnboardingChat from "./pages/OnboardingChat";
 import ScheduleConsultant from "./pages/ScheduleConsultant";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
           <Route path="/documents" element={<DocumentCollection />} />
           <Route path="/members" element={<Members />} />
+          <Route path="/assets" element={<Assets />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
