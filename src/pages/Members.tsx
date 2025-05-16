@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -14,7 +15,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from '@/components/ui/sidebar';
-import { Home, FileText, BarChart2, Settings, Users, User, LogIn, Calendar, CircleCheck, MessageSquare } from 'lucide-react';
+import { Home, FileText, BarChart2, Settings, Users, User, LogIn, Calendar, CircleCheck, MessageSquare, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import VerticalRoadmap, { RoadmapStep } from '@/components/VerticalRoadmap';
 import ChatModal from '@/components/ChatModal';
@@ -47,7 +48,7 @@ const documentSteps: RoadmapStep[] = [
     id: 'realestate',
     name: 'Documentos dos Imóveis',
     description: 'Escrituras e matrículas',
-    icon: <Building size={16} className="text-w1-primary-dark" />,
+    icon: <Building2 size={16} className="text-w1-primary-dark" />,
     status: 'locked'
   }
 ];
