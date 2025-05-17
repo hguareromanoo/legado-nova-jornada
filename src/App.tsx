@@ -32,9 +32,10 @@ import PlanApproval from "./pages/onboarding/human/PlanApproval";
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
-import Assets from "./pages/dashboard/Assets";
+import Assets from "./pages/Assets"; // Using the more comprehensive Assets page
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
+import Members from "./pages/Members";
 
 const queryClient = new QueryClient();
 
@@ -77,13 +78,13 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/assets" element={<Assets />} />
+                <Route path="/members" element={<Members />} />
                 <Route path="/structure" element={<Structure />} />
                 <Route path="/assistant" element={<Assistant />} />
               </Route>
               
               {/* Legacy route redirect */}
               <Route path="/document-opening" element={<Navigate to="/document-collection" replace />} />
-              <Route path="/members" element={<Navigate to="/dashboard" replace />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

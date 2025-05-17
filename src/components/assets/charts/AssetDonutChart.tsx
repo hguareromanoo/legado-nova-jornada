@@ -1,90 +1,94 @@
 
-import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Card } from '@/components/ui/card';
 
-interface AssetDonutChartProps {
-  data: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-  title?: string;
+interface DonutChartData {
+  name: string;
+  value: number;
+  color: string;
 }
 
-const AssetDonutChart: React.FC<AssetDonutChartProps> = ({ data, title = "Distribuição de Ativos" }) => {
+interface AssetDonutChartProps {
+  data: DonutChartData[];
+  title: string;
+}
+
+const AssetDonutChart = ({ data, title }: AssetDonutChartProps) => {
+  // Calculate total for percentage
   const total = data.reduce((sum, item) => sum + item.value, 0);
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+  // Custom tooltip formatter
+  const tooltipFormatter = (value: number) => {
+    const percentage = ((value / total) * 100).toFixed(1);
+    return `R$ ${value.toLocaleString()} (${percentage}%)`;
   };
-  
+
   return (
-    <div className="w-full h-full bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold text-white">{title}</h3>
+    <Card className="bg-w1-secondary-dark/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
+      <div className="flex justify-between items-center mb-3">
+        <div className="text-gray-400 text-sm">{title}</div>
+        <button className="text-gray-400">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="1" fill="currentColor" />
+            <circle cx="10" cy="6" r="1" fill="currentColor" />
+            <circle cx="10" cy="14" r="1" fill="currentColor" />
+          </svg>
+        </button>
       </div>
       
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-        <div className="w-full lg:w-1/2 aspect-square max-h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius="60%"
-                outerRadius="80%"
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const item = payload[0];
-                    const percentage = ((item.value as number) / total * 100).toFixed(1);
-                    
-                    return (
-                      <div className="rounded-lg border border-gray-800 bg-gray-900 p-2 shadow-md">
-                        <p className="text-sm text-white font-medium">{item.name}</p>
-                        <p className="text-sm text-white font-bold">
-                          {formatCurrency(item.value as number)}
-                        </p>
-                        <p className="text-xs text-gray-400">{percentage}% do total</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="w-full lg:w-1/2">
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {data.map((item, index) => (
-              <li key={index} className="bg-black/20 rounded-lg p-2.5">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-sm text-gray-300 font-medium">{item.name}</span>
-                </div>
-                <p className="text-lg font-bold text-white">{formatCurrency(item.value)}</p>
-                <p className="text-xs text-gray-400">{((item.value / total) * 100).toFixed(1)}% do total</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="h-52">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              fill="#8884d8"
+              paddingAngle={2}
+              dataKey="value"
+              nameKey="name"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={tooltipFormatter}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  const percentage = ((data.value / total) * 100).toFixed(1);
+                  
+                  return (
+                    <div className="bg-w1-secondary-dark p-2 rounded-md border border-w1-primary-accent/20 text-xs">
+                      <p className="text-white font-medium mb-1">{data.name}</p>
+                      <p className="text-white">{`R$ ${data.value.toLocaleString()}`}</p>
+                      <p className="text-gray-400">{`${percentage}% do total`}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Legend 
+              verticalAlign="bottom" 
+              height={36}
+              formatter={(value, entry, index) => {
+                const item = data[index];
+                const percentage = ((item.value / total) * 100).toFixed(1);
+                return (
+                  <span className="text-xs">
+                    {value} ({percentage}%)
+                  </span>
+                );
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 };
 

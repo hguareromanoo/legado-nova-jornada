@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -241,15 +242,15 @@ const Assets = () => {
 
   // Data for asset distribution donut chart
   const assetDistributionData = [
-    { name: 'Imóveis', value: assetsByType.imoveis.total, color: '#9B87F5' },
-    { name: 'Investimentos', value: assetsByType.investimentos.total, color: '#33C3F0' },
-    { name: 'Participações', value: assetsByType.participacoes.total, color: '#10b981' },
-    { name: 'Outros', value: assetsByType.outros.total, color: '#E5DEFF' }
+    { name: 'Imóveis', value: assetsByType.imoveis.total, color: '#4ECDC4' },
+    { name: 'Investimentos', value: assetsByType.investimentos.total, color: '#6BDED6' },
+    { name: 'Participações', value: assetsByType.participacoes.total, color: '#0A1A24' },
+    { name: 'Outros', value: assetsByType.outros.total, color: '#E5F0F9' }
   ];
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-w1-primary-dark via-w1-secondary-dark to-w1-primary-dark text-white">
         <Sidebar>
           <SidebarHeader>
             <div className="p-4">
@@ -364,7 +365,7 @@ const Assets = () => {
           </SidebarFooter>
         </Sidebar>
         
-        <SidebarInset className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <SidebarInset className="bg-gradient-to-br from-w1-primary-dark via-w1-secondary-dark to-w1-primary-dark">
           <div className="p-6">
             <header className="flex justify-between items-center mb-8">
               <div>
@@ -399,32 +400,32 @@ const Assets = () => {
                 <div className="mb-6 flex justify-between items-center">
                   <Tabs defaultValue="todos" className="w-full" onValueChange={setActiveTab}>
                     <div className="flex justify-between items-center w-full">
-                      <TabsList className="bg-gray-800/50 p-1 rounded-lg">
-                        <TabsTrigger value="todos" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                      <TabsList className="bg-w1-secondary-dark/50 p-1 rounded-lg">
+                        <TabsTrigger value="todos" className="data-[state=active]:bg-w1-primary-accent data-[state=active]:text-w1-primary-dark">
                           Todos
                         </TabsTrigger>
-                        <TabsTrigger value="imoveis" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                        <TabsTrigger value="imoveis" className="data-[state=active]:bg-w1-primary-accent data-[state=active]:text-w1-primary-dark">
                           Imóveis
                         </TabsTrigger>
-                        <TabsTrigger value="investimentos" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                        <TabsTrigger value="investimentos" className="data-[state=active]:bg-w1-primary-accent data-[state=active]:text-w1-primary-dark">
                           Investimentos
                         </TabsTrigger>
-                        <TabsTrigger value="participacoes" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                        <TabsTrigger value="participacoes" className="data-[state=active]:bg-w1-primary-accent data-[state=active]:text-w1-primary-dark">
                           Participações
                         </TabsTrigger>
-                        <TabsTrigger value="outros" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                        <TabsTrigger value="outros" className="data-[state=active]:bg-w1-primary-accent data-[state=active]:text-w1-primary-dark">
                           Outros
                         </TabsTrigger>
                       </TabsList>
                       
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="border-gray-700 bg-gray-800/50 text-gray-300">
+                        <Button variant="outline" size="sm" className="border-gray-700 bg-w1-secondary-dark/50 text-gray-300">
                           <Filter size={16} className="mr-1" />
                           Filtrar
                         </Button>
                         <Button 
                           size="sm" 
-                          variant="blue" 
+                          variant="w1Primary" 
                           onClick={() => setIsAddingAsset(true)}
                         >
                           <Plus size={16} className="mr-1" />
