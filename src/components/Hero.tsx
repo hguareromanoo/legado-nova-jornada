@@ -13,7 +13,7 @@ const Hero = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-slate-50">
             Protegendo e maximizando seu legado
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-gray-200 leading-relaxed">
+          <p className="text-xl md:text-2xl mb-8 leading-relaxed font-light text-gray-200 px-0">
             Descubra como a W1 Consultoria Patrimonial transforma a gestão de patrimônios em uma arte sofisticada, assegurando proteção, crescimento e transmissão eficiente do seu legado.
           </p>
           <Button size="lg" className="bg-w1-primary-accent hover:bg-w1-primary-accent/90 text-w1-primary-dark text-lg px-8 py-6 h-auto font-semibold" asChild>
