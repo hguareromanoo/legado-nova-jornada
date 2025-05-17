@@ -16,12 +16,12 @@ const ProtectedRoute = () => {
     // Get the current onboarding step from localStorage or context
     const currentStep = localStorage.getItem('onboardingStep') || 'selection';
     
-    // Map steps to routes
+    // Map steps to routes - Atualizando para usar '/members' para a etapa de documentos
     const stepRoutes: Record<string, string> = {
       'selection': '/onboarding',
       'chat': '/onboarding/chat',
       'schedule': '/onboarding/schedule',
-      'documents': '/members', // Redirecting to members page instead of document-collection
+      'documents': '/members', // Redirecionando consistentemente para members
       'review': '/document-review'
     };
     

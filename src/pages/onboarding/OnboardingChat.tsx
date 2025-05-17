@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -171,8 +170,8 @@ const OnboardingChat = () => {
         // Mark the chat step as complete in the onboarding context
         completeStep('chat');
         
-        // Navega para a página correta de coleta de documentos
-        navigate('/document-collection');
+        // Navega para a página Members ao invés de document-collection
+        navigate('/members');
       }
     }, 1000);
   };
