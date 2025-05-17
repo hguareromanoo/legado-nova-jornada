@@ -7,14 +7,14 @@ import { motion } from "framer-motion";
 const Hero = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-w1-primary-dark text-w1-text-light pt-16 overflow-hidden">
-      {/* Background video animation */}
+      {/* Background video animation - reduced opacity */}
       <div className="absolute inset-0 z-0">
         <video 
           autoPlay 
           muted 
           loop 
           playsInline
-          className="object-cover w-full h-full opacity-30"
+          className="object-cover w-full h-full opacity-15" // Reduced opacity from 30% to 15%
         >
           <source 
             src="https://cdn.sanity.io/files/vtdu2snp/production/d87a23a4e3797a6c26978cdd2bea561cbe85ec80.mp4" 
@@ -54,6 +54,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button 
               size="lg" 
@@ -63,6 +64,17 @@ const Hero = () => {
               <Link to="/simulation">
                 Faça simulação de holding
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            
+            <Button 
+              size="lg" 
+              variant="w1Secondary" 
+              className="text-lg px-8 py-6 h-auto font-semibold" 
+              asChild
+            >
+              <Link to="/cadastro">
+                Cadastre-se
               </Link>
             </Button>
           </motion.div>
