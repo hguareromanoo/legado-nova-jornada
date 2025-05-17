@@ -11,6 +11,7 @@ import {
   Legend,
   ReferenceLine
 } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 const OtherAssetChart: React.FC = () => {
   // Mock data for asset depreciation chart
@@ -44,41 +45,100 @@ const OtherAssetChart: React.FC = () => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ChartContainer
+      config={{
+        value: {
+          theme: {
+            light: "#f59e0b",
+            dark: "#f59e0b",
+          }
+        },
+        referenceValue: {
+          theme: {
+            light: "#64748b",
+            dark: "#94a3b8",
+          }
+        }
+      }}
+      className="aspect-[4/3] w-full h-full"
+    >
       <LineChart data={depreciationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <defs>
           <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.2} />
+            <stop offset="5%" stopColor="var(--color-value, #f59e0b)" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="var(--color-value, #f59e0b)" stopOpacity={0.2} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-        <XAxis dataKey="date" stroke="#aaa" tickFormatter={formatDate} />
-        <YAxis stroke="#aaa" tickFormatter={formatCurrency} domain={['dataMin - 20000', 'dataMax + 20000']} />
-        <Tooltip 
-          formatter={(value: number) => [formatCurrency(value), 'Valor']}
-          labelFormatter={formatDate}
-          contentStyle={{ 
-            backgroundColor: '#2a2a2a', 
-            borderColor: '#444',
-            color: '#fff'
-          }} 
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+        <XAxis 
+          dataKey="date" 
+          stroke="rgba(255,255,255,0.5)" 
+          tickFormatter={formatDate} 
+          tickLine={false}
+          axisLine={false}
+          dy={10}
         />
-        <Legend />
+        <YAxis 
+          stroke="rgba(255,255,255,0.5)" 
+          tickFormatter={formatCurrency} 
+          domain={['dataMin - 20000', 'dataMax + 20000']} 
+          axisLine={false}
+          tickLine={false}
+          dx={-10}
+        />
+        <Tooltip 
+          content={({ active, payload }) => {
+            if (active && payload?.length) {
+              return (
+                <div className="rounded-lg border border-gray-800 bg-gray-900 p-2 shadow-md">
+                  <div className="text-sm text-gray-300">{formatDate(payload[0].payload.date)}</div>
+                  <div className="font-bold text-white">{formatCurrency(payload[0].value as number)}</div>
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
+        <Legend 
+          verticalAlign="top"
+          height={36}
+          content={({ payload }) => (
+            <div className="flex items-center justify-center text-sm text-gray-300 mb-4">
+              <div className="flex items-center mr-4">
+                <div className="h-3 w-3 mr-1 rounded-full bg-[#f59e0b]"></div>
+                <span>Valor Estimado</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 mr-1 rounded-full bg-gray-500"></div>
+                <span>Valor de Aquisição</span>
+              </div>
+            </div>
+          )}
+        />
         <Line 
           type="monotone" 
           dataKey="value" 
           name="Valor Estimado" 
-          stroke="#f59e0b" 
-          strokeWidth={2}
-          dot={{ stroke: '#f59e0b', strokeWidth: 2, r: 4, fill: '#111' }}
-          activeDot={{ stroke: '#f59e0b', strokeWidth: 2, r: 6, fill: '#111' }}
-          fillOpacity={1} 
+          stroke="var(--color-value, #f59e0b)" 
+          strokeWidth={3}
+          dot={{ stroke: "var(--color-value, #f59e0b)", strokeWidth: 2, r: 4, fill: '#1f2937' }}
+          activeDot={{ stroke: "var(--color-value, #f59e0b)", strokeWidth: 2, r: 6, fill: '#1f2937' }}
+          fillOpacity={0.2} 
           fill="url(#colorValue)" 
         />
-        <ReferenceLine y={480000} label="Valor de Aquisição" stroke="#888" strokeDasharray="3 3" />
+        <ReferenceLine 
+          y={480000} 
+          label={{ 
+            value: "Valor de Aquisição",
+            position: "right",
+            fill: "var(--color-referenceValue, #94a3b8)",
+            fontSize: 12
+          }} 
+          stroke="var(--color-referenceValue, #94a3b8)" 
+          strokeDasharray="3 3" 
+        />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 };
 

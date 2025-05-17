@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 
 interface CompanyChartProps {
   chartType?: 'dividends' | 'valuation';
@@ -55,65 +56,142 @@ const CompanyChart: React.FC<CompanyChartProps> = ({ chartType = 'dividends' }) 
     switch (chartType) {
       case 'valuation':
         return (
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer
+            config={{
+              value: {
+                theme: {
+                  light: "#10b981",
+                  dark: "#10b981",
+                }
+              }
+            }}
+            className="aspect-[4/3] w-full h-full"
+          >
             <LineChart data={valuationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <defs>
                 <linearGradient id="colorValuation" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="5%" stopColor="var(--color-value, #10b981)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-value, #10b981)" stopOpacity={0.2} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="year" stroke="#aaa" />
-              <YAxis stroke="#aaa" tickFormatter={formatCurrency} />
-              <Tooltip 
-                formatter={(value: number) => [formatCurrency(value), 'Valor']}
-                contentStyle={{ 
-                  backgroundColor: '#2a2a2a', 
-                  borderColor: '#444',
-                  color: '#fff'
-                }} 
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis 
+                dataKey="year" 
+                stroke="rgba(255,255,255,0.5)" 
+                tickLine={false}
+                axisLine={false}
               />
-              <Legend />
+              <YAxis 
+                stroke="rgba(255,255,255,0.5)" 
+                tickFormatter={formatCurrency} 
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip 
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border border-gray-800 bg-gray-900 p-2 shadow-md">
+                        <p className="text-sm text-gray-300 mb-1">{label}</p>
+                        <p className="text-white font-bold">{formatCurrency(payload[0].value as number)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend 
+                verticalAlign="top"
+                height={36}
+                content={() => (
+                  <div className="flex items-center justify-center text-sm text-gray-300 mb-4">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 mr-1 rounded-full bg-[#10b981]"></div>
+                      <span>Valor da Participação</span>
+                    </div>
+                  </div>
+                )}
+              />
               <Line 
                 type="monotone" 
                 dataKey="value" 
                 name="Valor da Participação" 
-                stroke="#10b981" 
-                strokeWidth={2}
-                dot={{ stroke: '#10b981', strokeWidth: 2, r: 4, fill: '#111' }}
-                activeDot={{ stroke: '#10b981', strokeWidth: 2, r: 6, fill: '#111' }}
-                fillOpacity={1} 
+                stroke="var(--color-value, #10b981)" 
+                strokeWidth={3}
+                dot={{ stroke: "var(--color-value, #10b981)", strokeWidth: 2, r: 4, fill: '#1f2937' }}
+                activeDot={{ stroke: "var(--color-value, #10b981)", strokeWidth: 2, r: 6, fill: '#1f2937' }}
+                fillOpacity={0.2} 
                 fill="url(#colorValuation)" 
               />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         );
       default: // dividends
         return (
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer
+            config={{
+              value: {
+                theme: {
+                  light: "#10b981",
+                  dark: "#10b981",
+                }
+              }
+            }}
+            className="aspect-[4/3] w-full h-full"
+          >
             <BarChart data={dividendsData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <defs>
                 <linearGradient id="colorDividends" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="5%" stopColor="var(--color-value, #10b981)" stopOpacity={1} />
+                  <stop offset="95%" stopColor="var(--color-value, #10b981)" stopOpacity={0.4} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="period" stroke="#aaa" />
-              <YAxis stroke="#aaa" tickFormatter={formatCurrency} />
-              <Tooltip 
-                formatter={(value: number) => [formatCurrency(value), 'Dividendos']}
-                contentStyle={{ 
-                  backgroundColor: '#2a2a2a', 
-                  borderColor: '#444',
-                  color: '#fff'
-                }} 
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis 
+                dataKey="period" 
+                stroke="rgba(255,255,255,0.5)" 
+                tickLine={false}
+                axisLine={false}
               />
-              <Legend />
-              <Bar dataKey="value" name="Dividendos Recebidos" fill="url(#colorDividends)" />
+              <YAxis 
+                stroke="rgba(255,255,255,0.5)" 
+                tickFormatter={formatCurrency} 
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip 
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border border-gray-800 bg-gray-900 p-2 shadow-md">
+                        <p className="text-sm text-gray-300 mb-1">{label}</p>
+                        <p className="text-white font-bold">{formatCurrency(payload[0].value as number)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend 
+                verticalAlign="top"
+                height={36}
+                content={() => (
+                  <div className="flex items-center justify-center text-sm text-gray-300 mb-4">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 mr-1 rounded-full bg-[#10b981]"></div>
+                      <span>Dividendos Recebidos</span>
+                    </div>
+                  </div>
+                )}
+              />
+              <Bar 
+                dataKey="value" 
+                name="Dividendos Recebidos" 
+                fill="url(#colorDividends)" 
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         );
     }
   };

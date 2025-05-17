@@ -125,7 +125,7 @@ const Members = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton 
                     isActive={activeTab === 'assets'} 
-                    onClick={() => setActiveTab('assets')}
+                    onClick={() => navigate('/assets')}
                     tooltip="Ativos"
                   >
                     <BarChart2 />
