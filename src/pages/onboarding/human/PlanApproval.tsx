@@ -133,7 +133,7 @@ const PlanApproval = () => {
       toast({
         title: "Todos os documentos essenciais assinados!",
         description: "Você pode prosseguir para finalizar o processo.",
-        variant: "success",
+        variant: "default", // Changed from "success" to "default"
       });
     }
   };
