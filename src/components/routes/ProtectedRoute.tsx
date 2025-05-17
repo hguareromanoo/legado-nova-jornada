@@ -21,7 +21,7 @@ const ProtectedRoute = () => {
       'selection': '/onboarding',
       'chat': '/onboarding/chat',
       'schedule': '/onboarding/schedule',
-      'documents': '/document-collection',
+      'documents': '/members', // Redirecting to members page instead of document-collection
       'review': '/document-review'
     };
     

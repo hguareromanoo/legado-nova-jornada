@@ -20,7 +20,6 @@ import Cadastro from "./pages/Cadastro";
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
 import OnboardingChat from "./pages/onboarding/OnboardingChat";
 import ScheduleConsultant from "./pages/ScheduleConsultant";
-import DocumentCollection from "./pages/onboarding/DocumentCollection";
 import DocumentReview from "./pages/onboarding/DocumentReview";
 
 // Human Onboarding Flow
@@ -32,7 +31,7 @@ import PlanApproval from "./pages/onboarding/human/PlanApproval";
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
-import Assets from "./pages/Assets"; // Using the more comprehensive Assets page
+import Assets from "./pages/Assets";
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
 import Members from "./pages/Members";
@@ -69,7 +68,6 @@ const App = () => (
                 <Route path="/onboarding/human/portal" element={<HumanPortal />} />
                 <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
                 
-                <Route path="/document-collection" element={<DocumentCollection />} />
                 <Route path="/document-review" element={<DocumentReview />} />
               </Route>
               
@@ -83,8 +81,9 @@ const App = () => (
                 <Route path="/assistant" element={<Assistant />} />
               </Route>
               
-              {/* Legacy route redirect */}
-              <Route path="/document-opening" element={<Navigate to="/document-collection" replace />} />
+              {/* Legacy route redirects */}
+              <Route path="/document-collection" element={<Navigate to="/members" replace />} />
+              <Route path="/document-opening" element={<Navigate to="/members" replace />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

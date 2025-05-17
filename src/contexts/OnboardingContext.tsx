@@ -41,7 +41,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     { id: 'selection', name: 'Escolha de Onboarding', completed: false, path: '/onboarding' },
     { id: 'chat', name: 'Chat com IA', completed: false, path: '/onboarding/chat' },
     { id: 'schedule', name: 'Agendamento Consultor', completed: false, path: '/onboarding/schedule' },
-    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/document-collection' },
+    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/members' }, // Atualizando para o novo caminho
     { id: 'review', name: 'Revisão de Documentos', completed: false, path: '/document-review' }
   ]);
   
@@ -82,71 +82,44 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('onboardingSteps', JSON.stringify(steps));
   }, [path, currentStep, documents, steps]);
   
-  const setOnboardingPath = (newPath: OnboardingPathType) => {
-    setPath(newPath);
-    
-    // Update steps based on path
-    if (newPath === 'ai') {
-      // AI path: selection -> chat -> documents -> review
-      setSteps(prevSteps => {
-        return prevSteps.map(step => ({
-          ...step,
-          completed: step.id === 'selection' ? true : step.completed
-        }));
-      });
-      setCurrentStep('chat');
-    } else if (newPath === 'human') {
-      // Human path: selection -> schedule -> documents -> review
-      setSteps(prevSteps => {
-        return prevSteps.map(step => ({
-          ...step,
-          completed: step.id === 'selection' ? true : step.completed
-        }));
-      });
-      setCurrentStep('schedule');
-    }
-  };
-  
+  // Function to mark a step as completed
   const completeStep = (stepId: string) => {
-    // Mark the current step as completed
     setSteps(prevSteps => {
-      return prevSteps.map(step => ({
-        ...step,
-        completed: step.id === stepId ? true : step.completed
-      }));
-    });
-    
-    // Determine next step based on path
-    if (stepId === 'chat' || stepId === 'schedule') {
-      setCurrentStep('documents');
-    } else if (stepId === 'documents') {
-      setCurrentStep('review');
-    }
-  };
-  
-  const moveToStep = (stepId: string) => {
-    // Only allow moving to a step if previous steps are completed
-    const stepIndex = steps.findIndex(step => step.id === stepId);
-    const previousStepsCompleted = steps
-      .slice(0, stepIndex)
-      .every(step => step.completed || (path === 'ai' && step.id === 'schedule') || (path === 'human' && step.id === 'chat'));
-    
-    if (previousStepsCompleted) {
-      setCurrentStep(stepId);
-    }
-  };
-  
-  const updateDocumentStatus = (documentId: string, status: DocumentStatus['status']) => {
-    setDocuments(prevDocs => {
-      return prevDocs.map(doc => {
-        if (doc.id === documentId) {
-          return { ...doc, status };
+      const updatedSteps = prevSteps.map(step => {
+        if (step.id === stepId) {
+          return { ...step, completed: true };
         }
-        return doc;
+        return step;
       });
+      
+      // Find the next uncompleted step
+      const nextStep = updatedSteps.find(step => !step.completed);
+      if (nextStep) {
+        // Move to the next step
+        setCurrentStep(nextStep.id);
+        localStorage.setItem('onboardingStep', nextStep.id);
+      }
+      
+      return updatedSteps;
     });
   };
   
+  // Function to move to a specific step
+  const moveToStep = (stepId: string) => {
+    setCurrentStep(stepId);
+    localStorage.setItem('onboardingStep', stepId);
+  };
+  
+  // Function to update the status of a document
+  const updateDocumentStatus = (documentId: string, status: DocumentStatus['status']) => {
+    setDocuments(prevDocs => 
+      prevDocs.map(doc => 
+        doc.id === documentId ? { ...doc, status } : doc
+      )
+    );
+  };
+  
+  // Function to add a new document
   const uploadDocument = (document: Omit<DocumentStatus, 'status' | 'uploadDate'>) => {
     const newDocument: DocumentStatus = {
       ...document,
@@ -154,32 +127,18 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       uploadDate: new Date()
     };
     
-    setDocuments(prevDocs => {
-      // Check if document already exists
-      const exists = prevDocs.some(doc => doc.id === document.id);
-      
-      if (exists) {
-        return prevDocs.map(doc => {
-          if (doc.id === document.id) {
-            return newDocument;
-          }
-          return doc;
-        });
-      } else {
-        return [...prevDocs, newDocument];
-      }
-    });
+    setDocuments(prevDocs => [...prevDocs, newDocument]);
   };
   
   return (
-    <OnboardingContext.Provider
-      value={{
+    <OnboardingContext.Provider 
+      value={{ 
         currentStep,
-        path,
+        path, 
         documents,
         progress,
         steps,
-        setPath: setOnboardingPath,
+        setPath,
         completeStep,
         moveToStep,
         updateDocumentStatus,
@@ -191,7 +150,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useOnboarding = (): OnboardingContextType => {
+export const useOnboarding = () => {
   const context = useContext(OnboardingContext);
   if (context === undefined) {
     throw new Error('useOnboarding must be used within an OnboardingProvider');
