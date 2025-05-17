@@ -14,7 +14,7 @@ const Cadastro = () => {
   return (
     <div className="min-h-screen w-full flex">
       {/* Right Column - 5/12 width (changed from 7/12) */}
-      <div className="w-full md:w-7/12 flex items-center justify-center p-6 md:p-12">
+      <div className="w-full md:w-5/12 flex items-center justify-center p-6 md:p-12">
         <div className="max-w-md w-full">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-w1-primary-dark mb-6">
@@ -177,7 +177,7 @@ const Cadastro = () => {
       </div>
       
       {/* Left Column - 7/12 width (changed from 5/12) */}
-      <div className="hidden md:flex w-5/12 relative">
+      <div className="hidden md:flex w-7/12 relative">
         {/* Updated background with gradient overlay */}
         <div 
           className="absolute inset-0 z-0" 
