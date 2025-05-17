@@ -20,13 +20,20 @@ const Index = () => {
     // Update the document title when the component mounts
     document.title = "W1 Consultoria Patrimonial | Simulação de Holding";
     
-    // Check if the user is logged in and has started the onboarding process
-    const hasStartedOnboarding = localStorage.getItem('hasStartedOnboarding');
+    // Check if the user is logged in 
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     
-    if (isLoggedIn === 'true' && hasStartedOnboarding === 'true') {
-      // Redirect to documents collection page
-      navigate('/documents');
+    if (isLoggedIn === 'true') {
+      // Check if the user has completed the holding setup
+      const isSetupCompleted = localStorage.getItem('holdingSetupCompleted') === 'true';
+      
+      if (isSetupCompleted) {
+        // If setup is completed, redirect to members dashboard
+        navigate('/members');
+      } else {
+        // If not completed, redirect to document opening process
+        navigate('/document-opening');
+      }
     }
   }, [navigate]);
 
