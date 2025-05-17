@@ -54,7 +54,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="flex items-center justify-center"
           >
             <Button 
               size="lg" 
@@ -64,17 +64,6 @@ const Hero = () => {
               <Link to="/simulation">
                 Faça simulação de holding
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            
-            <Button 
-              size="lg" 
-              variant="w1Secondary" 
-              className="text-lg px-8 py-6 h-auto font-semibold" 
-              asChild
-            >
-              <Link to="/cadastro">
-                Cadastre-se
               </Link>
             </Button>
           </motion.div>

@@ -70,7 +70,7 @@ const Navbar = () => {
                 className="bg-w1-primary-accent text-w1-primary-dark hover:bg-w1-primary-accent-hover"
                 asChild
               >
-                <Link to="/simulation">Simulação</Link>
+                <Link to="/cadastro">Cadastre-se</Link>
               </Button>
             </>
           )}
@@ -120,7 +120,7 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                   asChild
                 >
-                  <Link to="/simulation">Simulação</Link>
+                  <Link to="/cadastro">Cadastre-se</Link>
                 </Button>
               </>
             )}
