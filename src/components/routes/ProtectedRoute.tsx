@@ -6,29 +6,15 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 const ProtectedRoute = () => {
   const { isLoggedIn, hasCompletedOnboarding } = useUser();
 
-  // If not logged in, redirect to login
+  // Se não estiver logado, redirecionar para login
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
   
-  // If logged in but onboarding not complete, redirect to appropriate step
-  if (!hasCompletedOnboarding) {
-    // Get the current onboarding step from localStorage or context
-    const currentStep = localStorage.getItem('onboardingStep') || 'selection';
-    
-    // Map steps to routes
-    const stepRoutes: Record<string, string> = {
-      'selection': '/onboarding',
-      'chat': '/onboarding/chat',
-      'documents': '/members',
-      'review': '/document-review'
-    };
-    
-    const redirectTo = stepRoutes[currentStep] || '/onboarding';
-    return <Navigate to={redirectTo} replace />;
-  }
+  // Em vez de redirecionar para etapas de onboarding, vamos mostrar o modo de preview
+  // com dados mock para todos os usuários, mesmo que não tenham completado o onboarding
   
-  // If logged in and onboarding complete, render the protected route with dashboard layout
+  // Renderizamos o layout do dashboard com o conteúdo protegido
   return (
     <DashboardLayout>
       <Outlet />

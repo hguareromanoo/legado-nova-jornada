@@ -60,6 +60,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { id: 'settings', label: 'Configurações', icon: <Settings />, path: '/settings' },
   ];
   
+  const userName = user?.name ? user.name.split(' ')[0] : 'Visitante';
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -67,7 +69,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <SidebarHeader>
             <div className="p-4">
               <h2 className="text-xl font-bold text-white">W1 Consultoria</h2>
-              <p className="text-sm text-gray-400">Área de Membros</p>
+              <p className="text-sm text-gray-300">Área de Membros</p>
             </div>
           </SidebarHeader>
           
@@ -129,16 +131,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         
         <SidebarInset className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
           <div className="p-6">
-            <header className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {menuItems.find(item => item.id === activeMenu)?.label || 'Dashboard'}
-                </h1>
-                <p className="text-gray-400">
-                  {user?.name ? `Bem-vindo, ${user.name.split(' ')[0]}` : 'Bem-vindo à sua holding'}
-                </p>
+            {/* Header com destaque para a saudação */}
+            <header className="mb-8">
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/30">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-3xl font-bold text-white mb-1">Olá, {userName} 👋</h1>
+                    <p className="text-lg text-gray-300">
+                      Bem-vindo à sua dashboard de gestão patrimonial
+                    </p>
+                  </div>
+                  <SidebarTrigger />
+                </div>
               </div>
-              <SidebarTrigger />
             </header>
             
             <main>

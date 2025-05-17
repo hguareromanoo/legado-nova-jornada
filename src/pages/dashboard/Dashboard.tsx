@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -86,14 +85,30 @@ const Dashboard = () => {
     }).format(value);
   };
   
+  // Aviso de modo preview para usuários que não completaram onboarding
+  const isPreviewMode = !localStorage.getItem('holdingSetupCompleted');
+  
   return (
     <div>
+      {isPreviewMode && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 bg-blue-500/20 p-4 rounded-lg border border-blue-500/40"
+        >
+          <h3 className="text-lg font-medium text-white mb-1">Modo Preview</h3>
+          <p className="text-gray-300">
+            Esta é uma visualização prévia do seu dashboard. Complete o processo de onboarding para acessar todas as funcionalidades.
+          </p>
+        </motion.div>
+      )}
+      
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h2 className="text-xl font-semibold mb-4">Visão Geral</h2>
+        <h2 className="text-xl font-semibold mb-4 text-white">Visão Geral</h2>
       </motion.div>
       
       <motion.div 
@@ -118,7 +133,7 @@ const Dashboard = () => {
             </button>
           </div>
           <h3 className="text-3xl font-bold text-white mb-1">{formatCurrency(assets.total)}</h3>
-          <p className="text-gray-400 text-sm mb-4">Patrimônio total</p>
+          <p className="text-gray-300 text-sm mb-4">Patrimônio total</p>
           <div className="flex items-center text-sm">
             <span className={`flex items-center ${assets.growth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -126,7 +141,7 @@ const Dashboard = () => {
               </svg>
               {Math.abs(assets.growth)}%
             </span>
-            <span className="text-gray-400 ml-2">este mês</span>
+            <span className="text-gray-300 ml-2">este mês</span>
           </div>
         </div>
         
@@ -201,7 +216,7 @@ const Dashboard = () => {
           className="lg:col-span-2"
         >
           <div className="mb-6 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Ativos principais</h2>
+            <h2 className="text-xl font-semibold text-white">Ativos principais</h2>
             <Button 
               variant="outline"
               className="text-white border-gray-700 hover:bg-gray-700"
@@ -269,7 +284,7 @@ const Dashboard = () => {
           className="lg:col-span-1"
         >
           <div className="mb-6">
-            <h2 className="text-xl font-semibold">Próximos Passos</h2>
+            <h2 className="text-xl font-semibold text-white">Próximos Passos</h2>
           </div>
           
           <div className="space-y-4">
