@@ -106,7 +106,7 @@ const Cadastro = () => {
           
           {/* Copywriting */}
           <div className="mb-20">
-            <h1 className="text-4xl md:text-5xl font-light leading-tight mb-6">
+            <h1 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
               Sinta a sensação de <span className="font-bold text-w1-primary-accent">transformar cada um dos seus objetivos em conquistas</span>
             </h1>
           </div>
