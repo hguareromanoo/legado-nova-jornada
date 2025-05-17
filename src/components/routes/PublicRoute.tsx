@@ -24,7 +24,7 @@ const PublicRoute = () => {
       'review': '/document-review'
     };
     
-    const redirectTo = stepRoutes[currentStep] || '/onboarding';
+    const redirectTo = stepRoutes[currentStep] || '/document-collection';
     return <Navigate to={redirectTo} replace />;
   }
   

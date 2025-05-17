@@ -49,9 +49,20 @@ const Login = () => {
     if (hasCompletedOnboarding) {
       navigate('/dashboard');
     } else {
-      // Set initial onboarding step explicitly
-      localStorage.setItem('onboardingStep', 'selection');
-      navigate('/document-collection');
+      // Get current step or set to selection as default
+      const currentStep = localStorage.getItem('onboardingStep') || 'selection';
+      
+      // Map steps to routes
+      const stepRoutes = {
+        'selection': '/onboarding',
+        'chat': '/onboarding/chat', 
+        'schedule': '/onboarding/schedule',
+        'documents': '/document-collection',
+        'review': '/document-review'
+      };
+      
+      // Navigate to the appropriate step
+      navigate(stepRoutes[currentStep as keyof typeof stepRoutes] || '/document-collection');
     }
   };
 
@@ -80,7 +91,7 @@ const Login = () => {
       description: "Redirecionando para o processo de onboarding...",
     });
 
-    // Explicitly set initial onboarding step for new users
+    // Set initial onboarding step and navigate to document collection
     localStorage.setItem('onboardingStep', 'selection');
     navigate('/document-collection');
   };
