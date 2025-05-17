@@ -48,6 +48,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     // Check if onboarding was already completed
     const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
     setHasCompletedOnboarding(completed);
+    
+    // Set default onboarding step if not set
+    if (!localStorage.getItem('onboardingStep')) {
+      localStorage.setItem('onboardingStep', 'selection');
+    }
   };
   
   const logout = () => {

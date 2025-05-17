@@ -42,15 +42,14 @@ const Login = () => {
       description: "Redirecionando...",
     });
     
-    // Navigate to onboarding or dashboard based on user status
-    const hasStartedOnboarding = localStorage.getItem('hasStartedOnboarding');
-    const hasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted');
+    // Navigate based on user's onboarding status
+    const hasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted') === 'true';
     
-    if (hasCompletedOnboarding === 'true') {
+    if (hasCompletedOnboarding) {
       navigate('/dashboard');
-    } else if (hasStartedOnboarding === 'true') {
-      navigate('/document-collection');
     } else {
+      // Set initial onboarding step explicitly
+      localStorage.setItem('onboardingStep', 'selection');
       navigate('/onboarding');
     }
   };
@@ -80,7 +79,8 @@ const Login = () => {
       description: "Redirecionando para o processo de onboarding...",
     });
 
-    // New users always start with onboarding
+    // Explicitly set initial onboarding step for new users
+    localStorage.setItem('onboardingStep', 'selection');
     navigate('/onboarding');
   };
 

@@ -14,6 +14,8 @@ const PublicRoute = () => {
   // If logged in but not completed onboarding, redirect to appropriate onboarding step
   if (isLoggedIn && !hasCompletedOnboarding) {
     const currentStep = localStorage.getItem('onboardingStep') || 'selection';
+    
+    // Map steps to routes
     const stepRoutes: Record<string, string> = {
       'selection': '/onboarding',
       'chat': '/onboarding/chat',

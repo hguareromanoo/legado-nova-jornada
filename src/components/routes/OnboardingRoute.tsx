@@ -16,7 +16,7 @@ const OnboardingRoute = () => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Check if current path matches the current onboarding step
+  // Get current onboarding step - default to 'selection' if not set
   const currentStep = localStorage.getItem('onboardingStep') || 'selection';
   const currentPath = window.location.pathname;
   
@@ -29,13 +29,16 @@ const OnboardingRoute = () => {
     'review': ['/document-review']
   };
   
-  // If the current path is not allowed for the current step, redirect
+  // Get allowed paths for current step
   const allowedPaths = stepPaths[currentStep] || ['/onboarding'];
-  if (!allowedPaths.some(path => currentPath.startsWith(path))) {
+  
+  // Only redirect if current path doesn't match allowed paths and we're not on a general onboarding path
+  if (!allowedPaths.some(path => currentPath.startsWith(path)) && 
+      !currentPath.startsWith('/onboarding/human')) {
     return <Navigate to={allowedPaths[0]} replace />;
   }
   
-  // If logged in but not completed onboarding, render the onboarding route with onboarding layout
+  // Render the onboarding layout with the current step
   return (
     <OnboardingLayout>
       <Outlet />
