@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import ChatBubble from '@/components/chat/ChatBubble';
 import ChatInput from '@/components/chat/ChatInput';
 import ProgressTracker from '@/components/chat/ProgressTracker';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 // Define message types
 interface Message {
@@ -28,6 +29,7 @@ interface Message {
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
+  const { completeStep } = useOnboarding();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [userResponses, setUserResponses] = useState<Record<string, any>>({});
@@ -163,8 +165,14 @@ const OnboardingChat = () => {
       if (nextStep < questions.length) {
         setMessages(prev => [...prev, questions[nextStep]]);
       } else {
-        // Navigate to the document collection page when all questions are answered
-        navigate('/documents');
+        // Marca que o chat foi concluído e atualiza para o próximo passo
+        localStorage.setItem('onboardingStep', 'documents');
+        
+        // Mark the chat step as complete in the onboarding context
+        completeStep('chat');
+        
+        // Navega para a página correta de coleta de documentos
+        navigate('/document-collection');
       }
     }, 1000);
   };

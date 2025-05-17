@@ -92,6 +92,9 @@ const DocumentCollection = () => {
     setTimeout(() => {
       const allCompleted = documents.length === currentStep + 1;
       if (allCompleted) {
+        // Set the flag for completed onboarding
+        localStorage.setItem('holdingSetupCompleted', 'true');
+        
         toast({
           title: "Todos os documentos enviados!",
           description: "Parabéns! Vamos prosseguir para a revisão dos documentos.",

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -9,10 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from '@/hooks/use-toast';
 import VerticalRoadmap, { RoadmapStep } from '@/components/VerticalRoadmap';
 import ChatModal from '@/components/ChatModal';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const DocumentCollection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { completeStep } = useOnboarding();
+  
   const [documents, setDocuments] = useState<RoadmapStep[]>([
     { 
       id: 'id', 
@@ -89,11 +91,19 @@ const DocumentCollection = () => {
     setTimeout(() => {
       const allCompleted = documents.length === currentStep + 1;
       if (allCompleted) {
+        // Set the flag for completed onboarding
+        localStorage.setItem('holdingSetupCompleted', 'true');
+        
         toast({
           title: "Todos os documentos enviados!",
           description: "Parabéns! Vamos agendar sua reunião com um consultor.",
         });
-        navigate('/onboarding/schedule');
+        
+        // Complete the documents step in the onboarding context
+        completeStep('documents');
+        
+        // Navigate to document review
+        navigate('/document-review');
       }
     }, 1000);
   };

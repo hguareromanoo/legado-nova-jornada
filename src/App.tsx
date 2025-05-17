@@ -14,11 +14,11 @@ import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Cadastro from "./pages/Cadastro"; // Add the new Cadastro page
+import Cadastro from "./pages/Cadastro";
 
 // Onboarding Flow
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
-import OnboardingChat from "./pages/OnboardingChat";
+import OnboardingChat from "./pages/onboarding/OnboardingChat";
 import ScheduleConsultant from "./pages/ScheduleConsultant";
 import DocumentCollection from "./pages/onboarding/DocumentCollection";
 import DocumentReview from "./pages/onboarding/DocumentReview";
@@ -53,7 +53,7 @@ const App = () => (
                 <Route path="/simulation" element={<SimulationIntro />} />
                 <Route path="/simulation-questions" element={<Simulation />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/cadastro" element={<Cadastro />} /> {/* Add the new Cadastro route */}
+                <Route path="/cadastro" element={<Cadastro />} />
               </Route>
               
               {/* Onboarding Routes - Accessible only during onboarding process */}
