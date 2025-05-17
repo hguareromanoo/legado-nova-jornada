@@ -10,6 +10,7 @@ import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/route
 
 // Public Pages
 import Index from "./pages/Index";
+import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -30,7 +31,7 @@ import PlanApproval from "./pages/onboarding/human/PlanApproval";
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
-import Assets from "./pages/dashboard/Assets"; // Using the dedicated Assets component
+import Assets from "./pages/dashboard/Assets";
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
 
@@ -48,7 +49,8 @@ const App = () => (
               {/* Public Routes */}
               <Route element={<PublicRoute />}>
                 <Route path="/" element={<Index />} />
-                <Route path="/simulation" element={<Simulation />} />
+                <Route path="/simulation" element={<SimulationIntro />} />
+                <Route path="/simulation-questions" element={<Simulation />} />
                 <Route path="/login" element={<Login />} />
               </Route>
               
