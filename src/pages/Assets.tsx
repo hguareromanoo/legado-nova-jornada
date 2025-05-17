@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -32,6 +31,10 @@ import AssetOverview from '@/components/assets/AssetOverview';
 import AssetDetails from '@/components/assets/AssetDetails';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import NewAssetForm from '@/components/assets/NewAssetForm';
+import AssetValueChart from '@/components/assets/charts/AssetValueChart';
+import AssetDonutChart from '@/components/assets/charts/AssetDonutChart';
+import { useToast } from '@/hooks/use-toast';
 
 export type AssetType = 'imoveis' | 'investimentos' | 'participacoes' | 'outros' | 'todos';
 
@@ -58,6 +61,7 @@ export interface Asset {
   participationPercentage?: number;
   description?: string;
   serialNumber?: string;
+  documents?: {name: string, uploaded: boolean}[];
 }
 
 // Mock data for the assets
@@ -185,7 +189,10 @@ const mockAssets: Asset[] = [
 const Assets = () => {
   const [activeTab, setActiveTab] = useState('todos');
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [assets, setAssets] = useState<Asset[]>(mockAssets);
+  const [isAddingAsset, setIsAddingAsset] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = () => {
     navigate('/');
@@ -199,30 +206,46 @@ const Assets = () => {
     setSelectedAsset(null);
   };
 
-  const filteredAssets = activeTab === 'todos' 
-    ? mockAssets 
-    : mockAssets.filter(asset => asset.type === activeTab);
+  const handleAddAsset = (newAsset: Asset) => {
+    setAssets([newAsset, ...assets]);
+    toast({
+      title: "Ativo adicionado",
+      description: `${newAsset.name} foi adicionado com sucesso.`
+    });
+  };
 
-  const totalAssetValue = mockAssets.reduce((sum, asset) => sum + asset.value, 0);
+  const filteredAssets = activeTab === 'todos' 
+    ? assets 
+    : assets.filter(asset => asset.type === activeTab);
+
+  const totalAssetValue = assets.reduce((sum, asset) => sum + asset.value, 0);
   
   const assetsByType = {
     imoveis: {
-      total: mockAssets.filter(a => a.type === 'imoveis').reduce((sum, a) => sum + a.value, 0),
-      count: mockAssets.filter(a => a.type === 'imoveis').length
+      total: assets.filter(a => a.type === 'imoveis').reduce((sum, a) => sum + a.value, 0),
+      count: assets.filter(a => a.type === 'imoveis').length
     },
     investimentos: {
-      total: mockAssets.filter(a => a.type === 'investimentos').reduce((sum, a) => sum + a.value, 0),
-      count: mockAssets.filter(a => a.type === 'investimentos').length
+      total: assets.filter(a => a.type === 'investimentos').reduce((sum, a) => sum + a.value, 0),
+      count: assets.filter(a => a.type === 'investimentos').length
     },
     participacoes: {
-      total: mockAssets.filter(a => a.type === 'participacoes').reduce((sum, a) => sum + a.value, 0),
-      count: mockAssets.filter(a => a.type === 'participacoes').length
+      total: assets.filter(a => a.type === 'participacoes').reduce((sum, a) => sum + a.value, 0),
+      count: assets.filter(a => a.type === 'participacoes').length
     },
     outros: {
-      total: mockAssets.filter(a => a.type === 'outros').reduce((sum, a) => sum + a.value, 0),
-      count: mockAssets.filter(a => a.type === 'outros').length
+      total: assets.filter(a => a.type === 'outros').reduce((sum, a) => sum + a.value, 0),
+      count: assets.filter(a => a.type === 'outros').length
     }
   };
+
+  // Data for asset distribution donut chart
+  const assetDistributionData = [
+    { name: 'Imóveis', value: assetsByType.imoveis.total, color: '#9B87F5' },
+    { name: 'Investimentos', value: assetsByType.investimentos.total, color: '#33C3F0' },
+    { name: 'Participações', value: assetsByType.participacoes.total, color: '#10b981' },
+    { name: 'Outros', value: assetsByType.outros.total, color: '#E5DEFF' }
+  ];
 
   return (
     <SidebarProvider>
@@ -357,138 +380,20 @@ const Assets = () => {
               <AssetDetails asset={selectedAsset} onBack={handleBackToList} />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                  <div className="col-span-1 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl p-5 backdrop-blur-sm border border-blue-500/30">
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center">
-                        <div className="bg-blue-500/30 p-2 rounded-lg">
-                          <Building2 className="text-blue-300" />
-                        </div>
-                      </div>
-                      <button className="text-gray-400">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="10" cy="10" r="1" fill="currentColor" />
-                          <circle cx="10" cy="6" r="1" fill="currentColor" />
-                          <circle cx="10" cy="14" r="1" fill="currentColor" />
-                        </svg>
-                      </button>
-                    </div>
-                    <h3 className="text-3xl font-bold text-white mb-1">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAssetValue)}
-                    </h3>
-                    <p className="text-gray-400 text-sm mb-4">Patrimônio total</p>
-                    <div className="flex items-center text-sm">
-                      <span className="text-green-400 flex items-center">
-                        <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        8.34%
-                      </span>
-                      <span className="text-gray-400 ml-2">este mês</span>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {/* Asset Value Chart */}
+                  <AssetValueChart 
+                    title="Patrimônio Total" 
+                    subtitle={`R$ ${new Intl.NumberFormat('pt-BR').format(totalAssetValue)}`}
+                    growthPercentage={8.34}
+                    period="este mês"
+                  />
                   
-                  <div className="col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-gray-400 text-sm">Imóveis</div>
-                        <button className="text-gray-400">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="1" fill="currentColor" />
-                            <circle cx="10" cy="6" r="1" fill="currentColor" />
-                            <circle cx="10" cy="14" r="1" fill="currentColor" />
-                          </svg>
-                        </button>
-                      </div>
-                      <h3 className="text-2xl font-bold mb-3">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(assetsByType.imoveis.total)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">{assetsByType.imoveis.count} imóveis</span>
-                        <span className="text-green-400 text-sm flex items-center">
-                          <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          5.2%
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-gray-400 text-sm">Investimentos</div>
-                        <button className="text-gray-400">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="1" fill="currentColor" />
-                            <circle cx="10" cy="6" r="1" fill="currentColor" />
-                            <circle cx="10" cy="14" r="1" fill="currentColor" />
-                          </svg>
-                        </button>
-                      </div>
-                      <h3 className="text-2xl font-bold mb-3">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(assetsByType.investimentos.total)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">{assetsByType.investimentos.count} ativos</span>
-                        <span className="text-green-400 text-sm flex items-center">
-                          <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          12.8%
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-gray-400 text-sm">Participações</div>
-                        <button className="text-gray-400">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="1" fill="currentColor" />
-                            <circle cx="10" cy="6" r="1" fill="currentColor" />
-                            <circle cx="10" cy="14" r="1" fill="currentColor" />
-                          </svg>
-                        </button>
-                      </div>
-                      <h3 className="text-2xl font-bold mb-3">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(assetsByType.participacoes.total)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">{assetsByType.participacoes.count} empresas</span>
-                        <span className="text-green-400 text-sm flex items-center">
-                          <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 2.5V9.5M6 2.5L3 5.5M6 2.5L9 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          15.3%
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-800/30 p-5 rounded-2xl backdrop-blur-sm border border-gray-700/30">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-gray-400 text-sm">Outros</div>
-                        <button className="text-gray-400">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="1" fill="currentColor" />
-                            <circle cx="10" cy="6" r="1" fill="currentColor" />
-                            <circle cx="10" cy="14" r="1" fill="currentColor" />
-                          </svg>
-                        </button>
-                      </div>
-                      <h3 className="text-2xl font-bold mb-3">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(assetsByType.outros.total)}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">{assetsByType.outros.count} ativos</span>
-                        <span className="text-red-400 text-sm flex items-center">
-                          <svg className="w-3 h-3 mr-1" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9.5V2.5M6 9.5L3 6.5M6 9.5L9 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          5.2%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Asset Distribution Chart */}
+                  <AssetDonutChart 
+                    data={assetDistributionData} 
+                    title="Distribuição por Categoria"
+                  />
                 </div>
                 
                 <div className="mb-6 flex justify-between items-center">
@@ -517,7 +422,11 @@ const Assets = () => {
                           <Filter size={16} className="mr-1" />
                           Filtrar
                         </Button>
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        <Button 
+                          size="sm" 
+                          variant="blue" 
+                          onClick={() => setIsAddingAsset(true)}
+                        >
                           <Plus size={16} className="mr-1" />
                           Novo Ativo
                         </Button>
@@ -543,6 +452,12 @@ const Assets = () => {
                 </div>
               </>
             )}
+            
+            <NewAssetForm 
+              open={isAddingAsset} 
+              onClose={() => setIsAddingAsset(false)}
+              onSave={handleAddAsset}
+            />
           </div>
         </SidebarInset>
       </div>
