@@ -1,65 +1,86 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, CircleDollarSign, Shield, Clock, ArrowDownNarrow } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import PublicLayout from '@/layouts/PublicLayout';
 
 const SimulationIntro = () => {
   const navigate = useNavigate();
-
-  const handleStart = () => {
+  
+  const startSimulation = () => {
     navigate('/simulation-questions');
   };
-
+  
   return (
-    <PublicLayout>
-      <div className="w-full bg-w1-bg-light py-16 md:py-24">
-        <div className="w1-container">
-          <div className="flex flex-col md:flex-row items-center">
-            {/* Left side - Content */}
-            <motion.div 
-              className="w-full md:w-1/2 md:pr-12 mb-12 md:mb-0"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-w1-primary-dark mb-6 leading-tight">
-                Descubra o poder de uma <span className="text-w1-primary-accent">Holding Familiar</span>
-              </h1>
-              
-              <p className="text-lg md:text-xl text-w1-secondary-text mb-10 leading-relaxed">
-                Economize impostos, proteja seu patrimônio e planeje a sucessão de forma inteligente. 
-                Transforme seus objetivos em conquistas patrimoniais.
-              </p>
-              
-              <Button 
-                onClick={handleStart} 
-                size="lg"
-                className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark font-medium text-lg px-8 py-6 h-auto"
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-w1-primary-dark to-w1-secondary-dark text-white py-20">
+        <div className="w1-container max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            <div>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                Começar Simulação
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </motion.div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                  Descubra quanto você pode economizar com uma Holding Familiar
+                </h1>
+                
+                <p className="text-xl mb-8 text-white/80">
+                  Responda algumas perguntas simples e obtenha uma estimativa personalizada dos benefícios fiscais e sucessórios para seu patrimônio.
+                </p>
+                
+                <Button 
+                  onClick={startSimulation}
+                  size="lg"
+                  className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
+                >
+                  Iniciar simulação
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
+            </div>
             
-            {/* Right side - Image */}
             <motion.div 
-              className="w-full md:w-1/2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="hidden md:block"
             >
-              <div className="rounded-lg overflow-hidden shadow-lg">
-                <div className="relative">
-                  {/* Image with overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-w1-primary-dark/40 to-transparent z-10"></div>
-                  <img 
-                    src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80" 
-                    alt="Consultoria patrimonial especializada"
-                    className="w-full h-auto object-cover aspect-[4/3]"
-                  />
+              <div className="relative">
+                <div className="bg-white p-8 rounded-xl shadow-xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="bg-w1-primary-accent/20 p-3 rounded-full">
+                      <CircleDollarSign className="w-8 h-8 text-w1-primary-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-w1-primary-dark text-xl font-semibold">Simulação de economia</h3>
+                      <p className="text-gray-600">Holding Patrimonial</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-gray-500 mb-2">Economia estimada em 10 anos</p>
+                      <p className="text-4xl font-bold text-w1-primary-dark">R$ 850.000</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-500 mb-1">ITCMD</p>
+                        <p className="text-xl font-semibold text-w1-primary-dark">R$ 300.000</p>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-500 mb-1">IR anual</p>
+                        <p className="text-xl font-semibold text-w1-primary-dark">R$ 55.000</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="absolute -bottom-6 -right-6 bg-w1-primary-accent text-w1-primary-dark p-4 rounded-lg font-bold">
+                  Exemplo ilustrativo
                 </div>
               </div>
             </motion.div>
@@ -67,56 +88,108 @@ const SimulationIntro = () => {
         </div>
       </div>
       
-      {/* Benefits section */}
-      <div className="w-full bg-white py-16">
-        <div className="w1-container">
-          <h2 className="text-2xl md:text-3xl font-medium text-center mb-12">
-            Vantagens de uma <span className="text-w1-primary-accent">Holding Familiar</span>
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="w1-card">
-              <div className="w-12 h-12 bg-w1-primary-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-w1-primary-accent"><path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.93a2 2 0 0 0 1.94 0L21 12.51a2.12 2.12 0 0 0-.09-3.67Z"/><path d="m3.09 8.84 12.35-6.61a1.93 1.93 0 0 1 1.81 0l3.65 1.9a2.12 2.12 0 0 1 .1 3.69L8.73 14.75a2 2 0 0 1-1.94 0L3 12.51a2.12 2.12 0 0 1 .09-3.67Z"/><line x1="12" y1="22" x2="12" y2="13"/><path d="M20 13.5v3.37a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13.5"/></svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Economia Tributária</h3>
-              <p className="text-w1-secondary-text">
-                Reduza significativamente sua carga tributária sobre rendimentos de aluguel e transferência de bens.
-              </p>
-            </div>
-            
-            <div className="w1-card">
-              <div className="w-12 h-12 bg-w1-primary-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-w1-primary-accent"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Proteção Patrimonial</h3>
-              <p className="text-w1-secondary-text">
-                Proteja seus bens contra riscos comerciais, disputas judiciais e outros imprevistos.
-              </p>
-            </div>
-            
-            <div className="w1-card">
-              <div className="w-12 h-12 bg-w1-primary-accent/10 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-w1-primary-accent"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Sucessão Planejada</h3>
-              <p className="text-w1-secondary-text">
-                Evite conflitos familiares e custos judiciais com um planejamento sucessório eficiente.
-              </p>
-            </div>
+      {/* Benefits Section */}
+      <div className="py-20 bg-gray-50">
+        <div className="w1-container max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-w1-primary-dark mb-4">
+              Principais benefícios de uma Holding Patrimonial
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Uma holding familiar pode te ajudar a proteger seu patrimônio e garantir que ele seja transmitido conforme seus desejos.
+            </p>
           </div>
           
-          <div className="mt-12 text-center">
-            <Button
-              onClick={handleStart}
-              className="w1-button-primary text-base"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white p-8 rounded-xl shadow-sm"
             >
-              Simular minha economia <ArrowRight className="h-4 w-4 ml-1" />
+              <div className="bg-w1-primary-accent/20 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6">
+                <CircleDollarSign className="w-8 h-8 text-w1-primary-accent" />
+              </div>
+              <h3 className="text-xl font-semibold text-w1-primary-dark mb-3">
+                Economia fiscal
+              </h3>
+              <p className="text-gray-600">
+                Reduza significativamente sua carga tributária em aluguéis, ganho de capital e na transmissão de bens aos seus herdeiros.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white p-8 rounded-xl shadow-sm"
+            >
+              <div className="bg-w1-primary-accent/20 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6">
+                <Clock className="w-8 h-8 text-w1-primary-accent" />
+              </div>
+              <h3 className="text-xl font-semibold text-w1-primary-dark mb-3">
+                Sucessão simplificada
+              </h3>
+              <p className="text-gray-600">
+                Elimine o processo de inventário e transmita seus bens de forma planejada, rápida e com menor custo.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white p-8 rounded-xl shadow-sm"
+            >
+              <div className="bg-w1-primary-accent/20 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-6">
+                <Shield className="w-8 h-8 text-w1-primary-accent" />
+              </div>
+              <h3 className="text-xl font-semibold text-w1-primary-dark mb-3">
+                Proteção patrimonial
+              </h3>
+              <p className="text-gray-600">
+                Proteja seus bens de credores, processos judiciais e garanta que sejam transferidos conforme sua vontade.
+              </p>
+            </motion.div>
+          </div>
+          
+          <div className="flex justify-center mt-12">
+            <Button 
+              onClick={startSimulation}
+              variant="outline" 
+              size="lg"
+              className="border-w1-primary-dark text-w1-primary-dark hover:bg-w1-primary-dark/10"
+            >
+              Simular minha economia
+              <ArrowDownNarrow className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </div>
       </div>
-    </PublicLayout>
+      
+      {/* Final CTA */}
+      <div className="bg-w1-primary-dark py-16">
+        <div className="w1-container max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Comece sua simulação gratuita agora
+          </h2>
+          <p className="text-xl text-white/80 mb-8">
+            Descubra quanto você pode economizar e como proteger melhor seu patrimônio em apenas 3 minutos.
+          </p>
+          <Button 
+            onClick={startSimulation}
+            size="lg"
+            className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
+          >
+            Iniciar simulação
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+          <p className="text-sm text-white/60 mt-4">
+            Sem compromisso ou cadastro obrigatório
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

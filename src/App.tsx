@@ -12,6 +12,7 @@ import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/route
 import Index from "./pages/Index";
 import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
+import SimulationReport from "./pages/SimulationReport"; // Add import for new page
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Cadastro from "./pages/Cadastro";
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/simulation" element={<SimulationIntro />} />
                 <Route path="/simulation-questions" element={<Simulation />} />
+                <Route path="/simulation-report" element={<SimulationReport />} /> {/* Add new route */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
               </Route>

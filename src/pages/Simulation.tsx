@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CircleCheck, CircleDollarSign } from 'lucide-react';
+import { CircleCheck } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -25,12 +25,10 @@ const Simulation = () => {
     companyType: '',
     companyRevenue: '',
     goals: [],
-    email: '',
-    phone: '',
   });
   const [isComplete, setIsComplete] = useState(false);
   
-  const totalSteps = 9;
+  const totalSteps = 8; // Reduced from 9 since we removed the contact step
   const progress = (currentStep / totalSteps) * 100;
 
   const handleInputChange = (field, value) => {
@@ -61,6 +59,9 @@ const Simulation = () => {
   const nextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
+    } else {
+      // If this is the final step, handle submission
+      handleSubmit();
     }
   };
 
@@ -123,9 +124,9 @@ const Simulation = () => {
     // Here you would typically send the data to your backend
     console.log("Simulation data:", simulationData);
     
-    // Navigate to onboarding after a short delay to show the completion message
+    // Navigate to simulation report after a short delay to show the completion message
     setTimeout(() => {
-      navigate('/onboarding');
+      navigate('/simulation-report');
     }, 2000);
   };
 
@@ -230,17 +231,6 @@ const Simulation = () => {
                       onChange={(value) => handleMultiSelect('goals', value)} 
                     />
                   )}
-                  
-                  {currentStep === 9 && (
-                    <StepContact 
-                      email={simulationData.email}
-                      phone={simulationData.phone}
-                      onChange={(field, value) => handleInputChange(field, value)} 
-                      onSubmit={handleSubmit}
-                      savingsData={estimatedSavings}
-                      taxBreakdown={taxBreakdown}
-                    />
-                  )}
                 </Card>
               </motion.div>
             </AnimatePresence>
@@ -255,14 +245,12 @@ const Simulation = () => {
                 Voltar
               </Button>
               
-              {currentStep < totalSteps ? (
-                <Button 
-                  onClick={nextStep}
-                  className="bg-w1-primary-dark hover:bg-opacity-90"
-                >
-                  Próximo
-                </Button>
-              ) : null}
+              <Button 
+                onClick={nextStep}
+                className="bg-w1-primary-dark hover:bg-opacity-90"
+              >
+                {currentStep === totalSteps ? 'Concluir' : 'Próximo'}
+              </Button>
             </div>
           </>
         ) : (
@@ -272,7 +260,7 @@ const Simulation = () => {
             </div>
             <h2 className="text-2xl font-bold mb-2">Simulação Concluída!</h2>
             <p className="text-gray-600 mb-8">
-              Estamos analisando seus dados para preparar uma recomendação personalizada.
+              Estamos analisando seus dados para preparar um relatório personalizado.
             </p>
             <div className="animate-pulse">
               <p className="text-sm text-gray-500">Redirecionando...</p>
@@ -691,160 +679,6 @@ const StepGoals = ({ selectedGoals, onChange }) => {
           </div>
         ))}
       </div>
-    </div>
-  );
-};
-
-const StepContact = ({ email, phone, onChange, onSubmit, savingsData, taxBreakdown }) => {
-  return (
-    <div>
-      <div className="mb-6">
-        <div className="flex justify-center mb-4">
-          <div className="flex items-center justify-center w-16 h-16 bg-w1-primary-accent/20 rounded-full">
-            <CircleDollarSign className="w-8 h-8 text-w1-primary-accent" />
-          </div>
-        </div>
-        
-        <h2 className="text-xl font-semibold mb-2 text-w1-primary-dark text-center">
-          Potencial Identificado!
-        </h2>
-        <p className="text-center text-gray-600 mb-6">
-          Com base no seu perfil, uma holding familiar pode ajudar você a reduzir impostos, evitar custos legais futuros e planejar uma sucessão tranquila.
-        </p>
-      </div>
-      
-      {/* Savings Chart */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <h3 className="text-lg font-medium mb-3 text-w1-primary-dark">
-          Economia estimada nos próximos 10 anos
-        </h3>
-        
-        <div className="h-[240px] w-full">
-          <ChartContainer 
-            config={{
-              holding: {
-                label: "Com Holding",
-                color: "#0F4C81" // w1-primary-dark
-              },
-              noHolding: {
-                label: "Sem Holding",
-                color: "#E5E7EB" // gray-200
-              }
-            }}
-          >
-            <BarChart data={savingsData}>
-              <XAxis 
-                dataKey="year" 
-                tickFormatter={(value) => `${value.toString().slice(2)}`} 
-              />
-              <YAxis 
-                tickFormatter={(value) => {
-                  if (typeof value === 'number' || typeof value === 'bigint') {
-                    return new Intl.NumberFormat('pt-BR', {
-                      notation: 'compact',
-                      compactDisplay: 'short',
-                      style: 'currency',
-                      currency: 'BRL',
-                      maximumFractionDigits: 0,
-                    }).format(value);
-                  }
-                  return String(value);
-                }} 
-              />
-              <Tooltip 
-                content={<ChartTooltipContent />} 
-                formatter={(value) => {
-                  if (typeof value === 'number' || typeof value === 'bigint') {
-                    return new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                      maximumFractionDigits: 0,
-                    }).format(value);
-                  }
-                  return String(value);
-                }} 
-              />
-              <Legend />
-              <Bar dataKey="withHolding" name="Com Holding" fill="var(--color-holding)" />
-              <Bar dataKey="withoutHolding" name="Sem Holding" fill="var(--color-noHolding)" />
-            </BarChart>
-          </ChartContainer>
-        </div>
-      </div>
-      
-      {/* Tax Breakdown */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <p className="text-gray-600 text-sm">Economia em IRPF → IRPJ</p>
-            <p className="text-xl font-bold text-w1-primary-dark">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0,
-              }).format(taxBreakdown.incomeTax)}
-            </p>
-          </div>
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <p className="text-gray-600 text-sm">Economia em ITCMD</p>
-            <p className="text-xl font-bold text-w1-primary-dark">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0,
-              }).format(taxBreakdown.successionTax)}
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 bg-w1-primary-accent/10 p-3 rounded-lg">
-          <p className="text-sm text-gray-600">Economia total estimada</p>
-          <p className="text-2xl font-bold text-w1-primary-dark">
-            {new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-              maximumFractionDigits: 0,
-            }).format(taxBreakdown.total)}
-          </p>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => onChange('email', e.target.value)}
-            placeholder="seu@email.com"
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="phone">Telefone</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => onChange('phone', e.target.value)}
-            placeholder="(XX) XXXXX-XXXX"
-            className="mt-1"
-          />
-        </div>
-        
-        <Button
-          onClick={onSubmit}
-          className="w-full bg-w1-primary-dark hover:bg-opacity-90 mt-2"
-          disabled={!email || !phone}
-        >
-          Receber Meu Diagnóstico Detalhado
-        </Button>
-      </div>
-      
-      <p className="text-xs text-gray-500 mt-4 text-center">
-        Seus dados estão seguros e protegidos pela nossa política de privacidade.
-      </p>
     </div>
   );
 };
