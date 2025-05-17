@@ -1,11 +1,12 @@
 
-import React, { useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Upload, X, HelpCircle } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, Upload, HelpCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { RoadmapStep } from './VerticalRoadmap';
 import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
 
 interface DocumentUploadChatProps {
   document: RoadmapStep | null;
@@ -26,7 +27,28 @@ const DocumentUploadChat = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [messages, setMessages] = useState<Array<{type: 'assistant' | 'user', content: string}>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize the chat with a welcome message from the assistant
+  useEffect(() => {
+    if (document && messages.length === 0) {
+      setMessages([
+        {
+          type: 'assistant',
+          content: `Olá! Por favor, envie seu ${document.name} para continuarmos. Formatos aceitos: PDF, JPG, PNG`
+        }
+      ]);
+    }
+  }, [document, messages.length]);
+
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
   
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -34,6 +56,12 @@ const DocumentUploadChat = ({
     
     setIsUploading(true);
     setUploadedFile(file);
+    
+    // Add message that file is being uploaded
+    setMessages(prev => [...prev, {
+      type: 'user',
+      content: `Enviando arquivo: ${file.name}`
+    }]);
     
     // Simulate upload progress
     let progress = 0;
@@ -44,6 +72,12 @@ const DocumentUploadChat = ({
       if (progress >= 100) {
         clearInterval(interval);
         setIsUploading(false);
+        
+        // Add confirmation message from the assistant
+        setMessages(prev => [...prev, {
+          type: 'assistant',
+          content: `Recebi seu arquivo ${file.name}. Obrigado! Você pode prosseguir para o próximo documento ou concluir este.`
+        }]);
         
         toast({
           title: "✅ Documento recebido!",
@@ -66,65 +100,66 @@ const DocumentUploadChat = ({
   if (!document) return null;
   
   return (
-    <div className="flex flex-col h-full bg-gray-900">
+    <div className="flex flex-col h-full">
       {/* Chat header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-800">
+      <div className="flex justify-between items-center p-4 border-b border-w1-secondary-dark bg-w1-primary-dark">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-gray-400 hover:text-white hover:bg-gray-800">
+          <Button variant="ghost" size="icon" onClick={onBack} className="text-gray-400 hover:text-white hover:bg-w1-secondary-dark">
             <ArrowLeft size={18} />
           </Button>
-          <span className="font-medium text-white">Upload de Documento</span>
+          <div>
+            <h3 className="font-medium text-white">{document.name}</h3>
+            <p className="text-xs text-gray-400">{document.description}</p>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onNext} className="text-gray-400 hover:text-white hover:bg-gray-800">
-            <ArrowRight size={18} />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white hover:bg-gray-800">
-            <X size={18} />
-          </Button>
-        </div>
+        <Button variant="ghost" size="icon" onClick={onNext} className="text-gray-400 hover:text-white hover:bg-w1-secondary-dark">
+          <ArrowRight size={18} />
+        </Button>
       </div>
       
       {/* Chat window */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-900">
-        {/* Assistant message */}
-        <div className="flex gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center flex-shrink-0">
-            <span className="text-blue-300 font-bold">R</span>
-          </div>
-          <div className="bg-gray-800/80 p-4 rounded-lg rounded-tl-none shadow-sm max-w-[80%] text-white border border-gray-700/50">
-            <p className="text-gray-200">
-              Olá! Por favor, envie seu <strong>{document.name}</strong> para continuarmos.
-              <br /><br />
-              <span className="text-sm text-gray-400">{document.description}</span>
-              <br />
-              <span className="text-sm text-gray-500">Formatos aceitos: PDF, JPG, PNG</span>
-            </p>
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 bg-w1-primary-dark">
+        {messages.map((message, index) => (
+          <motion.div 
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-4"
+          >
+            {message.type === 'assistant' ? (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-w1-primary-accent/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-w1-primary-accent font-bold">R</span>
+                </div>
+                <div className="bg-w1-secondary-dark/50 p-3 rounded-lg rounded-tl-none max-w-[80%] text-white">
+                  {message.content}
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-end">
+                <div className="bg-w1-primary-accent/20 p-3 rounded-lg rounded-tr-none max-w-[80%] text-w1-primary-accent border border-w1-primary-accent/30">
+                  {message.content}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ))}
         
-        {/* Upload progress or completed message */}
+        {/* Upload progress */}
         {isUploading && (
-          <div className="bg-gray-800/50 p-4 rounded-lg shadow-sm mb-4 mx-auto max-w-md border border-gray-700/30">
+          <div className="bg-w1-secondary-dark/30 p-4 rounded-lg shadow-sm mb-4 mx-auto max-w-md border border-w1-secondary-dark/50">
             <p className="text-sm text-gray-300 mb-2">Enviando arquivo: {uploadedFile?.name}</p>
-            <Progress value={uploadProgress} className="h-2 bg-gray-700" />
+            <Progress value={uploadProgress} className="h-2 bg-gray-700" indicatorClassName="bg-w1-primary-accent" />
           </div>
         )}
         
-        {uploadedFile && !isUploading && (
-          <div className="flex justify-end mb-4">
-            <div className="bg-blue-600/20 p-3 rounded-lg rounded-tr-none max-w-[80%] border border-blue-500/30">
-              <p className="text-blue-300">
-                Documento enviado: {uploadedFile.name}
-              </p>
-            </div>
-          </div>
-        )}
+        <div ref={chatEndRef} />
       </div>
       
       {/* Upload area */}
-      <div className="p-4 border-t border-gray-800 bg-gray-900">
+      <div className="p-4 border-t border-w1-secondary-dark bg-w1-primary-dark">
         <div className="flex flex-col gap-3">
           <input
             ref={fileInputRef}
@@ -135,7 +170,7 @@ const DocumentUploadChat = ({
           />
           <Button 
             onClick={triggerFileInput}
-            className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
+            className="w-full bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark gap-2"
             disabled={isUploading}
           >
             <Upload size={18} />
@@ -150,12 +185,12 @@ const DocumentUploadChat = ({
                 Preciso de ajuda com este documento
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-gray-900 border-gray-800">
+            <DialogContent className="sm:max-w-md bg-w1-primary-dark border-w1-secondary-dark">
               <DialogHeader>
                 <DialogTitle className="text-white">Ajuda com Documentos</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <h3 className="font-medium text-blue-400">Dúvidas sobre {document.name}?</h3>
+                <h3 className="font-medium text-w1-primary-accent">Dúvidas sobre {document.name}?</h3>
                 <p className="text-gray-300">
                   Este documento é necessário para validar sua identidade e garantir a segurança do processo.
                   Se você tiver dificuldades para obter este documento, aqui estão algumas opções:
