@@ -1,7 +1,6 @@
-
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, CircleDollarSign, Shield, Clock, ArrowDownNarrow } from 'lucide-react';
+import { ArrowRight, CircleDollarSign, Shield, Clock, ArrowDownNarrowWide } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const SimulationIntro = () => {
@@ -161,7 +160,7 @@ const SimulationIntro = () => {
               className="border-w1-primary-dark text-w1-primary-dark hover:bg-w1-primary-dark/10"
             >
               Simular minha economia
-              <ArrowDownNarrow className="ml-2 h-5 w-5" />
+              <ArrowDownNarrowWide className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </div>
