@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, Download, Building2, BarChart2, Users, Package, Clock, Banknote, MapPin, BarChart3 } from 'lucide-react';
+import { ChevronLeft, Download, Building2, BarChart2, Users, Package, Clock, Banknote, MapPin, BarChart3, FileText, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import type { Asset } from '@/pages/Assets';
 import PropertyChart from './charts/PropertyChart';
@@ -57,7 +57,7 @@ const AssetDetails: React.FC<AssetDetailsProps> = ({ asset, onBack }) => {
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
-    return new Intl.NumberFormat('pt-BR', { 
+    return new Intl.DateTimeFormat('pt-BR', { 
       day: '2-digit', 
       month: '2-digit', 
       year: 'numeric' 
