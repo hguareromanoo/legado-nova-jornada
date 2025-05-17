@@ -8,39 +8,8 @@ import { FaMicrosoft } from "react-icons/fa";
 const Cadastro = () => {
   return (
     <div className="min-h-screen w-full flex">
-      {/* Left Column - 5/12 width */}
-      <div className="hidden md:flex w-5/12 relative bg-w1-primary-dark">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/lovable-uploads/e17d2fac-2689-4bc4-9910-b66fe3145acb.png" 
-            alt="W1 Consultoria" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black opacity-30"></div>
-        </div>
-        
-        {/* Content overlay */}
-        <div className="relative z-10 flex flex-col h-full p-10 text-white">
-          {/* W1 Logo */}
-          <div className="mb-auto">
-            <Link to="/" className="text-w1-text-light font-bold text-3xl">
-              W1
-              <span className="text-w1-primary-accent">.</span>
-            </Link>
-          </div>
-          
-          {/* Copywriting */}
-          <div className="mb-20">
-            <h1 className="text-4xl md:text-5xl font-light leading-tight mb-6">
-              Sinta a sensação de <span className="font-bold text-w1-primary-accent">transformar cada um dos seus objetivos em conquistas</span>
-            </h1>
-          </div>
-        </div>
-      </div>
-      
-      {/* Right Column - 7/12 width */}
-      <div className="w-full md:w-7/12 flex items-center justify-center p-6 md:p-12">
+      {/* Right Column - 5/12 width (changed from 7/12) */}
+      <div className="w-full md:w-5/12 flex items-center justify-center p-6 md:p-12">
         <div className="max-w-md w-full">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-w1-primary-dark mb-6">
@@ -108,6 +77,38 @@ const Cadastro = () => {
                 Entrar
               </Link>
             </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Left Column - 7/12 width (changed from 5/12) */}
+      <div className="hidden md:flex w-7/12 relative">
+        {/* Updated background with gradient overlay */}
+        <div 
+          className="absolute inset-0 z-0" 
+          style={{
+            background: "linear-gradient(-90deg, rgba(0, 0, 0, 0.00) 10%, #000000 100%), url(https://cdn.sanity.io/images/vtdu2snp/production/4a6d8d90763e58a5c6b3ba43b9394c61592581d1-2436x1152.jpg)",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            backgroundPosition: "65%"
+          }}
+        ></div>
+        
+        {/* Content overlay */}
+        <div className="relative z-10 flex flex-col h-full p-10 text-white">
+          {/* W1 Logo */}
+          <div className="mb-auto">
+            <Link to="/" className="text-w1-text-light font-bold text-3xl">
+              W1
+              <span className="text-w1-primary-accent">.</span>
+            </Link>
+          </div>
+          
+          {/* Copywriting */}
+          <div className="mb-20">
+            <h1 className="text-4xl md:text-5xl font-light leading-tight mb-6">
+              Sinta a sensação de <span className="font-bold text-w1-primary-accent">transformar cada um dos seus objetivos em conquistas</span>
+            </h1>
           </div>
         </div>
       </div>

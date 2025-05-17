@@ -8,8 +8,8 @@ const Onboarding = () => {
   useEffect(() => {
     // Mark that onboarding has started
     localStorage.setItem('hasStartedOnboarding', 'true');
-    // Redirect to document opening page instead of members
-    navigate('/document-opening');
+    // Redirect to document collection page
+    navigate('/document-collection');
   }, [navigate]);
   
   return (

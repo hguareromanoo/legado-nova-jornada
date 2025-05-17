@@ -18,25 +18,6 @@ const OnboardingRoute = () => {
   
   // Get current onboarding step - default to 'selection' if not set
   const currentStep = localStorage.getItem('onboardingStep') || 'selection';
-  const currentPath = window.location.pathname;
-  
-  // Define the allowed paths for each step
-  const stepPaths: Record<string, string[]> = {
-    'selection': ['/onboarding'],
-    'chat': ['/onboarding/chat'],
-    'schedule': ['/onboarding/schedule'],
-    'documents': ['/document-collection'],
-    'review': ['/document-review']
-  };
-  
-  // Get allowed paths for current step
-  const allowedPaths = stepPaths[currentStep] || ['/onboarding'];
-  
-  // Only redirect if current path doesn't match allowed paths and we're not on a general onboarding path
-  if (!allowedPaths.some(path => currentPath.startsWith(path)) && 
-      !currentPath.startsWith('/onboarding/human')) {
-    return <Navigate to={allowedPaths[0]} replace />;
-  }
   
   // Render the onboarding layout with the current step
   return (

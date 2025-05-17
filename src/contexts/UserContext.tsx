@@ -59,6 +59,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setIsLoggedIn(false);
     localStorage.removeItem('user');
+    localStorage.removeItem('onboardingStep');
     localStorage.setItem('isLoggedIn', 'false');
   };
   

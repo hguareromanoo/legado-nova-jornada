@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +14,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useUser();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -45,12 +45,13 @@ const Login = () => {
     // Navigate based on user's onboarding status
     const hasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted') === 'true';
     
+    // Navigate to the redirect path or default paths based on onboarding status
     if (hasCompletedOnboarding) {
       navigate('/dashboard');
     } else {
       // Set initial onboarding step explicitly
       localStorage.setItem('onboardingStep', 'selection');
-      navigate('/onboarding');
+      navigate('/document-collection');
     }
   };
 
@@ -81,7 +82,7 @@ const Login = () => {
 
     // Explicitly set initial onboarding step for new users
     localStorage.setItem('onboardingStep', 'selection');
-    navigate('/onboarding');
+    navigate('/document-collection');
   };
 
   return (
