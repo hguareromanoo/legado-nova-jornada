@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useUser();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +29,30 @@ const Login = () => {
       return;
     }
 
-    toast({
-      title: "Login realizado com sucesso",
-      description: "Redirecionando para o processo de abertura da holding...",
+    // In a real app, we would validate credentials against a database
+    // Here we're just mocking the login
+    login({
+      id: '1',
+      name: 'Usuário de Teste',
+      email: email
     });
 
-    // Mock login - In a real app, this would validate credentials against a database
-    setTimeout(() => {
-      // Navigate to roadmap progress page instead of members
-      navigate('/roadmap-progress');
-    }, 1500);
+    toast({
+      title: "Login realizado com sucesso",
+      description: "Redirecionando...",
+    });
+    
+    // Navigate to onboarding or dashboard based on user status
+    const hasStartedOnboarding = localStorage.getItem('hasStartedOnboarding');
+    const hasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted');
+    
+    if (hasCompletedOnboarding === 'true') {
+      navigate('/dashboard');
+    } else if (hasStartedOnboarding === 'true') {
+      navigate('/document-collection');
+    } else {
+      navigate('/onboarding');
+    }
   };
 
   const handleSignup = (e: React.FormEvent) => {
@@ -51,35 +67,21 @@ const Login = () => {
       return;
     }
 
+    // In a real app, we would create a user in the database
+    // Here we're just mocking the signup
+    login({
+      id: '1',
+      name: name,
+      email: email
+    });
+    
     toast({
       title: "Cadastro realizado com sucesso",
-      description: "Redirecionando para o processo de abertura da holding...",
+      description: "Redirecionando para o processo de onboarding...",
     });
 
-    // Mock signup - In a real app, this would create a user in the database
-    // const createUser = async () => {
-    //   try {
-    //     const { data, error } = await supabase.auth.signUp({
-    //       email,
-    //       password,
-    //       options: {
-    //         data: {
-    //           name,
-    //         },
-    //       },
-    //     });
-    //     if (error) throw error;
-    //     return data;
-    //   } catch (error) {
-    //     console.error('Error signing up:', error);
-    //     throw error;
-    //   }
-    // };
-
-    setTimeout(() => {
-      // Navigate to roadmap progress page instead of members
-      navigate('/roadmap-progress');
-    }, 1500);
+    // New users always start with onboarding
+    navigate('/onboarding');
   };
 
   return (

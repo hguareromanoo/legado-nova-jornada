@@ -4,62 +4,77 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { UserProvider } from "./contexts/UserContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/routes";
+
+// Public Pages
 import Index from "./pages/Index";
 import Simulation from "./pages/Simulation";
 import Login from "./pages/Login";
-import Members from "./pages/Members";
-import Assets from "./pages/Assets";
-import Onboarding from "./pages/Onboarding";
-import OnboardingChat from "./pages/OnboardingChat";
-import ScheduleConsultant from "./pages/ScheduleConsultant";
-import DocumentCollection from "./pages/DocumentCollection";
-import DocumentOpening from "./pages/DocumentOpening";
-import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
-// Create a route guard component for protected routes
-const ProtectedRoute = ({ component: Component }) => {
-  // Check if the user has completed the holding setup
-  const isSetupCompleted = localStorage.getItem('holdingSetupCompleted') === 'true';
-  
-  // If not completed, redirect to the document opening page
-  if (!isSetupCompleted) {
-    return <Navigate to="/document-opening" />;
-  }
-  
-  return <Component />;
-};
+// Onboarding Flow
+import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
+import OnboardingChat from "./pages/onboarding/OnboardingChat";
+import ScheduleConsultant from "./pages/onboarding/ScheduleConsultant";
+import DocumentCollection from "./pages/onboarding/DocumentCollection";
+import DocumentReview from "./pages/onboarding/DocumentReview";
+
+// Dashboard Pages
+import Dashboard from "./pages/dashboard/Dashboard";
+import Documents from "./pages/dashboard/Documents";
+import Assets from "./pages/dashboard/Assets";
+import Structure from "./pages/dashboard/Structure";
+import Assistant from "./pages/dashboard/Assistant";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/simulation" element={<Simulation />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/onboarding/chat" element={<OnboardingChat />} />
-          <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
-          
-          {/* New document opening flow */}
-          <Route path="/document-opening" element={<DocumentOpening />} />
-          <Route path="/document-collection" element={<DocumentCollection />} />
-          
-          {/* Protected routes - only accessible after holding setup is complete */}
-          <Route path="/members" element={<Members />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/assets" element={<Assets />} />
-          
-          {/* Catch-all route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <UserProvider>
+      <OnboardingProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route element={<PublicRoute />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/simulation" element={<Simulation />} />
+                <Route path="/login" element={<Login />} />
+              </Route>
+              
+              {/* Onboarding Routes - Accessible only during onboarding process */}
+              <Route element={<OnboardingRoute />}>
+                <Route path="/onboarding" element={<OnboardingSelection />} />
+                <Route path="/onboarding/chat" element={<OnboardingChat />} />
+                <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
+                <Route path="/document-collection" element={<DocumentCollection />} />
+                <Route path="/document-review" element={<DocumentReview />} />
+              </Route>
+              
+              {/* Dashboard Routes - Protected, only accessible after holding setup */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/assets" element={<Assets />} />
+                <Route path="/structure" element={<Structure />} />
+                <Route path="/assistant" element={<Assistant />} />
+              </Route>
+              
+              {/* Legacy route redirect */}
+              <Route path="/document-opening" element={<Navigate to="/document-collection" replace />} />
+              <Route path="/members" element={<Navigate to="/dashboard" replace />} />
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </OnboardingProvider>
+    </UserProvider>
   </QueryClientProvider>
 );
 

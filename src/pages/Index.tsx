@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import StatsSection from '@/components/StatsSection';
@@ -15,27 +16,36 @@ import Footer from '@/components/Footer';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, hasCompletedOnboarding } = useUser();
   
   useEffect(() => {
     // Update the document title when the component mounts
     document.title = "W1 Consultoria Patrimonial | Simulação de Holding";
     
-    // Check if the user is logged in 
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    
-    if (isLoggedIn === 'true') {
-      // Check if the user has completed the holding setup
-      const isSetupCompleted = localStorage.getItem('holdingSetupCompleted') === 'true';
-      
-      if (isSetupCompleted) {
-        // If setup is completed, redirect to members dashboard
-        navigate('/members');
+    // Handle redirection based on authentication and onboarding status
+    if (isLoggedIn) {
+      if (hasCompletedOnboarding) {
+        // If user is logged in and has completed onboarding, go to dashboard
+        navigate('/dashboard');
       } else {
-        // If not completed, redirect to document opening process
-        navigate('/document-opening');
+        // If user is logged in but hasn't completed onboarding, get current step
+        const currentStep = localStorage.getItem('onboardingStep') || 'selection';
+        
+        // Map steps to routes
+        const stepRoutes: Record<string, string> = {
+          'selection': '/onboarding',
+          'chat': '/onboarding/chat',
+          'schedule': '/onboarding/schedule',
+          'documents': '/document-collection',
+          'review': '/document-review'
+        };
+        
+        const redirectTo = stepRoutes[currentStep] || '/onboarding';
+        navigate(redirectTo);
       }
     }
-  }, [navigate]);
+    // If not logged in, stay on landing page
+  }, [navigate, isLoggedIn, hasCompletedOnboarding]);
 
   return (
     <div className="min-h-screen bg-white">
