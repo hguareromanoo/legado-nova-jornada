@@ -13,6 +13,7 @@ import Onboarding from "./pages/Onboarding";
 import OnboardingChat from "./pages/OnboardingChat";
 import ScheduleConsultant from "./pages/ScheduleConsultant";
 import DocumentCollection from "./pages/DocumentCollection";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,8 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/chat" element={<OnboardingChat />} />
           <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
-          <Route path="/documents" element={<DocumentCollection />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/document-collection" element={<DocumentCollection />} />
           <Route path="/members" element={<Members />} />
           <Route path="/assets" element={<Assets />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
