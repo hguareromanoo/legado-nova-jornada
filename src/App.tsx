@@ -21,6 +21,12 @@ import ScheduleConsultant from "./pages/ScheduleConsultant";
 import DocumentCollection from "./pages/onboarding/DocumentCollection";
 import DocumentReview from "./pages/onboarding/DocumentReview";
 
+// Human Onboarding Flow
+import HumanSchedule from "./pages/onboarding/human/Schedule";
+import HumanConfirmation from "./pages/onboarding/human/Confirmation";
+import HumanPortal from "./pages/onboarding/human/Portal";
+import PlanApproval from "./pages/onboarding/human/PlanApproval";
+
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
@@ -51,6 +57,13 @@ const App = () => (
                 <Route path="/onboarding" element={<OnboardingSelection />} />
                 <Route path="/onboarding/chat" element={<OnboardingChat />} />
                 <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
+                
+                {/* Human Touch Onboarding Flow */}
+                <Route path="/onboarding/human/schedule" element={<HumanSchedule />} />
+                <Route path="/onboarding/human/confirmation" element={<HumanConfirmation />} />
+                <Route path="/onboarding/human/portal" element={<HumanPortal />} />
+                <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
+                
                 <Route path="/document-collection" element={<DocumentCollection />} />
                 <Route path="/document-review" element={<DocumentReview />} />
               </Route>

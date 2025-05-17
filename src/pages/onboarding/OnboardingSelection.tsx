@@ -34,7 +34,8 @@ const OnboardingSelection = () => {
     if (selectedPath === 'ai') {
       navigate('/onboarding/chat');
     } else {
-      navigate('/onboarding/schedule');
+      // Updated to navigate to the new Human Touch flow
+      navigate('/onboarding/human/schedule');
     }
   };
   
