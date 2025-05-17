@@ -1,5 +1,6 @@
 
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -7,7 +8,9 @@ const Footer = () => {
       <div className="w1-container">
         <div className="flex flex-col md:flex-row justify-between gap-8">
           <div className="max-w-md">
-            <a href="/" className="text-white font-bold text-2xl mb-6 block">W1</a>
+            <Link to="/" className="text-white font-bold text-2xl mb-6 block">
+              W1<span className="text-w1-primary-accent">.</span>
+            </Link>
             <p className="text-white/70 mb-6">
               W1 Consultoria Patrimonial - Transformando a gestão de patrimônios em uma arte sofisticada, 
               assegurando proteção, crescimento e transmissão eficiente do seu legado.
@@ -18,17 +21,17 @@ const Footer = () => {
             <div>
               <h4 className="text-white font-medium mb-4">Navegação</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-white/70 hover:text-w1-primary-accent transition-colors">Home</a></li>
-                <li><a href="#about" className="text-white/70 hover:text-w1-primary-accent transition-colors">Sobre nós</a></li>
-                <li><a href="#services" className="text-white/70 hover:text-w1-primary-accent transition-colors">Serviços</a></li>
-                <li><a href="#contact" className="text-white/70 hover:text-w1-primary-accent transition-colors">Contato</a></li>
+                <li><Link to="/" className="text-white/70 hover:text-w1-primary-accent transition-colors">Home</Link></li>
+                <li><a href="/#about" className="text-white/70 hover:text-w1-primary-accent transition-colors">Sobre nós</a></li>
+                <li><a href="/#services" className="text-white/70 hover:text-w1-primary-accent transition-colors">Serviços</a></li>
+                <li><a href="/#contact" className="text-white/70 hover:text-w1-primary-accent transition-colors">Contato</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="text-white font-medium mb-4">Serviços</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-white/70 hover:text-w1-primary-accent transition-colors">Estruturação de Holdings</a></li>
+                <li><Link to="/simulation" className="text-white/70 hover:text-w1-primary-accent transition-colors">Simulação de Holding</Link></li>
                 <li><a href="#" className="text-white/70 hover:text-w1-primary-accent transition-colors">Planejamento Sucessório</a></li>
                 <li><a href="#" className="text-white/70 hover:text-w1-primary-accent transition-colors">Blindagem Patrimonial</a></li>
                 <li><a href="#" className="text-white/70 hover:text-w1-primary-accent transition-colors">Gestão de Patrimônio</a></li>
@@ -54,7 +57,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-white/50 text-sm">© 2024 W1. Todos os direitos reservados.</p>
+          <p className="text-white/50 text-sm">© 2024 W1 Consultoria Patrimonial. Todos os direitos reservados.</p>
           
           <div className="mt-4 md:mt-0">
             <ul className="flex space-x-6">

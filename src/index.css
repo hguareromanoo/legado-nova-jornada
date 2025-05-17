@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -16,8 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 155 64% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 174 65% 56%;
+    --primary-foreground: 202 24% 9%;
 
     --secondary: 217 13% 35%;
     --secondary-foreground: 210 40% 98%;
@@ -33,18 +33,18 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 155 64% 60%;
+    --ring: 174 65% 56%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 202 24% 9%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 174 65% 56%;
+    --sidebar-primary-foreground: 202 24% 9%;
+    --sidebar-accent: 202 24% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 201 18% 18%;
+    --sidebar-ring: 174 65% 56%;
   }
 
   .dark {
@@ -57,8 +57,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 155 64% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 174 65% 56%;
+    --primary-foreground: 202 24% 9%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -75,14 +75,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 174 65% 56%;
+    --sidebar-primary-foreground: 202 24% 9%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 174 65% 56%;
   }
 }
 
@@ -97,23 +98,36 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-wide;
+    @apply font-semibold tracking-wide text-w1-primary-dark;
+  }
+
+  .bg-dark h1, 
+  .bg-dark h2, 
+  .bg-dark h3, 
+  .bg-dark h4, 
+  .bg-dark h5, 
+  .bg-dark h6 {
+    @apply text-white;
   }
 
   h1 {
-    @apply text-4xl md:text-5xl leading-tight;
+    @apply text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight;
   }
 
   h2 {
-    @apply text-3xl md:text-4xl leading-tight;
+    @apply text-2xl md:text-3xl lg:text-4xl font-medium leading-tight;
   }
 
   h3 {
-    @apply text-2xl md:text-3xl;
+    @apply text-xl md:text-2xl font-medium;
   }
 
   p {
-    @apply text-base md:text-lg leading-relaxed;
+    @apply text-base md:text-lg leading-relaxed text-w1-secondary-text;
+  }
+
+  .bg-dark p {
+    @apply text-white/80;
   }
 }
 
@@ -123,23 +137,59 @@
   }
   
   .w1-button-primary {
-    @apply bg-w1-primary-accent text-w1-primary-dark font-medium py-3 px-8 rounded hover:opacity-90 transition-all inline-flex items-center gap-2;
+    @apply bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark font-medium py-3 px-8 rounded-md transition-all inline-flex items-center gap-2;
   }
   
   .w1-button-secondary {
-    @apply bg-transparent border border-w1-primary-accent text-w1-primary-accent font-medium py-3 px-8 rounded hover:bg-w1-primary-accent/10 transition-all inline-flex items-center gap-2;
+    @apply bg-transparent border border-w1-primary-accent text-w1-primary-accent hover:bg-w1-primary-accent/10 font-medium py-3 px-8 rounded-md transition-all inline-flex items-center gap-2;
+  }
+
+  .w1-button-dark {
+    @apply bg-w1-primary-dark hover:bg-w1-secondary-dark text-white font-medium py-3 px-8 rounded-md transition-all inline-flex items-center gap-2;
   }
 
   .w1-section {
     @apply py-16 md:py-24;
   }
 
+  .w1-section-dark {
+    @apply py-16 md:py-24 bg-w1-primary-dark text-white;
+  }
+
   .w1-card {
-    @apply bg-white rounded-xl shadow-lg p-8 transition-all hover:shadow-xl;
+    @apply bg-white rounded-xl shadow-md p-6 md:p-8 transition-all hover:shadow-lg;
   }
 
   .w1-gradient-text {
     @apply text-transparent bg-clip-text bg-gradient-to-r from-w1-primary-accent to-teal-400;
+  }
+  
+  .w1-stat-number {
+    @apply text-3xl md:text-4xl lg:text-5xl font-semibold text-w1-primary-accent leading-none;
+  }
+  
+  .w1-stat-label {
+    @apply text-base text-w1-secondary-text;
+  }
+  
+  .w1-form-control {
+    @apply border border-w1-border-light rounded-md px-4 py-3 w-full focus:border-w1-primary-accent focus:ring-2 focus:ring-w1-primary-accent/20 focus:outline-none transition-colors;
+  }
+  
+  .w1-form-label {
+    @apply text-sm font-medium text-w1-secondary-text mb-2 block;
+  }
+  
+  .w1-tag {
+    @apply inline-block bg-w1-blue-light text-w1-primary-dark text-xs font-medium px-2.5 py-1 rounded;
+  }
+  
+  .w1-badge {
+    @apply inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-w1-primary-accent/20 text-w1-primary-accent;
+  }
+  
+  .w1-link {
+    @apply text-w1-primary-accent hover:text-w1-primary-accent-hover transition-colors;
   }
 }
 

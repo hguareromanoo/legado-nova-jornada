@@ -40,7 +40,7 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
   const currentStepObj = steps.find(step => step.id === currentStep);
   
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white font-sans">
       {/* Header */}
       <header className="bg-w1-primary-dark text-white py-4 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
@@ -48,13 +48,15 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-w1-primary-dark/80"
+              className="text-white hover:bg-w1-secondary-dark/80"
               onClick={handleBack}
             >
               <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">W1 Consultoria</h1>
+              <h1 className="text-2xl font-bold">
+                W1<span className="text-w1-primary-accent">.</span>
+              </h1>
               <p className="text-sm opacity-80">
                 {currentStepObj ? currentStepObj.name : 'Onboarding'}
               </p>
@@ -72,7 +74,7 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
             <Button 
               variant="outline" 
               size="sm"
-              className="border-white text-white hover:bg-white hover:text-w1-primary-dark"
+              className="border-white text-white hover:bg-white/10"
               onClick={handleLogout}
             >
               <LogOut size={16} className="mr-2" />
@@ -83,13 +85,13 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
       </header>
       
       {/* Progress bar */}
-      <div className="bg-gray-100 py-2">
+      <div className="bg-w1-bg-light py-2">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-1">
+          <div className="flex justify-between text-sm text-w1-secondary-text mb-1">
             <span>Progresso</span>
             <span>{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2 bg-gray-200" indicatorClassName="bg-w1-primary-accent" />
         </div>
       </div>
       

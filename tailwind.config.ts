@@ -65,13 +65,16 @@ export default {
 				},
 				// W1 Consultoria Patrimonial custom colors
 				w1: {
-					'primary-dark': '#0F1923',
-					'secondary-dark': '#4A5568',
-					'primary-accent': '#5ADBB5',
+					'primary-dark': '#0A1A24',
+					'secondary-dark': '#2A3B47',
+					'primary-accent': '#4ECDC4',
+					'primary-accent-hover': '#6BDED6',
 					'text-light': '#FFFFFF',
-					'text-dark': '#1A202C',
-					'secondary-text': '#718096',
-					'bg-light': '#F7FAFC',
+					'text-dark': '#0A1A24',
+					'secondary-text': '#535D67',
+					'bg-light': '#F5F7F9',
+					'blue-light': '#E5F0F9',
+					'border-light': '#E5E9EF',
 				},
 			},
 			borderRadius: {
@@ -112,11 +115,16 @@ export default {
 				'slide-in-right': 'slide-in-right 0.6s ease-out',
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
+				sans: ['Public Sans', 'Inter', 'sans-serif'],
 			},
 			backgroundImage: {
-				'gradient-dark': 'linear-gradient(180deg, #0F1923 0%, #1A2C3E 100%)',
-			}
+				'gradient-dark': 'linear-gradient(135deg, #0A1A24 0%, #2A3B47 100%)',
+				'gradient-teal': 'linear-gradient(90deg, #4ECDC4 0%, #6BDED6 100%)',
+			},
+			boxShadow: {
+				'w1-card': '0 4px 12px rgba(10, 26, 36, 0.08)',
+				'w1-card-hover': '0 8px 24px rgba(10, 26, 36, 0.12)',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
