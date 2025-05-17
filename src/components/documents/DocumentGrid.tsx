@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { File, FileText, FileImage, FilePdf } from 'lucide-react';
+import { File, FileText, FileImage, FileType } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Directory } from '@/pages/Documents';
@@ -24,12 +23,11 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({ documents, directories }) =
     if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension || '')) {
       return <FileImage className="text-green-400" size={40} />;
     } else if (extension === 'pdf') {
-      return <FilePdf className="text-red-400" size={40} />;
+      return <FileType className="text-red-400" size={40} />; // Changed from FilePdf to FileType
     } else {
       return <FileText className="text-blue-400" size={40} />;
     }
   };
-
   const getDirectoryName = (directoryId: string): string => {
     const directory = directories.find(dir => dir.id === directoryId);
     return directory?.name || 'Indefinido';
