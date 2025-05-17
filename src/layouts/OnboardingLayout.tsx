@@ -91,7 +91,11 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
             <span>Progresso</span>
             <span>{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2 bg-gray-200" indicatorClassName="bg-w1-primary-accent" />
+          <Progress 
+            value={progress} 
+            className="h-2 bg-gray-200" 
+            indicatorClassName="bg-w1-primary-accent" 
+          />
         </div>
       </div>
       
