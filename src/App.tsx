@@ -22,7 +22,6 @@ import OnboardingChat from "./pages/onboarding/OnboardingChat";
 import DocumentReview from "./pages/onboarding/DocumentReview";
 
 // Human Onboarding Flow
-import HumanSchedule from "./pages/onboarding/human/Schedule";
 import HumanConfirmation from "./pages/onboarding/human/Confirmation";
 import HumanPortal from "./pages/onboarding/human/Portal";
 import PlanApproval from "./pages/onboarding/human/PlanApproval";
@@ -61,12 +60,14 @@ const App = () => (
                 <Route path="/onboarding/chat" element={<OnboardingChat />} />
                 
                 {/* Human Touch Onboarding Flow */}
-                <Route path="/onboarding/human/schedule" element={<HumanSchedule />} />
                 <Route path="/onboarding/human/confirmation" element={<HumanConfirmation />} />
                 <Route path="/onboarding/human/portal" element={<HumanPortal />} />
                 <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
                 
                 <Route path="/document-review" element={<DocumentReview />} />
+                
+                {/* Add the Members route to the OnboardingRoute group as well to make it accessible during onboarding */}
+                <Route path="/members" element={<Members />} />
               </Route>
               
               {/* Dashboard Routes - Protected, only accessible after holding setup */}
@@ -82,7 +83,6 @@ const App = () => (
               {/* Legacy route redirects */}
               <Route path="/document-collection" element={<Navigate to="/members" replace />} />
               <Route path="/document-opening" element={<Navigate to="/members" replace />} />
-              <Route path="/onboarding/schedule" element={<Navigate to="/members" replace />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

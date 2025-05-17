@@ -165,14 +165,17 @@ const OnboardingChat = () => {
       if (nextStep < questions.length) {
         setMessages(prev => [...prev, questions[nextStep]]);
       } else {
-        // Marca que o chat foi concluído e atualiza para o próximo passo
+        // Update onboarding step to documents
         localStorage.setItem('onboardingStep', 'documents');
         
         // Mark the chat step as complete in the onboarding context
         completeStep('chat');
         
-        // Navega diretamente para a página de membros
-        navigate('/members');
+        // Log the redirect to help with debugging
+        console.log('Chat completed, redirecting to /members');
+        
+        // Navigate to members page
+        navigate('/members', { replace: true });
       }
     }, 1000);
   };

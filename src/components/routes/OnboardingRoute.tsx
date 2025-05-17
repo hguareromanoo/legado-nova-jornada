@@ -32,11 +32,15 @@ const OnboardingRoute = () => {
   
   // Check if we're on the correct path for the current step
   const correctPath = stepRoutes[currentStep];
+  console.log('Current onboarding step:', currentStep);
+  console.log('Current path:', currentPath);
+  console.log('Correct path should be:', correctPath);
   
   // If we're not on the correct path and we're not on a sub-path, redirect
   if (correctPath && currentPath !== correctPath && 
       !Object.values(stepRoutes).some(route => 
         route !== correctPath && currentPath.startsWith(route))) {
+    console.log('Redirecting to:', correctPath);
     return <Navigate to={correctPath} replace />;
   }
   
