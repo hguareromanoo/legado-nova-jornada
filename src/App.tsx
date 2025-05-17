@@ -24,7 +24,7 @@ import DocumentReview from "./pages/onboarding/DocumentReview";
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
-import Documents as Assets from "./pages/dashboard/Documents"; // Temporary fix until Assets page is created
+import Assets from "./pages/dashboard/Assets"; // Using the dedicated Assets component
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
 
