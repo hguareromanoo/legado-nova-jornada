@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { File, FileText, FileImage, FileType } from 'lucide-react';
 import { format } from 'date-fns';
@@ -35,7 +36,7 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({ documents, directories }) =
 
   if (documents.length === 0) {
     return (
-      <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+      <div className="h-64 flex flex-col items-center justify-center text-gray-300">
         <File size={48} className="mb-4 opacity-30" />
         <p>Nenhum documento encontrado</p>
         <p className="text-sm">Adicione documentos ou altere sua busca</p>
@@ -55,12 +56,12 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({ documents, directories }) =
               {getDocumentIcon(document.name)}
               <div>
                 <h3 className="font-medium text-white">{document.name}</h3>
-                <p className="text-xs text-gray-400">{getDirectoryName(document.directory)}</p>
+                <p className="text-xs text-gray-300">{getDirectoryName(document.directory)}</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-300 hover:text-white">
                   <span className="sr-only">Abrir menu</span>
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
@@ -81,7 +82,7 @@ const DocumentGrid: React.FC<DocumentGridProps> = ({ documents, directories }) =
             </DropdownMenu>
           </div>
           
-          <div className="text-xs text-gray-400 mt-4 flex items-center justify-between">
+          <div className="text-xs text-gray-300 mt-4 flex items-center justify-between">
             <div>
               {document.size && (
                 <span className="inline-block mr-3">{document.size}</span>

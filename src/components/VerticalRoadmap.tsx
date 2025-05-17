@@ -23,7 +23,7 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
     <div className="py-6 px-4">
       <div className="mb-6">
         <h3 className="text-lg font-medium text-white mb-1">Documentos Necessários</h3>
-        <p className="text-sm text-gray-400">Complete as etapas para prosseguir</p>
+        <p className="text-sm text-gray-300">Complete as etapas para prosseguir</p>
       </div>
       
       <div className="relative">
@@ -60,7 +60,7 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                       <div className="text-center">
                         {step.icon || <span className={cn(
                           "text-sm font-medium",
-                          isCurrent ? "text-blue-400" : "text-gray-400"
+                          isCurrent ? "text-blue-400" : "text-gray-300"
                         )}>{index + 1}</span>}
                       </div>
                     )}
@@ -75,11 +75,11 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                       "font-medium mb-0.5",
                       isCompleted ? "text-blue-400" : 
                       isCurrent ? "text-white font-semibold" : 
-                      "text-gray-400"
+                      "text-gray-300"
                     )}>
                       {step.name}
                     </p>
-                    <p className="text-sm text-gray-400">{step.description}</p>
+                    <p className="text-sm text-gray-300">{step.description}</p>
                   </div>
                   
                   {/* Continue button for current step */}
@@ -119,7 +119,7 @@ const VerticalRoadmap = ({ steps, currentStep, onStepSelect }: VerticalRoadmapPr
                 <p className="font-medium mb-0.5 text-white">
                   Finalizar com Consultor
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   Agende sua consultoria personalizada
                 </p>
               </div>
