@@ -16,15 +16,15 @@ import NotFound from "./pages/NotFound";
 
 // Onboarding Flow
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
-import OnboardingChat from "./pages/onboarding/OnboardingChat";
-import ScheduleConsultant from "./pages/onboarding/ScheduleConsultant";
+import OnboardingChat from "./pages/OnboardingChat";
+import ScheduleConsultant from "./pages/ScheduleConsultant";
 import DocumentCollection from "./pages/onboarding/DocumentCollection";
 import DocumentReview from "./pages/onboarding/DocumentReview";
 
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import Documents from "./pages/dashboard/Documents";
-import Assets from "./pages/dashboard/Assets";
+import Documents as Assets from "./pages/dashboard/Documents"; // Temporary fix until Assets page is created
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
 
