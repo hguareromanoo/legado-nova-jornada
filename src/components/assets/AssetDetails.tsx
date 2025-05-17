@@ -63,15 +63,17 @@ const AssetDetails = ({ asset, onBack }: AssetDetailsProps) => {
   };
   
   const getAssetChart = () => {
+    // Determine the appropriate chart type based on asset.type
+    // Instead of passing the entire asset object, pass the specific props each chart needs
     switch (asset.type) {
       case 'imoveis':
-        return <PropertyChart asset={asset} />;
+        return <PropertyChart chartType="valuation" />;
       case 'investimentos':
-        return <InvestmentChart asset={asset} />;
+        return <InvestmentChart chartType="price" />;
       case 'participacoes':
-        return <CompanyChart asset={asset} />;
+        return <CompanyChart chartType="dividends" />;
       default:
-        return <OtherAssetChart asset={asset} />;
+        return <OtherAssetChart />;
     }
   };
   
