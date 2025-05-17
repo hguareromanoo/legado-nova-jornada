@@ -51,7 +51,7 @@ const Cadastro = () => {
             <Button 
               variant="default" 
               size="w1Base" 
-              className="w-full bg-w1-primary-dark hover:bg-w1-secondary-dark"
+              className="w-full bg-w1-primary-dark hover:bg-w1-secondary-dark text-white"
             >
               Continuar com Email
             </Button>
