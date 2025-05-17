@@ -1,5 +1,5 @@
 
-import { Building2, BarChart2, FileDollar, Package2, Eye } from 'lucide-react';
+import { Building2, BarChart2, DollarSign, Package2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Asset } from '@/pages/Assets';
@@ -25,7 +25,7 @@ const AssetOverview = ({ assets, onAssetSelect }: AssetOverviewProps) => {
       case 'investimentos':
         return <BarChart2 className="h-5 w-5 text-w1-primary-accent" />;
       case 'participacoes':
-        return <FileDollar className="h-5 w-5 text-w1-primary-accent" />;
+        return <DollarSign className="h-5 w-5 text-w1-primary-accent" />; // Changed from FileDollar to DollarSign
       default:
         return <Package2 className="h-5 w-5 text-w1-primary-accent" />;
     }

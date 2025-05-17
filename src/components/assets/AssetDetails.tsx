@@ -1,15 +1,13 @@
-
 import React, { useState } from 'react';
 import { 
   ArrowLeft, 
   Building2, 
   BarChart2, 
-  FileDollar, 
+  DollarSign, 
   Package2, 
   Calendar, 
   MapPin, 
   Tag, 
-  DollarSign, 
   Plus, 
   ClipboardList, 
   FileText, 
@@ -21,10 +19,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PropertyChart } from './charts/PropertyChart';
-import { InvestmentChart } from './charts/InvestmentChart';
-import { CompanyChart } from './charts/CompanyChart';
-import { OtherAssetChart } from './charts/OtherAssetChart';
+import PropertyChart from './charts/PropertyChart';
+import InvestmentChart from './charts/InvestmentChart';
+import CompanyChart from './charts/CompanyChart';
+import OtherAssetChart from './charts/OtherAssetChart';
 import type { Asset } from '@/pages/Assets';
 
 interface AssetDetailsProps {
@@ -58,7 +56,7 @@ const AssetDetails = ({ asset, onBack }: AssetDetailsProps) => {
       case 'investimentos':
         return <BarChart2 className="h-6 w-6 text-w1-primary-accent" />;
       case 'participacoes':
-        return <FileDollar className="h-6 w-6 text-w1-primary-accent" />;
+        return <DollarSign className="h-6 w-6 text-w1-primary-accent" />;
       default:
         return <Package2 className="h-6 w-6 text-w1-primary-accent" />;
     }
