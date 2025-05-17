@@ -14,7 +14,7 @@ const Hero = () => {
           muted 
           loop 
           playsInline
-          className="object-cover w-full h-full opacity-15" // Reduced opacity from 30% to 15%
+          className="object-cover w-full h-full opacity-5" // Reduced opacity from 30% to 15%
         >
           <source 
             src="https://cdn.sanity.io/files/vtdu2snp/production/d87a23a4e3797a6c26978cdd2bea561cbe85ec80.mp4" 
