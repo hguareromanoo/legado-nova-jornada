@@ -57,12 +57,12 @@ const Login = () => {
         'selection': '/onboarding',
         'chat': '/onboarding/chat', 
         'schedule': '/onboarding/schedule',
-        'documents': '/document-collection',
+        'documents': '/members',
         'review': '/document-review'
       };
       
       // Navigate to the appropriate step
-      navigate(stepRoutes[currentStep as keyof typeof stepRoutes] || '/document-collection');
+      navigate(stepRoutes[currentStep as keyof typeof stepRoutes] || '/onboarding');
     }
   };
 
@@ -93,7 +93,7 @@ const Login = () => {
 
     // Set initial onboarding step and navigate to document collection
     localStorage.setItem('onboardingStep', 'selection');
-    navigate('/document-collection');
+    navigate('/onboarding');
   };
 
   return (

@@ -22,21 +22,21 @@ const Index = () => {
     // Update the document title when the component mounts
     document.title = "W1 Consultoria Patrimonial | Simulação de Holding";
     
-    // Only redirect if user is already logged in
+    // Só redireciona se o usuário estiver logado
     if (isLoggedIn) {
       if (hasCompletedOnboarding) {
-        // If user is logged in and has completed onboarding, go to dashboard
+        // Se o usuário estiver logado e tiver concluído o onboarding, vá para o dashboard
         navigate('/dashboard', { replace: true });
       } else {
-        // If user is logged in but hasn't completed onboarding, get current step
+        // Se o usuário estiver logado mas não concluiu o onboarding, obtenha a etapa atual
         const currentStep = localStorage.getItem('onboardingStep') || 'selection';
         
-        // Map steps to routes
+        // Mapeie as etapas para rotas
         const stepRoutes: Record<string, string> = {
           'selection': '/onboarding',
           'chat': '/onboarding/chat',
           'schedule': '/onboarding/schedule',
-          'documents': '/document-collection',
+          'documents': '/members',
           'review': '/document-review'
         };
         
@@ -44,10 +44,10 @@ const Index = () => {
         navigate(redirectTo, { replace: true });
       }
     }
-    // If not logged in, stay on landing page - no redirection needed
+    // Se não estiver logado, não redirecione - continue na landing page
   }, [navigate, isLoggedIn, hasCompletedOnboarding]);
 
-  // Only render the landing page content if not redirecting
+  // Renderizar o conteúdo da landing page somente se não estiver redirecionando
   if (isLoggedIn) {
     return <div className="min-h-screen bg-white flex items-center justify-center">
       <p>Redirecionando...</p>
