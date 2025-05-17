@@ -40,8 +40,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const [steps, setSteps] = useState<OnboardingStep[]>([
     { id: 'selection', name: 'Escolha de Onboarding', completed: false, path: '/onboarding' },
     { id: 'chat', name: 'Chat com IA', completed: false, path: '/onboarding/chat' },
-    { id: 'schedule', name: 'Agendamento Consultor', completed: false, path: '/onboarding/schedule' },
-    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/members' }, // Atualizando para o novo caminho
+    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/members' },
     { id: 'review', name: 'Revisão de Documentos', completed: false, path: '/document-review' }
   ]);
   

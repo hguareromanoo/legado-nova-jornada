@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,6 @@ const Login = () => {
       const stepRoutes = {
         'selection': '/onboarding',
         'chat': '/onboarding/chat', 
-        'schedule': '/onboarding/schedule',
         'documents': '/members',
         'review': '/document-review'
       };
@@ -91,7 +91,7 @@ const Login = () => {
       description: "Redirecionando para o processo de onboarding...",
     });
 
-    // Set initial onboarding step and navigate to document collection
+    // Set initial onboarding step and navigate to onboarding selection
     localStorage.setItem('onboardingStep', 'selection');
     navigate('/onboarding');
   };

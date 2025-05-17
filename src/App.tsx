@@ -19,7 +19,6 @@ import Cadastro from "./pages/Cadastro";
 // Onboarding Flow
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
 import OnboardingChat from "./pages/onboarding/OnboardingChat";
-import ScheduleConsultant from "./pages/ScheduleConsultant";
 import DocumentReview from "./pages/onboarding/DocumentReview";
 
 // Human Onboarding Flow
@@ -60,7 +59,6 @@ const App = () => (
               <Route element={<OnboardingRoute />}>
                 <Route path="/onboarding" element={<OnboardingSelection />} />
                 <Route path="/onboarding/chat" element={<OnboardingChat />} />
-                <Route path="/onboarding/schedule" element={<ScheduleConsultant />} />
                 
                 {/* Human Touch Onboarding Flow */}
                 <Route path="/onboarding/human/schedule" element={<HumanSchedule />} />
@@ -84,6 +82,7 @@ const App = () => (
               {/* Legacy route redirects */}
               <Route path="/document-collection" element={<Navigate to="/members" replace />} />
               <Route path="/document-opening" element={<Navigate to="/members" replace />} />
+              <Route path="/onboarding/schedule" element={<Navigate to="/members" replace />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

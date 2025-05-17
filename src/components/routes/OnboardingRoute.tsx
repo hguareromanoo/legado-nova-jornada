@@ -22,12 +22,11 @@ const OnboardingRoute = () => {
   // Get current path
   const currentPath = location.pathname;
   
-  // Map steps to routes - Atualizando para usar '/members' para a etapa de documentos
+  // Map steps to routes
   const stepRoutes: Record<string, string> = {
     'selection': '/onboarding',
     'chat': '/onboarding/chat',
-    'schedule': '/onboarding/schedule',
-    'documents': '/members', // Redirecionando para a página de membros para documentos
+    'documents': '/members',
     'review': '/document-review'
   };
   

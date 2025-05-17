@@ -4,9 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Settings, 
-  HelpCircle, 
-  Upload, 
-  Mic 
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -14,6 +12,7 @@ import ChatBubble from '@/components/chat/ChatBubble';
 import ChatInput from '@/components/chat/ChatInput';
 import ProgressTracker from '@/components/chat/ProgressTracker';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useToast } from '@/hooks/use-toast';
 
 // Define message types
 interface Message {
@@ -29,6 +28,7 @@ interface Message {
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { completeStep } = useOnboarding();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -171,7 +171,7 @@ const OnboardingChat = () => {
         // Mark the chat step as complete in the onboarding context
         completeStep('chat');
         
-        // Navega para a página de membros (confirmando o redirecionamento correto)
+        // Navega diretamente para a página de membros
         navigate('/members');
       }
     }, 1000);
@@ -198,8 +198,11 @@ const OnboardingChat = () => {
     }
   };
 
-  const handleConsultantRedirect = () => {
-    navigate('/onboarding/schedule');
+  const handleConsultantRequest = () => {
+    toast({
+      title: "Solicitação recebida",
+      description: "Um de nossos consultores entrará em contato em breve.",
+    });
   };
   
   return (
@@ -265,12 +268,12 @@ const OnboardingChat = () => {
         <ProgressTracker currentStep={currentStep} totalSteps={questions.length - 1} />
       </div>
       
-      {/* Consultant Redirect Button */}
+      {/* Consultant Request Button */}
       <div className="fixed top-20 left-4">
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleConsultantRedirect}
+          onClick={handleConsultantRequest}
           className="text-xs bg-white border-w1-primary-accent text-w1-primary-dark"
         >
           Falar com um consultor
