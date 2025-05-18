@@ -21,12 +21,12 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         blue: "bg-blue-600 text-white hover:bg-blue-700",
         // W1 Theme Variants - Modified to improve hover readability
-        w1Primary: "bg-w1-primary-accent-hover text-w1-primary-dark hover:bg-w1-primary-accent", 
-        w1Secondary: "border border-w1-primary-accent text-w1-primary-accent bg-w1-primary-accent/5 hover:bg-w1-primary-accent/10", 
+        w1Primary: "bg-w1-primary-accent text-w1-primary-dark hover:bg-w1-primary-accent-hover", 
+        w1Secondary: "bg-w1-primary-accent/20 border border-w1-primary-accent text-w1-primary-accent hover:bg-w1-primary-accent/30", 
         w1Dark: "bg-w1-secondary-dark text-white hover:bg-w1-primary-dark", 
         // Modified hover for the simulation button - removing opacity hover and using a slightly different color
-        w1Ghost: "bg-gray-50 text-w1-primary-dark hover:bg-w1-bg-light", 
-        w1GhostLight: "bg-white/5 text-white hover:bg-white/10", 
+        w1Ghost: "bg-gray-50 text-w1-primary-dark hover:bg-gray-100", 
+        w1GhostLight: "bg-white/10 text-white hover:bg-white/20", 
       },
       size: {
         default: "h-10 px-4 py-2",

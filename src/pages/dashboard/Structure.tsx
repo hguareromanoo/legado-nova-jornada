@@ -33,7 +33,7 @@ const Structure = () => {
                     O visualizador de estrutura societária está sendo implementado.
                     <br />Aguarde as próximas atualizações.
                   </p>
-                  <Button className="bg-blue-600 hover:bg-blue-700 mx-auto">
+                  <Button variant="blue" className="mx-auto">
                     Pré-visualizar Estrutura
                   </Button>
                 </div>
@@ -69,7 +69,7 @@ const Structure = () => {
                   </div>
                 </div>
                 
-                <Button variant="outline" className="w-full text-white border-gray-700 hover:bg-gray-700">
+                <Button variant="outline" className="w-full text-white border-gray-700 bg-gray-700/40 hover:bg-gray-700">
                   Adicionar Participante
                 </Button>
               </div>
@@ -92,7 +92,7 @@ const Structure = () => {
                   </div>
                 </div>
                 
-                <Button variant="outline" className="w-full text-white border-gray-700 hover:bg-gray-700">
+                <Button variant="outline" className="w-full text-white border-gray-700 bg-gray-700/40 hover:bg-gray-700">
                   Adicionar Empresa
                 </Button>
               </div>

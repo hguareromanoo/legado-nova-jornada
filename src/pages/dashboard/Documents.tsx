@@ -205,7 +205,7 @@ const Documents = () => {
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
-              <Button onClick={() => setIsAddDocumentOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setIsAddDocumentOpen(true)} variant="blue">
                 <Plus size={16} className="mr-2" />
                 Adicionar Documento
               </Button>
