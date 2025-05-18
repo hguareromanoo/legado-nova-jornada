@@ -6,16 +6,16 @@ import PublicLayout from "@/layouts/PublicLayout";
 const PublicRoute = () => {
   const { isLoggedIn, hasCompletedOnboarding } = useUser();
   
-  // Se estiver logado e completou o onboarding, redirecione para o dashboard
+  // If logged in and completed onboarding, redirect to dashboard
   if (isLoggedIn && hasCompletedOnboarding) {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Se estiver logado mas não completou o onboarding, redirecione para a etapa apropriada
+  // If logged in but not completed onboarding, redirect to appropriate step
   if (isLoggedIn && !hasCompletedOnboarding) {
     const currentStep = localStorage.getItem('onboardingStep') || 'selection';
     
-    // Mapeie as etapas para rotas
+    // Map steps to routes
     const stepRoutes: Record<string, string> = {
       'selection': '/onboarding',
       'chat': '/onboarding/chat',
@@ -28,7 +28,7 @@ const PublicRoute = () => {
     return <Navigate to={redirectTo} replace />;
   }
   
-  // Se não estiver logado, renderize a rota pública com o layout público
+  // If not logged in, render the public route with public layout
   return (
     <PublicLayout>
       <Outlet />

@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
@@ -22,16 +21,16 @@ const Index = () => {
     // Update the document title when the component mounts
     document.title = "W1 Consultoria Patrimonial | Simulação de Holding";
     
-    // Só redireciona se o usuário estiver logado
+    // Only redirect if the user is logged in
     if (isLoggedIn) {
       if (hasCompletedOnboarding) {
-        // Se o usuário estiver logado e tiver concluído o onboarding, vá para o dashboard
+        // If the user is logged in and has completed onboarding, go to dashboard
         navigate('/dashboard', { replace: true });
       } else {
-        // Se o usuário estiver logado mas não concluiu o onboarding, obtenha a etapa atual
+        // If the user is logged in but hasn't completed onboarding, get the current step
         const currentStep = localStorage.getItem('onboardingStep') || 'selection';
         
-        // Mapeie as etapas para rotas
+        // Map steps to routes
         const stepRoutes: Record<string, string> = {
           'selection': '/onboarding',
           'chat': '/onboarding/chat',
@@ -44,16 +43,17 @@ const Index = () => {
         navigate(redirectTo, { replace: true });
       }
     }
-    // Se não estiver logado, não redirecione - continue na landing page
+    // If not logged in, don't redirect - stay on the landing page
   }, [navigate, isLoggedIn, hasCompletedOnboarding]);
 
-  // Renderizar o conteúdo da landing page somente se não estiver redirecionando
+  // Only show loading state if we're going to redirect
   if (isLoggedIn) {
     return <div className="min-h-screen bg-white flex items-center justify-center">
       <p>Redirecionando...</p>
     </div>;
   }
 
+  // Otherwise render the full landing page
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
