@@ -22,7 +22,7 @@ const SimulationIntro = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                <h1 className="text-white text-4xl md:text-5xl font-bold mb-6 leading-tight">
                   Descubra quanto você pode economizar com uma Holding Familiar
                 </h1>
                 
