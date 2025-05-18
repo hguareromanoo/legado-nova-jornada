@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, CircleDollarSign, Shield, Clock, ArrowDownNarrowWide } from 'lucide-react';
@@ -33,7 +34,9 @@ const SimulationIntro = () => {
                 <Button 
                   onClick={startSimulation}
                   size="lg"
-                  className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
+                  // Updated to use the variant system consistently
+                  variant="w1Primary"
+                  className="text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
                 >
                   Iniciar simulação
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -178,7 +181,9 @@ const SimulationIntro = () => {
           <Button 
             onClick={startSimulation}
             size="lg"
-            className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
+            // Updated to use the variant system consistently
+            variant="w1Primary"
+            className="text-w1-primary-dark text-lg px-8 py-6 h-auto font-medium"
           >
             Iniciar simulação
             <ArrowRight className="ml-2 h-5 w-5" />

@@ -20,12 +20,13 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         blue: "bg-blue-600 text-white hover:bg-blue-700",
-        // W1 Theme Variants - Modificado para iniciar com tons mais claros e escurecer no hover
-        w1Primary: "bg-w1-primary-accent-hover text-w1-primary-dark hover:bg-w1-primary-accent", // Tom mais claro inicialmente, escurece no hover
-        w1Secondary: "border border-w1-primary-accent text-w1-primary-accent bg-w1-primary-accent/5 hover:bg-w1-primary-accent/10", // Fundo mais claro
-        w1Dark: "bg-w1-secondary-dark text-white hover:bg-w1-primary-dark", // Tom mais claro do azul escuro
-        w1Ghost: "bg-gray-50 text-w1-primary-dark hover:bg-w1-bg-light", // Adicionando fundo sutil
-        w1GhostLight: "bg-white/5 text-white hover:bg-white/10", // Fundo mais sutil para início
+        // W1 Theme Variants - Modified to improve hover readability
+        w1Primary: "bg-w1-primary-accent-hover text-w1-primary-dark hover:bg-w1-primary-accent", 
+        w1Secondary: "border border-w1-primary-accent text-w1-primary-accent bg-w1-primary-accent/5 hover:bg-w1-primary-accent/10", 
+        w1Dark: "bg-w1-secondary-dark text-white hover:bg-w1-primary-dark", 
+        // Modified hover for the simulation button - removing opacity hover and using a slightly different color
+        w1Ghost: "bg-gray-50 text-w1-primary-dark hover:bg-w1-bg-light", 
+        w1GhostLight: "bg-white/5 text-white hover:bg-white/10", 
       },
       size: {
         default: "h-10 px-4 py-2",

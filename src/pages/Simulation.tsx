@@ -247,7 +247,8 @@ const Simulation = () => {
               
               <Button 
                 onClick={nextStep}
-                className="bg-w1-primary-dark hover:bg-opacity-90"
+                variant="w1Dark"
+                className="text-white"
               >
                 {currentStep === totalSteps ? 'Concluir' : 'Próximo'}
               </Button>
