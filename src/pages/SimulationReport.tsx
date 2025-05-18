@@ -399,7 +399,7 @@ const SimulationReport = () => {
               transition={{ duration: 0.5, delay: 0.5 }}
               className="bg-white rounded-xl shadow-md overflow-hidden"
             >
-              <div className="h-48 bg-[url('https://images.unsplash.com/photo-1499856871958-5b9088d4677f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center"></div>
+              <div className="h-48 bg-[url('https://res.cloudinary.com/dtljonz0f/image/upload/c_auto,ar_1:1,w_3840,g_auto/f_auto/q_auto/v1/gc-v1/paris/3%20giorni%20a%20Parigi%20Tour%20Eiffel?_a=BAVAZGE70')] bg-cover bg-center"></div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-4 text-w1-primary-dark">
                   Economia anual = {euroTripsPerYear} {euroTripsPerYear > 1 ? 'viagens' : 'viagem'} para Europa
@@ -422,7 +422,7 @@ const SimulationReport = () => {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="bg-white rounded-xl shadow-md overflow-hidden"
             >
-              <div className="h-48 bg-[url('https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80')] bg-cover bg-center"></div>
+              <div className="h-48 bg-[url('https://grandbrasil.com.br/wp-content/uploads/2019/11/7_BMW_X1_Rockset.webp')] bg-cover bg-center"></div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-4 text-w1-primary-dark">
                   Economia de 5 anos = {bmwsAfterFiveYears} {bmwsAfterFiveYears > 1 ? 'BMW X1' : 'BMW X1'}
