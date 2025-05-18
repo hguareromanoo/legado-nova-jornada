@@ -1,10 +1,20 @@
 
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import PublicLayout from "@/layouts/PublicLayout";
 
 const PublicRoute = () => {
   const { isLoggedIn, hasCompletedOnboarding } = useUser();
+  const location = useLocation();
+  
+  // Never redirect if we're on the home page
+  if (location.pathname === "/") {
+    return (
+      <PublicLayout>
+        <Outlet />
+      </PublicLayout>
+    );
+  }
   
   // If logged in and completed onboarding, redirect to dashboard
   if (isLoggedIn && hasCompletedOnboarding) {
