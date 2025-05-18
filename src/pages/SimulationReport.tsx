@@ -346,7 +346,7 @@ const SimulationReport = () => {
             >
               <Card className="p-6 h-full bg-gradient-to-br from-w1-primary-dark to-w1-secondary-dark text-white">
                 <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <Euro className="w-5 h-5 mr-2 text-w1-primary-accent" />
+                  <Euro className="w-5 h-5 mr-2 text-w1-primary-accent text-white" />
                   Suas economias potenciais
                 </h3>
                 
