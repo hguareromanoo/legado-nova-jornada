@@ -104,15 +104,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
     try {
       console.log('Attempting signup for:', email);
+      
+      // Let's simplify the signup process
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: userData.first_name || '',
-            last_name: userData.last_name || '',
-            full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
-            // Don't add user_type, the trigger will set it as 'client' by default
+            last_name: userData.last_name || ''
+            // Remove the full_name to see if that's causing issues
           }
         }
       });
@@ -123,6 +124,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
       
       console.log('Signup successful, user:', data.user?.id);
+      console.log('User data:', data.user);
       
       // Set default onboarding step
       localStorage.setItem('onboardingStep', 'selection');
