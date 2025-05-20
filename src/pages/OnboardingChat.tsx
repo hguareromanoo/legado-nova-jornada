@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -285,6 +284,8 @@ const OnboardingChat = () => {
           onChange={setInputValue}
           onSubmit={handleTextSubmit}
           onOptionSelect={handleUserResponse}
+          disabled={loading}
+          onSendMessage={handleTextSubmit} // Add this prop to satisfy the interface
         />
       </div>
     </div>

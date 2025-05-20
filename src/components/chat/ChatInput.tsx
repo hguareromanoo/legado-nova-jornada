@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void;
-  disabled: boolean;
+  // Make these props optional with default values
+  onSendMessage?: (message: string) => void;
+  disabled?: boolean;
   value?: string;
   onChange?: (value: string) => void;
   onSubmit?: (text: string) => void;
@@ -16,7 +17,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ 
   onSendMessage, 
-  disabled, 
+  disabled = false, 
   value, 
   onChange, 
   onSubmit, 
@@ -53,7 +54,7 @@ const ChatInput = ({
     if (message.trim() && !disabled) {
       if (onSubmit) {
         onSubmit(message);
-      } else {
+      } else if (onSendMessage) {
         onSendMessage(message);
       }
       
