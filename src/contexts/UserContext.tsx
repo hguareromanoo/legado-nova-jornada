@@ -34,7 +34,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   const { toast } = useToast();
   
-  // Configurar listener de autenticação Supabase e verificar sessão existente
+  // Configure Supabase auth state listener and check for existing session
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -44,7 +44,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentSession?.user ?? null);
         setIsLoggedIn(!!currentSession);
         
-        // Verificar status de onboarding
+        // Check onboarding status
         if (currentSession) {
           const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
           setHasCompletedOnboarding(completed);
@@ -58,7 +58,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentSession?.user ?? null);
       setIsLoggedIn(!!currentSession);
       
-      // Verificar status de onboarding
+      // Check onboarding status
       if (currentSession) {
         const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
         setHasCompletedOnboarding(completed);
@@ -72,19 +72,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error('Erro de login:', error.message);
+        console.error('Login error:', error.message);
         return { error: error.message };
       }
       
-      // Supabase Auth já define session e user através do listener
+      console.log('Login successful, user:', data.user?.id);
       
-      // Verificar status de onboarding
+      // Check onboarding status
       const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
       setHasCompletedOnboarding(completed);
       
@@ -95,13 +96,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       
       return {};
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
+      console.error('Error during login:', error);
       return { error: 'Erro ao fazer login' };
     }
   };
   
   const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
     try {
+      console.log('Attempting signup for:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -110,24 +112,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             first_name: userData.first_name || '',
             last_name: userData.last_name || '',
             full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
-            // Não precisa adicionar o user_type, pois o trigger definirá como 'client' por padrão
+            // Don't add user_type, the trigger will set it as 'client' by default
           }
         }
       });
       
       if (error) {
-        console.error('Erro de cadastro:', error.message);
+        console.error('Signup error:', error.message);
         return { error: error.message };
       }
       
-      // O listener onAuthStateChange já vai configurar o usuário
+      console.log('Signup successful, user:', data.user?.id);
       
       // Set default onboarding step
       localStorage.setItem('onboardingStep', 'selection');
       
       return {};
     } catch (error) {
-      console.error('Erro ao fazer cadastro:', error);
+      console.error('Error during signup:', error);
       return { error: 'Erro ao fazer cadastro' };
     }
   };
@@ -148,8 +150,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   
   const updateUser = (data: Partial<UserData>) => {
     if (user) {
-      // Aqui poderíamos atualizar os metadados do usuário no Supabase
-      console.log('Atualizando dados do usuário:', data);
+      // Here we could update user metadata in Supabase
+      console.log('Updating user data:', data);
     }
   };
   
