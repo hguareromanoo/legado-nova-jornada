@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Settings, 
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';
 import ProfileSidebar from '@/components/chat/ProfileSidebar';
@@ -18,7 +20,7 @@ const OnboardingChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { completeStep } = useOnboarding();
-  const { session, messages, loading, sendMessage } = useChat();
+  const { session, messages, loading, sendMessage, error } = useChat();
   const [showSidebar, setShowSidebar] = useState(true);
   
   const handleBack = () => {
@@ -105,6 +107,22 @@ const OnboardingChat = () => {
         </div>
       </header>
       
+      {/* API Error Alert */}
+      {error && (
+        <Alert variant="destructive" className="m-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+            <div className="mt-2">
+              <strong>Atenção:</strong> É necessário iniciar o servidor Python FastAPI em http://localhost:8000.
+              <div className="mt-1 text-sm">
+                Execute <code className="bg-gray-200 px-1 rounded">python app.py</code> no terminal do seu backend.
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Main Content with Chat and Profile */}
       <div className="flex flex-1 overflow-hidden">
         {/* Chat Window */}
@@ -115,7 +133,10 @@ const OnboardingChat = () => {
           
           {/* Input Area */}
           <div className="p-4 border-t bg-white">
-            <ChatInput onSendMessage={handleSendMessage} disabled={loading} />
+            <ChatInput 
+              onSendMessage={handleSendMessage} 
+              disabled={loading || !!error} 
+            />
           </div>
         </div>
         

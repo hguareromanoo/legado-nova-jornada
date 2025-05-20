@@ -94,5 +94,6 @@ export interface ChatContextType {
   session: Session | null;
   messages: ConversationMessage[];
   loading: boolean;
+  error: string | null;
   sendMessage: (content: string) => Promise<void>;
 }

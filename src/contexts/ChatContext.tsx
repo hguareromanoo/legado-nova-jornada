@@ -24,11 +24,15 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const { toast } = useToast();
 
   useEffect(() => {
     const initSession = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
         // Try to get stored session ID
         const storedSessionId = localStorage.getItem('chatSessionId');
@@ -37,22 +41,27 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           try {
             const existingSession = await api.getSession(storedSessionId);
             setSession(existingSession);
-            setMessages(existingSession.conversation_history);
+            setMessages(existingSession.conversation_history || []);
           } catch (error) {
             // If session not found, create new one
             localStorage.removeItem('chatSessionId');
-            createNewSession();
+            await createNewSession();
           }
         } else {
-          createNewSession();
+          await createNewSession();
         }
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.message || 'Erro ao iniciar sessão';
         console.error('Error initializing session:', error);
+        setError(errorMessage);
+        
         toast({
           title: "Erro ao iniciar sessão",
-          description: "Não foi possível conectar ao serviço. Por favor, tente novamente.",
+          description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -61,13 +70,16 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         const userId = user?.id || null;
         const newSession = await api.createSession(userId);
         setSession(newSession);
-        setMessages(newSession.conversation_history);
+        setMessages(newSession.conversation_history || []);
         localStorage.setItem('chatSessionId', newSession.session_id);
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.message || 'Erro ao criar nova sessão';
         console.error('Error creating new session:', error);
+        setError(errorMessage);
+        
         toast({
           title: "Erro ao criar nova sessão",
-          description: "Não foi possível iniciar uma nova conversa. Por favor, tente novamente.",
+          description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
           variant: "destructive",
         });
       }
@@ -123,6 +135,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || !session) return;
+    setError(null);
     
     // Add user message to UI immediately
     const tempUserMessage: ConversationMessage = {
@@ -168,11 +181,14 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           completion_percentage: response.completion_percentage
         };
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Falha ao enviar mensagem';
       console.error('Error sending message:', error);
+      setError(errorMessage);
+      
       toast({
         title: "Falha ao enviar mensagem",
-        description: "Não foi possível enviar sua mensagem. Por favor, tente novamente.",
+        description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
         variant: "destructive",
       });
     } finally {
@@ -184,6 +200,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     session,
     messages,
     loading,
+    error,
     sendMessage
   };
 
