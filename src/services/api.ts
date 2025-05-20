@@ -1,8 +1,22 @@
+
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
-// Use API_BASE_URL as http://localhost:8000 since that's where your FastAPI server is running
-const API_BASE_URL = 'http://localhost:8000';
+// Determine the correct API URL based on environment
+const determineApiUrl = () => {
+  // In development, use localhost
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:8000';
+  }
+  
+  // When deployed in preview, try to use a deployed backend URL if available
+  // You should replace this with your actual deployed API URL when available
+  return 'http://localhost:8000'; // Fallback to localhost for now
+};
+
+const API_BASE_URL = determineApiUrl();
+
+console.log('Using API base URL:', API_BASE_URL);
 
 // Create axios instance with proper configuration
 const apiClient = axios.create({
@@ -10,22 +24,31 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000 // 10 second timeout
+  timeout: 10000, // 10 second timeout
+  // Important for CORS when credentials might be sent
+  withCredentials: false
 });
 
 export const api = {
   createSession: async (userId: string | null = null): Promise<Session> => {
     try {
-      // Make sure user_id is properly formatted for the API
-      // When userId is null, we need to send an actual string value of "null" to backend
-      // Otherwise we send the UUID string as is
+      // Use a valid UUID instead of null to satisfy database constraints
+      // The UUID below is a "nil" UUID (all zeros) which should work as a valid placeholder
+      const validUserId = userId || '00000000-0000-0000-0000-000000000000';
+      
+      console.log('Creating session with user_id:', validUserId);
+      
       const response = await apiClient.post('/sessions', { 
-        user_id: userId || '00000000-0000-0000-0000-000000000000' // Use a default UUID when null
+        user_id: validUserId 
       });
+      
       return response.data;
     } catch (error) {
       console.error('Error creating session:', error);
-      throw new Error('Erro ao criar sessão. Verifique se o servidor API está rodando em http://localhost:8000');
+      if (axios.isAxiosError(error) && !error.response) {
+        throw new Error(`Erro de conexão com o servidor API (${API_BASE_URL}). Verifique se o servidor está rodando e acessível.`);
+      }
+      throw new Error('Erro ao criar sessão. Verifique se o servidor API está rodando corretamente.');
     }
   },
   
@@ -35,7 +58,7 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Error getting session:', error);
-      throw new Error('Erro ao buscar sessão. Verifique se o servidor API está rodando em http://localhost:8000');
+      throw new Error('Erro ao buscar sessão. Verifique se o servidor API está rodando corretamente.');
     }
   },
   
@@ -48,7 +71,7 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
-      throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando em http://localhost:8000');
+      throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');
     }
   },
   
@@ -58,7 +81,7 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Error getting messages:', error);
-      throw new Error('Erro ao buscar mensagens. Verifique se o servidor API está rodando em http://localhost:8000');
+      throw new Error('Erro ao buscar mensagens. Verifique se o servidor API está rodando corretamente.');
     }
   }
 };

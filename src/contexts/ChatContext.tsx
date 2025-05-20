@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { api } from '@/services/api';
 import { Session, ConversationMessage, ChatContextType } from '@/types/chat';
 import { useUser } from '@/contexts/UserContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatProviderProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser(); // Get user from context
+  const { toast } = useToast();
 
   // Initialize session
   useEffect(() => {
@@ -54,18 +56,27 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     
     const createNewSession = async () => {
       // Ensure we pass a valid user ID to the API
-      // If user is authenticated, use their ID, otherwise pass null
       const userId = user?.id || null;
       console.log('Creating new session with user ID:', userId);
       
-      const newSession = await api.createSession(userId);
-      localStorage.setItem('chatSessionId', newSession.session_id);
-      setSession(newSession);
-      setMessages(newSession.conversation_history || []);
+      try {
+        const newSession = await api.createSession(userId);
+        localStorage.setItem('chatSessionId', newSession.session_id);
+        setSession(newSession);
+        setMessages(newSession.conversation_history || []);
+      } catch (error) {
+        console.error('Failed to create new session:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro na conexão",
+          description: "Não foi possível conectar ao servidor API."
+        });
+        throw error; // Re-throw to be caught by the parent function
+      }
     };
     
     initializeSession();
-  }, [user]); // Depend on user to reinitialize when user changes
+  }, [user, toast]); // Depend on user to reinitialize when user changes
   
   // Function to send message to API
   const sendMessage = async (content: string): Promise<void> => {
