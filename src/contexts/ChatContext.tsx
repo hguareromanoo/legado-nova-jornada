@@ -2,39 +2,29 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '@/services/api';
 import { Session, ConversationMessage, ChatContextType } from '@/types/chat';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from './UserContext';
-import { useToast } from '@/hooks/use-toast';
-
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
-
-export const useChat = (): ChatContextType => {
-  const context = useContext(ChatContext);
-  if (!context) {
-    throw new Error('useChat must be used within a ChatProvider');
-  }
-  return context;
-};
+import { useUser } from '@/contexts/UserContext';
 
 interface ChatProviderProps {
   children: ReactNode;
 }
 
-export const ChatProvider = ({ children }: ChatProviderProps) => {
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
-  const { toast } = useToast();
+  const { user } = useUser(); // Get user from context
 
+  // Initialize session
   useEffect(() => {
-    const initSession = async () => {
-      setLoading(true);
-      setError(null);
-      
+    const initializeSession = async () => {
       try {
-        // Try to get stored session ID
+        setLoading(true);
+        setError(null);
+        
+        // Get session ID from localStorage or create a new session
         const storedSessionId = localStorage.getItem('chatSessionId');
         
         if (storedSessionId) {
@@ -43,166 +33,113 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             setSession(existingSession);
             setMessages(existingSession.conversation_history || []);
           } catch (error) {
-            // If session not found, create new one
-            localStorage.removeItem('chatSessionId');
+            console.error('Error retrieving stored session, creating new one:', error);
+            // If there's an error with the stored session, create a new one
             await createNewSession();
           }
         } else {
           await createNewSession();
         }
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Erro ao iniciar sessão';
-        console.error('Error initializing session:', error);
-        setError(errorMessage);
-        
-        toast({
-          title: "Erro ao iniciar sessão",
-          description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
-          variant: "destructive",
-        });
+      } catch (fetchError) {
+        console.error('Error initializing session:', fetchError);
+        if (fetchError instanceof Error) {
+          setError(fetchError.message);
+        } else {
+          setError('Ocorreu um erro ao inicializar a sessão.');
+        }
       } finally {
         setLoading(false);
       }
     };
     
     const createNewSession = async () => {
-      try {
-        const userId = user?.id || null;
-        const newSession = await api.createSession(userId);
-        setSession(newSession);
-        setMessages(newSession.conversation_history || []);
-        localStorage.setItem('chatSessionId', newSession.session_id);
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Erro ao criar nova sessão';
-        console.error('Error creating new session:', error);
-        setError(errorMessage);
-        
-        toast({
-          title: "Erro ao criar nova sessão",
-          description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
-          variant: "destructive",
-        });
-      }
+      // Pass user.id if available, otherwise null
+      const userId = user?.id || null;
+      const newSession = await api.createSession(userId);
+      localStorage.setItem('chatSessionId', newSession.session_id);
+      setSession(newSession);
+      setMessages(newSession.conversation_history || []);
     };
-
-    if (user) {
-      initSession();
+    
+    initializeSession();
+  }, [user]); // Depend on user to reinitialize when user changes
+  
+  // Function to send message to API
+  const sendMessage = async (content: string): Promise<void> => {
+    if (!session) {
+      setError('Sessão não inicializada. Por favor, recarregue a página.');
+      return;
     }
     
-    // Setup Supabase realtime subscription for messages
-    const setupRealtimeSubscription = () => {
-      if (!session?.session_id) return;
-      
-      const channel = supabase
-        .channel('schema-db-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'conversation_messages',
-            filter: `session_id=eq.${session.session_id}`
-          },
-          (payload) => {
-            // Only add the message if it's not from the current user
-            const newMessage = payload.new as ConversationMessage;
-            if (newMessage.role === 'assistant') {
-              setMessages(prev => [...prev, newMessage]);
-              
-              // Update session with new profile data if available
-              if (session) {
-                api.getSession(session.session_id)
-                  .then(updatedSession => {
-                    setSession(updatedSession);
-                  })
-                  .catch(console.error);
-              }
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-
-    const unsubscribe = setupRealtimeSubscription();
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [user, session?.session_id, toast]);
-
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || !session) return;
-    setError(null);
-    
-    // Add user message to UI immediately
-    const tempUserMessage: ConversationMessage = {
-      message_id: `temp-${Date.now()}`,
-      session_id: session.session_id,
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-      extracted_entities: null
-    };
-    
-    setMessages(prev => [...prev, tempUserMessage]);
-    setLoading(true);
-    
     try {
-      // Send to backend
+      setLoading(true);
+      setError(null);
+      
+      // Add user message to the list immediately
+      const userMessage: ConversationMessage = {
+        message_id: `temp-${Date.now()}`,
+        session_id: session.session_id,
+        timestamp: new Date().toISOString(),
+        role: 'user',
+        content,
+        extracted_entities: null
+      };
+      
+      setMessages(prevMessages => [...prevMessages, userMessage]);
+      
+      // Send message to API
       const response = await api.sendMessage(session.session_id, content);
       
-      // Add assistant response if not already added by the subscription
-      const existingAssistantMessage = messages.find(
-        m => m.role === 'assistant' && m.content === response.content
-      );
+      // Add assistant response to the list
+      const assistantMessage: ConversationMessage = {
+        message_id: `assist-${Date.now()}`,
+        session_id: session.session_id,
+        timestamp: new Date().toISOString(),
+        role: 'assistant',
+        content: response.content,
+        extracted_entities: null
+      };
       
-      if (!existingAssistantMessage) {
-        const assistantMessage: ConversationMessage = {
-          message_id: `temp-assistant-${Date.now()}`,
-          session_id: session.session_id,
-          role: 'assistant',
-          content: response.content,
-          timestamp: new Date().toISOString(),
-          extracted_entities: null
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-      }
+      setMessages(prevMessages => [...prevMessages, assistantMessage]);
       
-      // Update session with new profile data
-      setSession(prev => {
-        if (!prev) return prev;
+      // Update session with the new profile data
+      setSession(prevSession => {
+        if (!prevSession) return null;
         return {
-          ...prev,
+          ...prevSession,
           profile: response.profile,
           completion_percentage: response.completion_percentage
         };
       });
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Falha ao enviar mensagem';
-      console.error('Error sending message:', error);
-      setError(errorMessage);
-      
-      toast({
-        title: "Falha ao enviar mensagem",
-        description: "Verifique se o servidor Python FastAPI está rodando em http://localhost:8000.",
-        variant: "destructive",
-      });
+    } catch (sendError) {
+      console.error('Error sending message:', sendError);
+      if (sendError instanceof Error) {
+        setError(sendError.message);
+      } else {
+        setError('Ocorreu um erro ao enviar a mensagem.');
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  return (
+    <ChatContext.Provider value={{
+      session,
+      messages,
+      loading,
+      error,
+      sendMessage
+    }}>
+      {children}
+    </ChatContext.Provider>
+  );
+};
 
-  const value: ChatContextType = {
-    session,
-    messages,
-    loading,
-    error,
-    sendMessage
-  };
-
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+export const useChat = (): ChatContextType => {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error('useChat must be used within a ChatProvider');
+  }
+  return context;
 };

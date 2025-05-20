@@ -18,6 +18,7 @@ const apiClient = axios.create({
 export const api = {
   createSession: async (userId: string | null = null): Promise<Session> => {
     try {
+      // Ensure user_id is properly sent in the request body as required by the backend
       const response = await apiClient.post('/sessions', { user_id: userId });
       return response.data;
     } catch (error) {

@@ -6,7 +6,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser(); // Get user from context
   const { currentStep } = useOnboarding();
   
   useEffect(() => {
