@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
@@ -32,15 +31,12 @@ const apiClient = axios.create({
 export const api = {
   createSession: async (userId: string | null = null): Promise<Session> => {
     try {
-      // Use a valid UUID instead of null to satisfy database constraints
-      // The UUID below is a "nil" UUID (all zeros) which should work as a valid placeholder
-      const validUserId = userId || '00000000-0000-0000-0000-000000000000';
+      console.log('Creating session with user_id:', userId);
       
-      console.log('Creating session with user_id:', validUserId);
+      // Only include user_id in the request if it's not null
+      const requestBody = userId ? { user_id: userId } : {};
       
-      const response = await apiClient.post('/sessions', { 
-        user_id: validUserId 
-      });
+      const response = await apiClient.post('/sessions', requestBody);
       
       return response.data;
     } catch (error) {
