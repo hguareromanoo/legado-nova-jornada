@@ -110,6 +110,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             first_name: userData.first_name || '',
             last_name: userData.last_name || '',
             full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+            // Removendo o campo user_type que estava causando o erro
           }
         }
       });
