@@ -105,7 +105,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Attempting signup for:', email);
       
-      // Let's simplify the signup process
+      // Simplified signup with minimal metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,7 +113,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           data: {
             first_name: userData.first_name || '',
             last_name: userData.last_name || ''
-            // Remove the full_name to see if that's causing issues
+            // No additional fields that might conflict with database expectations
           }
         }
       });
