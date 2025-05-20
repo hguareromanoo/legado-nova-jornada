@@ -60,7 +60,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { id: 'settings', label: 'Configurações', icon: <Settings />, path: '/settings' },
   ];
   
-  const userName = user?.name ? user.name.split(' ')[0] : 'Visitante';
+  // Get first name from user metadata or use "Visitante" as fallback
+  const firstName = user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || 'Visitante';
 
   return (
     <SidebarProvider>
@@ -136,7 +137,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/30">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-1">Olá, {userName} 👋</h1>
+                    <h1 className="text-3xl font-bold text-white mb-1">Olá, {firstName} 👋</h1>
                     <p className="text-lg text-gray-300">
                       Bem-vindo à sua dashboard de gestão patrimonial
                     </p>

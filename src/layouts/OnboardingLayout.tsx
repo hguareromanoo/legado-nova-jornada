@@ -39,6 +39,9 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
   
   const currentStepObj = steps.find(step => step.id === currentStep);
   
+  // Get first name from user metadata or use fallback
+  const firstName = user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || '';
+  
   return (
     <div className="min-h-screen flex flex-col bg-white font-sans">
       {/* Header */}
@@ -66,7 +69,7 @@ const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
           <div className="flex items-center gap-6">
             {user && (
               <div className="hidden md:block text-right">
-                <p className="font-medium">Olá, {user.name.split(' ')[0]}</p>
+                <p className="font-medium">Olá, {firstName}</p>
                 <p className="text-sm opacity-80">{user.email}</p>
               </div>
             )}
