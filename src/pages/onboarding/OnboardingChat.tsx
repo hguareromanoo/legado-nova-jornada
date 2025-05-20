@@ -1,7 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings, HelpCircle } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Settings, 
+  HelpCircle
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';
@@ -54,6 +58,14 @@ const OnboardingChat = () => {
     navigate('/onboarding/human/schedule');
   };
 
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    const chatContainer = document.querySelector('.chat-messages');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Chat Header */}
@@ -97,7 +109,7 @@ const OnboardingChat = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Chat Window */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 pb-32">
+          <div className="flex-1 overflow-y-auto p-4 pb-32 chat-messages">
             <MessageList messages={messages} />
           </div>
           

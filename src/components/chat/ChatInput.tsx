@@ -7,11 +7,31 @@ import { Textarea } from '@/components/ui/textarea';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: (text: string) => void;
+  onOptionSelect?: (response: any) => void;
+  currentQuestion?: any;
 }
 
-const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
-  const [message, setMessage] = useState('');
+const ChatInput = ({ 
+  onSendMessage, 
+  disabled, 
+  value, 
+  onChange, 
+  onSubmit, 
+  currentQuestion,
+  onOptionSelect 
+}: ChatInputProps) => {
+  const [message, setMessage] = useState(value || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Update internal state when value prop changes
+  useEffect(() => {
+    if (value !== undefined) {
+      setMessage(value);
+    }
+  }, [value]);
 
   // Auto-focus on the textarea when component mounts
   useEffect(() => {
@@ -31,8 +51,15 @@ const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim() && !disabled) {
-      onSendMessage(message);
-      setMessage('');
+      if (onSubmit) {
+        onSubmit(message);
+      } else {
+        onSendMessage(message);
+      }
+      
+      if (onChange === undefined) {
+        setMessage('');
+      }
     }
   };
 
@@ -43,12 +70,21 @@ const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setMessage(newValue);
+    
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex items-end space-x-2">
       <Textarea
         ref={textareaRef}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem..."
         disabled={disabled}
