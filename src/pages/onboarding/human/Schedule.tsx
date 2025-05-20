@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CalendarIcon, Clock, MapPin, Video } from 'lucide-react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 
-// Mock data for consultants
+// Mock data para consultores
 const consultants = [
   {
     id: 1,
@@ -31,10 +31,10 @@ const consultants = [
   },
 ];
 
-// Mock data for available time slots
+// Horários disponíveis
 const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
-// Locations for in-person meetings
+// Locais para reuniões presenciais
 const locations = [
   {
     id: 'sp',
@@ -61,8 +61,8 @@ const Schedule = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   
-  // Selected consultant will be determined based on date & time
-  const selectedConsultant = consultants[0]; // Default to first consultant for demo
+  // O consultor é selecionado com base na data e horário
+  const selectedConsultant = consultants[0]; // Padrão para o primeiro consultor neste demo
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +85,7 @@ const Schedule = () => {
       return;
     }
     
-    // Save booking information to localStorage for persistence
+    // Salvar informações de agendamento no localStorage para persistência
     const bookingInfo = {
       date: date.toISOString(),
       time: selectedTime,
@@ -97,10 +97,10 @@ const Schedule = () => {
     
     localStorage.setItem('humanConsultationBooking', JSON.stringify(bookingInfo));
     
-    // Mark this step as completed in the onboarding flow
+    // Marcar esta etapa como concluída no fluxo de onboarding
     completeStep('schedule');
     
-    // Navigate to confirmation page
+    // Navegar para página de confirmação
     navigate('/onboarding/human/confirmation');
     
     toast({
@@ -149,7 +149,7 @@ const Schedule = () => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Meeting Type Selection */}
+        {/* Seleção do Tipo de Reunião */}
         <Card>
           <CardHeader>
             <CardTitle>Como você prefere realizar a consulta?</CardTitle>
@@ -186,7 +186,7 @@ const Schedule = () => {
               </div>
             </RadioGroup>
             
-            {/* Location selection (only visible for in-person meetings) */}
+            {/* Seleção de local (apenas visível para reuniões presenciais) */}
             {meetingType === 'presencial' && (
               <div className="mt-6">
                 <Label htmlFor="location" className="block mb-2">
@@ -212,7 +212,7 @@ const Schedule = () => {
           </CardContent>
         </Card>
         
-        {/* Calendar and Time Selection */}
+        {/* Calendário e Seleção de Horário */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -228,7 +228,7 @@ const Schedule = () => {
                 onSelect={setDate}
                 className="rounded-md border"
                 disabled={(date) => {
-                  // Disable weekends and past dates
+                  // Desabilitar fins de semana e datas passadas
                   const day = date.getDay();
                   const isPastDate = date < new Date();
                   const isWeekend = day === 0 || day === 6;
@@ -269,7 +269,7 @@ const Schedule = () => {
           </Card>
         </div>
         
-        {/* Consultant Card - Only displayed after selecting date and time */}
+        {/* Cartão do Consultor - Exibido apenas após selecionar data e hora */}
         {date && selectedTime && (
           <Card className="border-blue-200 shadow-md">
             <CardHeader className="bg-blue-50 border-b border-blue-100">
@@ -299,7 +299,7 @@ const Schedule = () => {
           </Card>
         )}
         
-        {/* Your Information */}
+        {/* Suas Informações */}
         <Card>
           <CardHeader>
             <CardTitle>Suas Informações de Contato</CardTitle>
