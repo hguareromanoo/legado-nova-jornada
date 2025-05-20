@@ -12,7 +12,7 @@ import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/route
 import Index from "./pages/Index";
 import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
-import SimulationReport from "./pages/SimulationReport"; // Add import for new page
+import SimulationReport from "./pages/SimulationReport"; 
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Cadastro from "./pages/Cadastro";
@@ -26,6 +26,7 @@ import DocumentReview from "./pages/onboarding/DocumentReview";
 import HumanConfirmation from "./pages/onboarding/human/Confirmation";
 import HumanPortal from "./pages/onboarding/human/Portal";
 import PlanApproval from "./pages/onboarding/human/PlanApproval";
+import Schedule from "./pages/onboarding/human/Schedule"; // Add import for Schedule page
 
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -51,7 +52,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/simulation" element={<SimulationIntro />} />
                 <Route path="/simulation-questions" element={<Simulation />} />
-                <Route path="/simulation-report" element={<SimulationReport />} /> {/* Add new route */}
+                <Route path="/simulation-report" element={<SimulationReport />} /> 
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
               </Route>
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/onboarding/chat" element={<OnboardingChat />} />
                 
                 {/* Human Touch Onboarding Flow */}
+                <Route path="/onboarding/human/schedule" element={<Schedule />} /> {/* Add Schedule route */}
                 <Route path="/onboarding/human/confirmation" element={<HumanConfirmation />} />
                 <Route path="/onboarding/human/portal" element={<HumanPortal />} />
                 <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
