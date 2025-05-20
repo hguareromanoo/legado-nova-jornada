@@ -1,213 +1,59 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Settings, 
-  HelpCircle
-} from 'lucide-react';
+import { ArrowLeft, Settings, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import ChatBubble from '@/components/chat/ChatBubble';
+import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';
-import ProgressTracker from '@/components/chat/ProgressTracker';
-import { useOnboarding } from '@/contexts/OnboardingContext';
+import ProfileSidebar from '@/components/chat/ProfileSidebar';
+import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
-
-// Define message types
-interface Message {
-  id: string;
-  sender: 'assistant' | 'user';
-  content: string;
-  type: 'text' | 'options' | 'input' | 'slider' | 'date';
-  options?: {
-    value: string;
-    label: string;
-  }[];
-}
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { completeStep } = useOnboarding();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [userResponses, setUserResponses] = useState<Record<string, any>>({});
-  const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  
-  // Questions flow
-  const questions: Message[] = [
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      content: 'Olá! Bem-vindo à jornada de planejamento patrimonial. Prefere que eu te chame pelo seu nome? :)',
-      type: 'input'
-    },
-    {
-      id: 'objective',
-      sender: 'assistant',
-      content: 'Qual é o seu principal objetivo com a holding?',
-      type: 'options',
-      options: [
-        { value: 'protection', label: 'Proteção de bens' },
-        { value: 'succession', label: 'Planejamento sucessório' },
-        { value: 'tax', label: 'Economia tributária' },
-        { value: 'other', label: 'Outro objetivo' }
-      ]
-    },
-    {
-      id: 'assets',
-      sender: 'assistant',
-      content: 'Você possui imóveis, empresas ou aplicações financeiras em seu nome?',
-      type: 'options',
-      options: [
-        { value: 'real-estate', label: 'Imóveis' },
-        { value: 'companies', label: 'Empresas' },
-        { value: 'investments', label: 'Aplicações Financeiras' },
-        { value: 'none', label: 'Nenhum' }
-      ]
-    },
-    {
-      id: 'passive-income',
-      sender: 'assistant',
-      content: 'Hoje, você já possui alguma renda passiva? Quanto, em média, por mês?',
-      type: 'slider'
-    },
-    {
-      id: 'age-heirs',
-      sender: 'assistant',
-      content: 'Qual a sua idade e se tiver herdeiros, quantos?',
-      type: 'input'
-    },
-    {
-      id: 'interest-level',
-      sender: 'assistant',
-      content: 'Você quer apenas entender se vale a pena ou já deseja abrir sua holding nos próximos 30 dias?',
-      type: 'options',
-      options: [
-        { value: 'understand', label: 'Só entender' },
-        { value: 'open-soon', label: 'Quero abrir em breve' }
-      ]
-    },
-    {
-      id: 'conclusion',
-      sender: 'assistant',
-      content: 'Ótimo, já temos o essencial. Agora vamos organizar seus documentos para personalizar sua estrutura de holding.',
-      type: 'options',
-      options: [
-        { value: 'continue', label: 'Continuar' }
-      ]
-    }
-  ];
-
-  useEffect(() => {
-    // Add initial welcome message
-    if (messages.length === 0) {
-      setMessages([questions[0]]);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Auto-scroll to the bottom of chat
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  const handleUserResponse = (response: any) => {
-    setLoading(true);
-    
-    // Save the user's response
-    const currentQuestion = questions[currentStep];
-    setUserResponses({
-      ...userResponses,
-      [currentQuestion.id]: response
-    });
-    
-    // Add user message to the chat
-    let userMessage = '';
-    if (currentQuestion.type === 'options') {
-      if (Array.isArray(response)) {
-        userMessage = response.map(option => {
-          const found = currentQuestion.options?.find(o => o.value === option);
-          return found ? found.label : option;
-        }).join(', ');
-      } else {
-        const option = currentQuestion.options?.find(o => o.value === response);
-        userMessage = option ? option.label : response;
-      }
-    } else {
-      userMessage = response.toString();
-    }
-    
-    setMessages([
-      ...messages,
-      { id: `user-${Date.now()}`, sender: 'user', content: userMessage, type: 'text' }
-    ]);
-    
-    // Store response in localStorage
-    localStorage.setItem('chatResponses', JSON.stringify({
-      ...userResponses,
-      [currentQuestion.id]: response
-    }));
-    
-    // Wait for a moment to simulate AI thinking
-    setTimeout(() => {
-      setLoading(false);
-      
-      // Move to the next question
-      const nextStep = currentStep + 1;
-      setCurrentStep(nextStep);
-      
-      // If there are more questions, show the next one
-      if (nextStep < questions.length) {
-        setMessages(prev => [...prev, questions[nextStep]]);
-      } else {
-        // Update onboarding step to documents
-        localStorage.setItem('onboardingStep', 'documents');
-        
-        // Mark the chat step as complete in the onboarding context
-        completeStep('chat');
-        
-        // Log the redirect to help with debugging
-        console.log('Chat completed, redirecting to /members');
-        
-        // Navigate to members page
-        navigate('/members', { replace: true });
-      }
-    }, 1000);
-  };
+  const { session, messages, loading, sendMessage } = useChat();
+  const [showSidebar, setShowSidebar] = useState(true);
   
   const handleBack = () => {
-    navigate(-1);
+    navigate('/onboarding');
   };
   
   const handleHelpClick = () => {
-    // Show help modal or instructions
-    console.log('Help requested');
+    toast({
+      title: "Ajuda",
+      description: "Um guia completo foi enviado ao seu e-mail.",
+    });
   };
   
   const handleSettingsClick = () => {
-    // Show settings modal
-    console.log('Settings requested');
+    toast({
+      title: "Configurações",
+      description: "As configurações serão implementadas em breve.",
+    });
   };
   
-  const handleTextSubmit = (text: string) => {
-    if (text.trim()) {
-      handleUserResponse(text);
-      setInputValue('');
+  const handleSendMessage = async (text: string) => {
+    await sendMessage(text);
+    
+    // Check if chat completion is sufficient to move to the next step
+    if (session && session.completion_percentage >= 0.8) {
+      completeStep('chat');
+      
+      // Show congratulations toast
+      toast({
+        title: "Parabéns! 🎉",
+        description: "Você completou as informações iniciais. Na próxima etapa, vamos organizar seus documentos.",
+      });
     }
   };
 
   const handleConsultantRequest = () => {
-    toast({
-      title: "Solicitação recebida",
-      description: "Um de nossos consultores entrará em contato em breve.",
-    });
+    navigate('/onboarding/human/schedule');
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Chat Header */}
@@ -247,29 +93,40 @@ const OnboardingChat = () => {
         </div>
       </header>
       
-      {/* Chat Window */}
-      <div className="flex-1 overflow-y-auto p-4 pb-32">
-        {messages.map((message, index) => (
-          <motion.div 
-            key={message.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChatBubble 
-              message={message} 
-              onResponse={handleUserResponse} 
-              isLastMessage={index === messages.length - 1}
+      {/* Main Content with Chat and Profile */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Chat Window */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 pb-32">
+            <MessageList messages={messages} />
+          </div>
+          
+          {/* Input Area */}
+          <div className="p-4 border-t bg-white">
+            <ChatInput onSendMessage={handleSendMessage} disabled={loading} />
+          </div>
+        </div>
+        
+        {/* Profile Sidebar - Hidden on mobile by default */}
+        {session && showSidebar && (
+          <div className="hidden md:block w-80 border-l shrink-0">
+            <ProfileSidebar 
+              profile={session.profile} 
+              completionPercentage={session.completion_percentage} 
             />
-          </motion.div>
-        ))}
-        <div ref={chatEndRef} />
+          </div>
+        )}
       </div>
       
-      {/* Progress Tracker */}
-      <div className="fixed top-20 right-4">
-        <ProgressTracker currentStep={currentStep} totalSteps={questions.length - 1} />
-      </div>
+      {/* Toggle Sidebar Button (Mobile Only) */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowSidebar(!showSidebar)}
+        className="md:hidden fixed bottom-20 right-4 z-20 rounded-full h-12 w-12 p-0 shadow-md"
+      >
+        {showSidebar ? <ArrowLeft size={18} /> : <span className="text-xs">Perfil</span>}
+      </Button>
       
       {/* Consultant Request Button */}
       <div className="fixed top-20 left-4">
@@ -283,16 +140,27 @@ const OnboardingChat = () => {
         </Button>
       </div>
       
-      {/* Input Area */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg">
-        <ChatInput 
-          currentQuestion={questions[currentStep]} 
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={handleTextSubmit}
-          onOptionSelect={handleUserResponse}
-        />
-      </div>
+      {/* Mobile Profile Sidebar (when shown) */}
+      {session && showSidebar && (
+        <div className="md:hidden fixed inset-0 z-10 bg-white">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h2 className="font-bold text-lg">Seu Perfil</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowSidebar(false)}
+            >
+              Fechar
+            </Button>
+          </div>
+          <div className="h-[calc(100vh-60px)] overflow-y-auto">
+            <ProfileSidebar 
+              profile={session.profile} 
+              completionPercentage={session.completion_percentage} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

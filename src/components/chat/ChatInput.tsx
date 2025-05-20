@@ -1,105 +1,68 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Send, Mic, Upload } from 'lucide-react';
-
-interface Message {
-  id: string;
-  sender: 'assistant' | 'user';
-  content: string;
-  type: 'text' | 'options' | 'input' | 'slider' | 'date';
-  options?: {
-    value: string;
-    label: string;
-  }[];
-}
+import { Textarea } from '@/components/ui/textarea';
 
 interface ChatInputProps {
-  currentQuestion: Message;
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit: (text: string) => void;
-  onOptionSelect: (option: any) => void;
+  onSendMessage: (message: string) => void;
+  disabled: boolean;
 }
 
-const ChatInput = ({ currentQuestion, value, onChange, onSubmit, onOptionSelect }: ChatInputProps) => {
-  const [sliderValue, setSliderValue] = useState<number[]>([5000]);
-  
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      onSubmit(value);
+const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
+  const [message, setMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus on the textarea when component mounts
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
+
+  // Auto-resize the textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim() && !disabled) {
+      onSendMessage(message);
+      setMessage('');
     }
   };
 
-  // Don't render input if the current question is an options type
-  if (currentQuestion?.type === 'options') {
-    return null;
-  }
-  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      {currentQuestion?.type === 'slider' && (
-        <div className="w-full px-1">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm text-gray-500">R$ 0</span>
-            <span className="text-sm font-medium">
-              R$ {sliderValue[0].toLocaleString('pt-BR')}
-            </span>
-            <span className="text-sm text-gray-500">R$ 50.000+</span>
-          </div>
-          <Slider
-            defaultValue={[5000]}
-            max={50000}
-            step={1000}
-            value={sliderValue}
-            onValueChange={setSliderValue}
-            className="mb-4"
-          />
-          <div className="flex justify-end">
-            <Button 
-              onClick={() => onOptionSelect(sliderValue[0])}
-              className="bg-w1-primary-dark hover:bg-opacity-90"
-            >
-              Confirmar
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {currentQuestion?.type === 'input' && (
-        <div className="flex gap-2">
-          <Input
-            placeholder="Digite sua resposta..."
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1"
-          />
-          <Button 
-            onClick={() => onSubmit(value)}
-            className="bg-w1-primary-dark hover:bg-opacity-90"
-            disabled={!value.trim()}
-          >
-            <Send size={18} />
-          </Button>
-          <Button variant="outline">
-            <Upload size={18} />
-          </Button>
-          <Button variant="outline">
-            <Mic size={18} />
-          </Button>
-        </div>
-      )}
-    </div>
+    <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+      <Textarea
+        ref={textareaRef}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Digite sua mensagem..."
+        disabled={disabled}
+        className="min-h-[48px] max-h-[200px] text-base resize-none flex-1"
+      />
+      <Button 
+        type="submit" 
+        disabled={!message.trim() || disabled}
+        className="h-12 w-12 p-0 rounded-full"
+        variant="w1Primary"
+      >
+        <Send className="h-5 w-5" />
+      </Button>
+    </form>
   );
 };
 

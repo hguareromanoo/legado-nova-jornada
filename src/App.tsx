@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { ChatProvider } from "./contexts/ChatContext";
 import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/routes";
 
 // Public Pages
@@ -42,57 +43,59 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <UserProvider>
       <OnboardingProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route element={<PublicRoute />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/simulation" element={<SimulationIntro />} />
-                <Route path="/simulation-questions" element={<Simulation />} />
-                <Route path="/simulation-report" element={<SimulationReport />} /> 
-                <Route path="/login" element={<Login />} />
-                <Route path="/cadastro" element={<Cadastro />} />
-              </Route>
-              
-              {/* Onboarding Routes - Accessible only during onboarding process */}
-              <Route element={<OnboardingRoute />}>
-                <Route path="/onboarding" element={<OnboardingSelection />} />
-                <Route path="/onboarding/chat" element={<OnboardingChat />} />
+        <ChatProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route element={<PublicRoute />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/simulation" element={<SimulationIntro />} />
+                  <Route path="/simulation-questions" element={<Simulation />} />
+                  <Route path="/simulation-report" element={<SimulationReport />} /> 
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/cadastro" element={<Cadastro />} />
+                </Route>
                 
-                {/* Human Touch Onboarding Flow */}
-                <Route path="/onboarding/human/schedule" element={<Schedule />} /> {/* Add Schedule route */}
-                <Route path="/onboarding/human/confirmation" element={<HumanConfirmation />} />
-                <Route path="/onboarding/human/portal" element={<HumanPortal />} />
-                <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
+                {/* Onboarding Routes - Accessible only during onboarding process */}
+                <Route element={<OnboardingRoute />}>
+                  <Route path="/onboarding" element={<OnboardingSelection />} />
+                  <Route path="/onboarding/chat" element={<OnboardingChat />} />
+                  
+                  {/* Human Touch Onboarding Flow */}
+                  <Route path="/onboarding/human/schedule" element={<Schedule />} /> 
+                  <Route path="/onboarding/human/confirmation" element={<HumanConfirmation />} />
+                  <Route path="/onboarding/human/portal" element={<HumanPortal />} />
+                  <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
+                  
+                  <Route path="/document-review" element={<DocumentReview />} />
+                  
+                  {/* Add the Members route to the OnboardingRoute group as well to make it accessible during onboarding */}
+                  <Route path="/members" element={<Members />} />
+                </Route>
                 
-                <Route path="/document-review" element={<DocumentReview />} />
+                {/* Dashboard Routes - Protected, only accessible after holding setup */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/documents" element={<Documents />} />
+                  <Route path="/assets" element={<Assets />} />
+                  <Route path="/members" element={<Members />} />
+                  <Route path="/structure" element={<Structure />} />
+                  <Route path="/assistant" element={<Assistant />} />
+                </Route>
                 
-                {/* Add the Members route to the OnboardingRoute group as well to make it accessible during onboarding */}
-                <Route path="/members" element={<Members />} />
-              </Route>
-              
-              {/* Dashboard Routes - Protected, only accessible after holding setup */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/assets" element={<Assets />} />
-                <Route path="/members" element={<Members />} />
-                <Route path="/structure" element={<Structure />} />
-                <Route path="/assistant" element={<Assistant />} />
-              </Route>
-              
-              {/* Legacy route redirects */}
-              <Route path="/document-collection" element={<Navigate to="/members" replace />} />
-              <Route path="/document-opening" element={<Navigate to="/members" replace />} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+                {/* Legacy route redirects */}
+                <Route path="/document-collection" element={<Navigate to="/members" replace />} />
+                <Route path="/document-opening" element={<Navigate to="/members" replace />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ChatProvider>
       </OnboardingProvider>
     </UserProvider>
   </QueryClientProvider>
