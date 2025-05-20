@@ -34,8 +34,11 @@ const PublicRoute = () => {
       'review': '/document-review'
     };
     
-    const redirectTo = stepRoutes[currentStep] || '/onboarding';
-    return <Navigate to={redirectTo} replace />;
+    // Não redirecionar se já estivermos na página de login ou cadastro
+    if (location.pathname === '/login' || location.pathname === '/cadastro') {
+      const redirectTo = stepRoutes[currentStep] || '/onboarding';
+      return <Navigate to={redirectTo} replace />;
+    }
   }
   
   // If not logged in, render the public route with public layout

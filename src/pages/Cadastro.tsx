@@ -2,14 +2,72 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Cadastro = () => {
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useUser();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!firstName || !lastName || !email || !password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { error } = await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao criar conta",
+          description: error,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      toast({
+        title: "Cadastro realizado com sucesso",
+        description: "Redirecionando para o processo de onboarding...",
+      });
+      
+      // PublicRoute vai redirecionar automaticamente
+    } catch (error) {
+      console.error("Erro ao fazer cadastro:", error);
+      toast({
+        title: "Erro ao criar conta",
+        description: "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex">
@@ -91,7 +149,7 @@ const Cadastro = () => {
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-w1-primary-dark mb-1">
                       Nome
@@ -100,7 +158,10 @@ const Cadastro = () => {
                       id="firstName" 
                       type="text" 
                       placeholder="Digite seu nome"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       className="w-full"
+                      required
                     />
                   </div>
                   
@@ -112,7 +173,10 @@ const Cadastro = () => {
                       id="lastName" 
                       type="text" 
                       placeholder="Digite seu sobrenome"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                       className="w-full"
+                      required
                     />
                   </div>
                   
@@ -124,7 +188,10 @@ const Cadastro = () => {
                       id="email" 
                       type="email" 
                       placeholder="Digite seu email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full"
+                      required
                     />
                   </div>
                   
@@ -136,18 +203,23 @@ const Cadastro = () => {
                       id="password" 
                       type="password" 
                       placeholder="Digite sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       className="w-full"
+                      required
                     />
                   </div>
-                </div>
                 
-                <Button 
-                  variant="w1Dark" 
-                  size="w1Base" 
-                  className="w-full mt-6"
-                >
-                  Cadastrar-me
-                </Button>
+                  <Button 
+                    type="submit"
+                    variant="w1Dark" 
+                    size="w1Base" 
+                    className="w-full mt-6"
+                    disabled={loading}
+                  >
+                    {loading ? 'Cadastrando...' : 'Cadastrar-me'}
+                  </Button>
+                </form>
               </motion.div>
             )}
           </AnimatePresence>

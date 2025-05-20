@@ -8,7 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, logout } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +25,11 @@ const Navbar = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav 
@@ -49,6 +54,13 @@ const Navbar = () => {
                 asChild
               >
                 <Link to="/dashboard">Dashboard</Link>
+              </Button>
+              <Button 
+                variant="ghost"
+                className="text-w1-text-light hover:bg-white/10"
+                onClick={handleLogout}
+              >
+                Sair
               </Button>
               <Button 
                 className="bg-w1-primary-accent text-w1-primary-dark hover:bg-w1-primary-accent-hover"
@@ -96,6 +108,13 @@ const Navbar = () => {
                   asChild
                 >
                   <Link to="/dashboard">Dashboard</Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="text-w1-text-light hover:bg-white/10 justify-center"
+                  onClick={handleLogout}
+                >
+                  Sair
                 </Button>
                 <Button 
                   className="bg-w1-primary-accent text-w1-primary-dark hover:bg-w1-primary-accent-hover justify-center"

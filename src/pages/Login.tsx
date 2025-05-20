@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,12 +13,13 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useUser();
+  const { login, signUp } = useUser();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -30,46 +31,43 @@ const Login = () => {
       return;
     }
 
-    // In a real app, we would validate credentials against a database
-    // Here we're just mocking the login
-    login({
-      id: '1',
-      name: 'Usuário de Teste',
-      email: email
-    });
+    setLoading(true);
+    
+    try {
+      const { error } = await login(email, password);
+      
+      if (error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: error,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
-    toast({
-      title: "Login realizado com sucesso",
-      description: "Redirecionando...",
-    });
-    
-    // Navigate based on user's onboarding status
-    const hasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted') === 'true';
-    
-    // Navigate to the redirect path or default paths based on onboarding status
-    if (hasCompletedOnboarding) {
-      navigate('/dashboard');
-    } else {
-      // Get current step or set to selection as default
-      const currentStep = localStorage.getItem('onboardingStep') || 'selection';
+      toast({
+        title: "Login realizado com sucesso",
+        description: "Redirecionando...",
+      });
       
-      // Map steps to routes
-      const stepRoutes = {
-        'selection': '/onboarding',
-        'chat': '/onboarding/chat', 
-        'documents': '/members',
-        'review': '/document-review'
-      };
-      
-      // Navigate to the appropriate step
-      navigate(stepRoutes[currentStep as keyof typeof stepRoutes] || '/onboarding');
+      // O redirecionamento será feito automaticamente pelo PublicRoute
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      toast({
+        title: "Erro ao fazer login",
+        description: "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !password) {
+    if (!name || !lastName || !email || !password) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos.",
@@ -78,22 +76,40 @@ const Login = () => {
       return;
     }
 
-    // In a real app, we would create a user in the database
-    // Here we're just mocking the signup
-    login({
-      id: '1',
-      name: name,
-      email: email
-    });
+    setLoading(true);
     
-    toast({
-      title: "Cadastro realizado com sucesso",
-      description: "Redirecionando para o processo de onboarding...",
-    });
+    try {
+      const { error } = await signUp(email, password, {
+        first_name: name,
+        last_name: lastName
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao criar conta",
+          description: error,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
-    // Set initial onboarding step and navigate to onboarding selection
-    localStorage.setItem('onboardingStep', 'selection');
-    navigate('/onboarding');
+      toast({
+        title: "Cadastro realizado com sucesso",
+        description: "Redirecionando para o processo de onboarding...",
+      });
+
+      // O redirecionamento será feito automaticamente pelo PublicRoute
+    } catch (error) {
+      console.error("Erro ao fazer cadastro:", error);
+      toast({
+        title: "Erro ao criar conta",
+        description: "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -162,8 +178,9 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full bg-w1-primary-dark hover:bg-opacity-90 text-white"
+                disabled={loading}
               >
-                Entrar
+                {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
           </TabsContent>
@@ -172,12 +189,23 @@ const Login = () => {
             <form onSubmit={handleSignup} className="mt-8 space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Nome completo</Label>
+                  <Label htmlFor="name">Nome</Label>
                   <Input
                     id="name"
                     placeholder="Seu nome"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Sobrenome</Label>
+                  <Input
+                    id="lastName"
+                    placeholder="Seu sobrenome"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                     className="mt-1"
                   />
@@ -223,8 +251,9 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full bg-w1-primary-dark hover:bg-opacity-90 text-white"
+                disabled={loading}
               >
-                Cadastrar
+                {loading ? 'Criando conta...' : 'Cadastrar'}
               </Button>
             </form>
           </TabsContent>

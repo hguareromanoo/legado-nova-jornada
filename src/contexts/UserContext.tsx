@@ -1,61 +1,138 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserContextType {
   isLoggedIn: boolean;
-  user: UserData | null;
+  user: User | null;
+  session: Session | null;
   hasCompletedOnboarding: boolean;
-  login: (userData: UserData) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{error?: string}>;
+  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string}>;
+  logout: () => Promise<void>;
   completeOnboarding: () => void;
   updateUser: (data: Partial<UserData>) => void;
 }
 
 interface UserData {
   id: string;
-  name: string;
+  name?: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   [key: string]: any;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
+  const { toast } = useToast();
   
-  // Initialize state from localStorage on mount
+  // Configurar listener de autenticação Supabase e verificar sessão existente
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
-    const storedHasCompletedOnboarding = localStorage.getItem('holdingSetupCompleted');
-    
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    
-    setIsLoggedIn(storedIsLoggedIn === 'true');
-    setHasCompletedOnboarding(storedHasCompletedOnboarding === 'true');
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsLoggedIn(!!currentSession);
+        
+        // Verificar status de onboarding
+        if (currentSession) {
+          const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
+          setHasCompletedOnboarding(completed);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsLoggedIn(!!currentSession);
+      
+      // Verificar status de onboarding
+      if (currentSession) {
+        const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
+        setHasCompletedOnboarding(completed);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
-  const login = (userData: UserData) => {
-    setUser(userData);
-    setIsLoggedIn(true);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    // Check if onboarding was already completed
-    const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
-    setHasCompletedOnboarding(completed);
-    
-    // Set default onboarding step if not set
-    if (!localStorage.getItem('onboardingStep')) {
-      localStorage.setItem('onboardingStep', 'selection');
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Erro de login:', error.message);
+        return { error: error.message };
+      }
+      
+      // Supabase Auth já define session e user através do listener
+      
+      // Verificar status de onboarding
+      const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
+      setHasCompletedOnboarding(completed);
+      
+      // Set default onboarding step if not set
+      if (!localStorage.getItem('onboardingStep')) {
+        localStorage.setItem('onboardingStep', 'selection');
+      }
+      
+      return {};
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      return { error: 'Erro ao fazer login' };
     }
   };
   
-  const logout = () => {
+  const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Erro de cadastro:', error.message);
+        return { error: error.message };
+      }
+      
+      // O listener onAuthStateChange já vai configurar o usuário
+      
+      // Set default onboarding step
+      localStorage.setItem('onboardingStep', 'selection');
+      
+      return {};
+    } catch (error) {
+      console.error('Erro ao fazer cadastro:', error);
+      return { error: 'Erro ao fazer cadastro' };
+    }
+  };
+  
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsLoggedIn(false);
     localStorage.removeItem('user');
@@ -70,9 +147,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   
   const updateUser = (data: Partial<UserData>) => {
     if (user) {
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Aqui poderíamos atualizar os metadados do usuário no Supabase
+      console.log('Atualizando dados do usuário:', data);
     }
   };
   
@@ -81,8 +157,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       value={{
         isLoggedIn,
         user,
+        session,
         hasCompletedOnboarding,
         login,
+        signUp,
         logout,
         completeOnboarding,
         updateUser
