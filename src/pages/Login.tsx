@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +17,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showEmailConfirmationAlert, setShowEmailConfirmationAlert] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { login, signUp } = useUser();
@@ -79,7 +82,7 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password, {
+      const { error, needsEmailConfirmation } = await signUp(email, password, {
         first_name: name,
         last_name: lastName
       });
@@ -89,6 +92,16 @@ const Login = () => {
           title: "Erro ao criar conta",
           description: error,
           variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (needsEmailConfirmation) {
+        setShowEmailConfirmationAlert(true);
+        toast({
+          title: "Cadastro realizado com sucesso",
+          description: "Por favor, verifique seu email para confirmar sua conta.",
         });
         setLoading(false);
         return;
@@ -124,6 +137,16 @@ const Login = () => {
             Acesse sua conta para continuar o processo de abertura da sua holding familiar
           </p>
         </div>
+
+        {showEmailConfirmationAlert && (
+          <Alert className="bg-amber-50 border-amber-300 text-amber-800 mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Um email de confirmação foi enviado para seu endereço. 
+              Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">

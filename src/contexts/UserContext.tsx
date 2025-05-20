@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +10,7 @@ interface UserContextType {
   session: Session | null;
   hasCompletedOnboarding: boolean;
   login: (email: string, password: string) => Promise<{error?: string}>;
-  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string}>;
+  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string; needsEmailConfirmation?: boolean}>;
   logout: () => Promise<void>;
   completeOnboarding: () => void;
   updateUser: (data: Partial<UserData>) => void;
@@ -79,6 +80,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error('Login error:', error.message);
+        
+        // Specific error handling for email not confirmed
+        if (error.message === 'Email not confirmed') {
+          return { 
+            error: 'Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.' 
+          };
+        }
+        
         return { error: error.message };
       }
       
@@ -119,6 +128,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       
       // Set default onboarding step
       localStorage.setItem('onboardingStep', 'selection');
+      
+      // Check if confirmation email was sent
+      if (data?.user && !data.user.confirmed_at) {
+        return { 
+          needsEmailConfirmation: true,
+        };
+      }
       
       return {};
     } catch (error) {
