@@ -107,17 +107,25 @@ const OnboardingChat = () => {
         </div>
       </header>
       
-      {/* API Error Alert */}
+      {/* API Error Alert - Improved with more debug info */}
       {error && (
         <Alert variant="destructive" className="m-4">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
-            <div className="mt-2">
+          <AlertDescription className="space-y-2">
+            <div><strong>Erro:</strong> {error}</div>
+            
+            <div>
               <strong>Atenção:</strong> É necessário iniciar o servidor Python FastAPI em http://localhost:8000.
-              <div className="mt-1 text-sm">
-                Execute <code className="bg-gray-200 px-1 rounded">python app.py</code> no terminal do seu backend.
-              </div>
+            </div>
+            
+            <div className="text-sm bg-gray-100 p-2 rounded">
+              <p>Comando para iniciar o servidor:</p>
+              <code className="bg-gray-200 px-1 rounded">python app.py</code>
+            </div>
+            
+            <div className="text-sm">
+              <p><strong>Nota:</strong> O backend está esperando um user_id válido.</p>
+              <p>Certifique-se de que o usuário esteja logado e que as credenciais do Supabase estejam configuradas corretamente.</p>
             </div>
           </AlertDescription>
         </Alert>

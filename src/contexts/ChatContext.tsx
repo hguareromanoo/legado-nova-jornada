@@ -53,8 +53,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     };
     
     const createNewSession = async () => {
-      // Pass user.id if available, otherwise null
+      // Ensure we pass a valid user ID to the API
+      // If user is authenticated, use their ID, otherwise pass null
       const userId = user?.id || null;
+      console.log('Creating new session with user ID:', userId);
+      
       const newSession = await api.createSession(userId);
       localStorage.setItem('chatSessionId', newSession.session_id);
       setSession(newSession);

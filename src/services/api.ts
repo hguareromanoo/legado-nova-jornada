@@ -1,7 +1,5 @@
-
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
-import { useToast } from '@/hooks/use-toast';
 
 // Use API_BASE_URL as http://localhost:8000 since that's where your FastAPI server is running
 const API_BASE_URL = 'http://localhost:8000';
@@ -18,8 +16,12 @@ const apiClient = axios.create({
 export const api = {
   createSession: async (userId: string | null = null): Promise<Session> => {
     try {
-      // Ensure user_id is properly sent in the request body as required by the backend
-      const response = await apiClient.post('/sessions', { user_id: userId });
+      // Make sure user_id is properly formatted for the API
+      // When userId is null, we need to send an actual string value of "null" to backend
+      // Otherwise we send the UUID string as is
+      const response = await apiClient.post('/sessions', { 
+        user_id: userId || '00000000-0000-0000-0000-000000000000' // Use a default UUID when null
+      });
       return response.data;
     } catch (error) {
       console.error('Error creating session:', error);
