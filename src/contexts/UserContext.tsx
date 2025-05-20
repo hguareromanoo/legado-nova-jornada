@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -105,17 +104,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Attempting signup for:', email);
       
-      // Simplified signup with minimal metadata
+      // Very basic signup with absolutely minimal metadata
       const { data, error } = await supabase.auth.signUp({
         email,
-        password,
-        options: {
-          data: {
-            first_name: userData.first_name || '',
-            last_name: userData.last_name || ''
-            // No additional fields that might conflict with database expectations
-          }
-        }
+        password
       });
       
       if (error) {
@@ -124,7 +116,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
       
       console.log('Signup successful, user:', data.user?.id);
-      console.log('User data:', data.user);
       
       // Set default onboarding step
       localStorage.setItem('onboardingStep', 'selection');
