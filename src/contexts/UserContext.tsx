@@ -49,6 +49,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
           setHasCompletedOnboarding(completed);
         }
+        
+        // Show toast for successful email confirmation
+        if (event === 'SIGNED_IN' && currentSession?.user?.email_confirmed_at) {
+          toast({
+            title: "Email confirmado com sucesso",
+            description: "Você pode agora acessar sua conta.",
+          });
+        }
       }
     );
 
@@ -68,7 +76,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
   
   const login = async (email: string, password: string) => {
     try {
@@ -113,10 +121,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Attempting signup for:', email);
       
-      // Very basic signup with absolutely minimal metadata
+      // Configure redirect URL to the login page
+      const redirectTo = window.location.origin + '/login';
+      
+      // Very basic signup with minimal metadata and redirect configuration
       const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+          data: {
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || ''
+          },
+          emailRedirectTo: redirectTo
+        }
       });
       
       if (error) {
@@ -130,7 +148,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('onboardingStep', 'selection');
       
       // Check if confirmation email was sent
-      if (data?.user && !data.user.confirmed_at) {
+      if (data?.user && !data.user.email_confirmed_at) {
         return { 
           needsEmailConfirmation: true,
         };
