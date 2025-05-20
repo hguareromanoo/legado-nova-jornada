@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
-const API_BASE_URL = 'https://api.example.com'; // Update this with your actual API URL
+const API_BASE_URL = 'http://localhost:8000'; // Update this with your actual API URL
 
 export const api = {
   createSession: async (userId: string | null = null): Promise<Session> => {
