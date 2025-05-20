@@ -57,10 +57,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     const createNewSession = async () => {
       // Only pass user ID if user is logged in
       const userId = user?.id || null;
-      console.log('Creating new session with user ID:', userId);
+      const isAnonymous = !userId;
+      
+      console.log('Creating new session:', {
+        userId,
+        isLoggedIn: !!user,
+        isAnonymous
+      });
       
       try {
-        // If userId is null, we'll send an empty body to the backend
+        // Create session - will be anonymous if userId is null
         const newSession = await api.createSession(userId);
         localStorage.setItem('chatSessionId', newSession.session_id);
         setSession(newSession);

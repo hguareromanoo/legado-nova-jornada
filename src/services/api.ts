@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
@@ -33,8 +34,12 @@ export const api = {
     try {
       console.log('Creating session with user_id:', userId);
       
-      // Only include user_id in the request if it's not null
-      const requestBody = userId ? { user_id: userId } : {};
+      // Make it explicit that we're creating an anonymous session when userId is null
+      const requestBody = userId 
+        ? { user_id: userId, is_anonymous: false }
+        : { is_anonymous: true };
+      
+      console.log('Request body for session creation:', requestBody);
       
       const response = await apiClient.post('/sessions', requestBody);
       
