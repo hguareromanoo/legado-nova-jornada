@@ -80,7 +80,7 @@ export const api = {
     }
   },
   
-  // New method to stream assistant responses
+  // Modificado para usar endpoint regular em vez do endpoint de streaming
   sendMessageStreaming: async (
     sessionId: string, 
     message: string, 
@@ -88,72 +88,28 @@ export const api = {
     onComplete: (response: AssistantResponse) => void
   ): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/messages/stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': API_KEY  // Make sure API key is included in fetch requests too
-        },
-        body: JSON.stringify({ content: message })
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error(`Error: ${response.status}`);
+      console.log("Enviando mensagem sem streaming (endpoint stream não implementado)");
+      
+      // Usar o endpoint regular em vez do endpoint de streaming
+      const response = await apiClient.post(
+        `/sessions/${sessionId}/messages`, 
+        { content: message }
+      );
+      
+      // Simular chunks para manter experiência de digitação
+      const content = response.data.content;
+      const words = content.split(' ');
+      
+      // Simular o streaming dividindo a resposta em palavras
+      let accumulatedText = '';
+      for (const word of words) {
+        await new Promise(resolve => setTimeout(resolve, 50)); // Pequena pausa
+        accumulatedText += word + ' ';
+        onChunk(word + ' ');
       }
-
-      // Create a reader to read the streaming response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let finalResponse: AssistantResponse | null = null;
-
-      // Continue reading until we're done
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // Convert bytes to text
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-
-        // Process any complete JSON objects
-        let endOfJson = buffer.indexOf('\n');
-        while (endOfJson !== -1) {
-          const jsonString = buffer.substring(0, endOfJson);
-          buffer = buffer.substring(endOfJson + 1);
-
-          try {
-            const data = JSON.parse(jsonString);
-            if (data.event === 'chunk') {
-              onChunk(data.content);
-            } else if (data.event === 'complete') {
-              finalResponse = data.response;
-            }
-          } catch (e) {
-            console.error('Error parsing JSON:', e);
-          }
-
-          endOfJson = buffer.indexOf('\n');
-        }
-      }
-
-      // Process any remaining data in the buffer
-      if (buffer.trim() && !finalResponse) {
-        try {
-          const data = JSON.parse(buffer);
-          if (data.event === 'complete') {
-            finalResponse = data.response;
-          }
-        } catch (e) {
-          console.error('Error parsing final JSON:', e);
-        }
-      }
-
-      if (finalResponse) {
-        onComplete(finalResponse);
-      } else {
-        throw new Error('No complete response received');
-      }
+      
+      // Quando terminar, chama onComplete com a resposta completa
+      onComplete(response.data);
     } catch (error) {
       console.error('Error streaming message:', error);
       throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');

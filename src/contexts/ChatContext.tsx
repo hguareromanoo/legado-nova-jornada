@@ -34,8 +34,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         setLoading(true);
         setError(null);
         
-        // Get session ID from localStorage or create a new session
-        const storedSessionId = localStorage.getItem('chatSessionId');
+        // Obter o ID da sessão específico para o usuário atual
+        const storedSessionId = user?.id ? localStorage.getItem(`chatSessionId_${user.id}`) : null;
         
         if (storedSessionId) {
           try {
@@ -75,7 +75,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       try {
         // Create session with the authenticated user ID
         const newSession = await api.createSession(user.id);
-        localStorage.setItem('chatSessionId', newSession.session_id);
+        
+        // Armazenar sessionId associado ao usuário atual
+        localStorage.setItem(`chatSessionId_${user.id}`, newSession.session_id);
+        
         setSession(newSession);
         setMessages(newSession.conversation_history || []);
       } catch (error) {
