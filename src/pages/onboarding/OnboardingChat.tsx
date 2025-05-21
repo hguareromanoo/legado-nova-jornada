@@ -5,7 +5,8 @@ import {
   ArrowLeft, 
   Settings, 
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -15,13 +16,27 @@ import ProfileSidebar from '@/components/chat/ProfileSidebar';
 import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useUser } from '@/contexts/UserContext';
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { completeStep } = useOnboarding();
   const { session, messages, loading, sendMessage, error } = useChat();
+  const { isLoggedIn } = useUser();
   const [showSidebar, setShowSidebar] = useState(true);
+  
+  // Redirecionar para login se não estiver autenticado
+  useEffect(() => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Autenticação necessária",
+        description: "Por favor, faça login para acessar o chat onboarding.",
+        variant: "destructive",
+      });
+      navigate('/login');
+    }
+  }, [isLoggedIn, navigate, toast]);
   
   const handleBack = () => {
     navigate('/onboarding');
@@ -42,6 +57,17 @@ const OnboardingChat = () => {
   };
   
   const handleSendMessage = async (text: string) => {
+    // Verificar se usuário está autenticado
+    if (!isLoggedIn) {
+      toast({
+        title: "Autenticação necessária",
+        description: "Por favor, faça login para enviar mensagens.",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+    
     await sendMessage(text);
     
     // Check if chat completion is sufficient to move to the next step
@@ -60,6 +86,10 @@ const OnboardingChat = () => {
     navigate('/onboarding/human/schedule');
   };
 
+  const handleLoginRedirect = () => {
+    navigate('/login');
+  };
+
   useEffect(() => {
     // Scroll to bottom when messages change
     const chatContainer = document.querySelector('.chat-messages');
@@ -67,6 +97,29 @@ const OnboardingChat = () => {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   }, [messages]);
+
+  // Se o usuário não estiver logado, mostrar mensagem e botão de login
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-6 bg-white rounded-lg shadow-md max-w-md">
+          <AlertTriangle size={48} className="mx-auto mb-4 text-amber-500" />
+          <h2 className="text-2xl font-bold mb-4">Autenticação Necessária</h2>
+          <p className="mb-6">
+            Você precisa estar logado para acessar o chat de onboarding e iniciar 
+            seu processo de planejamento patrimonial com a W1.
+          </p>
+          <Button 
+            onClick={handleLoginRedirect} 
+            className="bg-w1-primary-accent hover:bg-w1-primary-accent-hover text-w1-primary-dark"
+          >
+            <LogIn className="mr-2" size={18} />
+            Fazer Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -124,7 +177,7 @@ const OnboardingChat = () => {
             </div>
             
             <div className="text-sm">
-              <p><strong>Nota:</strong> O backend está esperando um user_id válido.</p>
+              <p><strong>Nota:</strong> Verifique se você está enviando um user_id válido na requisição.</p>
               <p>Certifique-se de que o usuário esteja logado e que as credenciais do Supabase estejam configuradas corretamente.</p>
             </div>
           </AlertDescription>

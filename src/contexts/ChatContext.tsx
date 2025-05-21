@@ -16,11 +16,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser(); // Get user from context
+  const { user, isLoggedIn } = useUser(); // Get user from context
   const { toast } = useToast();
 
-  // Initialize session
+  // Initialize session - Only when the user is logged in
   useEffect(() => {
+    // Se o usuário não estiver logado, não inicialize a sessão
+    if (!isLoggedIn || !user) {
+      console.log('Usuário não autenticado. Não inicializando sessão de chat.');
+      return;
+    }
+
     const initializeSession = async () => {
       try {
         setLoading(true);
@@ -55,19 +61,18 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     };
     
     const createNewSession = async () => {
-      // Only pass user ID if user is logged in
-      const userId = user?.id || null;
-      const isAnonymous = !userId;
+      // Garantir que temos um user ID válido
+      if (!user?.id) {
+        console.error('User ID não disponível para criar sessão');
+        setError('Erro ao criar sessão: usuário não identificado.');
+        return;
+      }
       
-      console.log('Creating new session:', {
-        userId,
-        isLoggedIn: !!user,
-        isAnonymous
-      });
+      console.log('Creating new session with authenticated user:', user.id);
       
       try {
-        // Create session - will be anonymous if userId is null
-        const newSession = await api.createSession(userId);
+        // Create session with the authenticated user ID
+        const newSession = await api.createSession(user.id);
         localStorage.setItem('chatSessionId', newSession.session_id);
         setSession(newSession);
         setMessages(newSession.conversation_history || []);
@@ -83,10 +88,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     };
     
     initializeSession();
-  }, [user, toast]); // Depend on user to reinitialize when user changes
+  }, [user, isLoggedIn, toast]); // Depend on user and isLoggedIn to reinitialize when user changes
   
   // Function to send message to API
   const sendMessage = async (content: string): Promise<void> => {
+    // Verificar se usuário está logado e se sessão existe
+    if (!isLoggedIn || !user) {
+      setError('Usuário não autenticado. Faça login para continuar.');
+      return;
+    }
+    
     if (!session) {
       setError('Sessão não inicializada. Por favor, recarregue a página.');
       return;

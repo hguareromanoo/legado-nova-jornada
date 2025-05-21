@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
@@ -30,14 +29,16 @@ const apiClient = axios.create({
 });
 
 export const api = {
-  createSession: async (userId: string | null = null): Promise<Session> => {
+  createSession: async (userId: string): Promise<Session> => {
     try {
       console.log('Creating session with user_id:', userId);
       
-      // Make it explicit that we're creating an anonymous session when userId is null
-      const requestBody = userId 
-        ? { user_id: userId, is_anonymous: false }
-        : { is_anonymous: true };
+      // Garantir que userId foi fornecido
+      if (!userId) {
+        throw new Error('User ID é obrigatório para criar uma sessão');
+      }
+      
+      const requestBody = { user_id: userId, is_anonymous: false };
       
       console.log('Request body for session creation:', requestBody);
       
