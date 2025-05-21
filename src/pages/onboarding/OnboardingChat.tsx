@@ -10,9 +10,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';
-import ProfileSidebar from '@/components/chat/ProfileSidebar';
 import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -24,7 +24,6 @@ const OnboardingChat = () => {
   const { completeStep } = useOnboarding();
   const { session, messages, loading, isTyping, sendMessage, error } = useChat();
   const { isLoggedIn } = useUser();
-  const [showSidebar, setShowSidebar] = useState(true);
   
   // Redirecionar para login se não estiver autenticado
   useEffect(() => {
@@ -159,6 +158,19 @@ const OnboardingChat = () => {
           </Button>
         </div>
       </header>
+
+      {/* Progress Bar */}
+      <div className="bg-white px-4 pt-2 pb-1 border-b">
+        <div className="flex justify-between text-xs text-gray-600 mb-1">
+          <span>Progresso da coleta de informações</span>
+          <span>{Math.round((session?.completion_percentage || 0) * 100)}%</span>
+        </div>
+        <Progress 
+          value={(session?.completion_percentage || 0) * 100} 
+          className="h-2 bg-gray-100" 
+          indicatorClassName="bg-w1-primary-accent"
+        />
+      </div>
       
       {/* API Error Alert - Improved with more debug info */}
       {error && (
@@ -184,8 +196,8 @@ const OnboardingChat = () => {
         </Alert>
       )}
       
-      {/* Main Content with Chat and Profile */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content with Chat */}
+      <div className="flex-1 overflow-hidden">
         {/* Chat Window */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 pb-32 chat-messages">
@@ -200,27 +212,7 @@ const OnboardingChat = () => {
             />
           </div>
         </div>
-        
-        {/* Profile Sidebar - Hidden on mobile by default */}
-        {session && showSidebar && (
-          <div className="hidden md:block w-80 border-l shrink-0">
-            <ProfileSidebar 
-              profile={session.profile} 
-              completionPercentage={session.completion_percentage} 
-            />
-          </div>
-        )}
       </div>
-      
-      {/* Toggle Sidebar Button (Mobile Only) */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setShowSidebar(!showSidebar)}
-        className="md:hidden fixed bottom-20 right-4 z-20 rounded-full h-12 w-12 p-0 shadow-md"
-      >
-        {showSidebar ? <ArrowLeft size={18} /> : <span className="text-xs">Perfil</span>}
-      </Button>
       
       {/* Consultant Request Button */}
       <div className="fixed top-20 left-4">
@@ -233,28 +225,6 @@ const OnboardingChat = () => {
           Falar com um consultor
         </Button>
       </div>
-      
-      {/* Mobile Profile Sidebar (when shown) */}
-      {session && showSidebar && (
-        <div className="md:hidden fixed inset-0 z-10 bg-white">
-          <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="font-bold text-lg">Seu Perfil</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowSidebar(false)}
-            >
-              Fechar
-            </Button>
-          </div>
-          <div className="h-[calc(100vh-60px)] overflow-y-auto">
-            <ProfileSidebar 
-              profile={session.profile} 
-              completionPercentage={session.completion_percentage} 
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

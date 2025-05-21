@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ConversationMessage } from '@/types/chat';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader } from 'lucide-react';
 
 interface MessageListProps {
   messages: ConversationMessage[];
@@ -56,8 +55,11 @@ const MessageList = ({ messages, isTyping = false }: MessageListProps) => {
             >
               {isEmptyLastMessage && isTyping ? (
                 <div className="flex items-center space-x-2 py-1">
-                  <Loader className="h-4 w-4 animate-spin text-gray-500" />
-                  <p className="text-gray-500">Digitando...</p>
+                  <span className="text-gray-700 typing-animation">
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                  </span>
                 </div>
               ) : (
                 <>
@@ -84,15 +86,49 @@ const MessageList = ({ messages, isTyping = false }: MessageListProps) => {
           className="flex justify-start"
         >
           <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-tl-none">
-            <div className="flex items-center space-x-2">
-              <Loader className="h-4 w-4 animate-spin text-gray-500" />
-              <p className="text-gray-500">Digitando...</p>
+            <div className="flex items-center">
+              <span className="text-gray-700 typing-animation">
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+              </span>
             </div>
           </div>
         </motion.div>
       )}
       
       <div ref={endOfMessagesRef} />
+
+      <style jsx>{`
+        .typing-animation {
+          display: inline-flex;
+          font-size: 24px;
+          line-height: 1;
+        }
+        .typing-animation .dot {
+          animation: typingAnimation 1.4s infinite ease-in-out;
+          margin-right: 2px;
+        }
+        .typing-animation .dot:nth-child(1) {
+          animation-delay: 0s;
+        }
+        .typing-animation .dot:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        .typing-animation .dot:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+        @keyframes typingAnimation {
+          0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.6;
+          }
+          30% {
+            transform: translateY(-5px);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 };
