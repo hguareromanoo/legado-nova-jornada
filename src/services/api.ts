@@ -26,7 +26,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'apikey': API_KEY  // Consistent API key header
   },
-  timeout: 30000, // Increase timeout to 30 seconds for streaming
+  timeout: 30000, // Increased timeout for long responses
   // Important for CORS when credentials might be sent
   withCredentials: false
 });
@@ -76,42 +76,6 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
-      throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');
-    }
-  },
-  
-  // Modificado para usar endpoint regular em vez do endpoint de streaming
-  sendMessageStreaming: async (
-    sessionId: string, 
-    message: string, 
-    onChunk: (chunk: string) => void,
-    onComplete: (response: AssistantResponse) => void
-  ): Promise<void> => {
-    try {
-      console.log("Enviando mensagem sem streaming (endpoint stream não implementado)");
-      
-      // Usar o endpoint regular em vez do endpoint de streaming
-      const response = await apiClient.post(
-        `/sessions/${sessionId}/messages`, 
-        { content: message }
-      );
-      
-      // Simular chunks para manter experiência de digitação
-      const content = response.data.content;
-      const words = content.split(' ');
-      
-      // Simular o streaming dividindo a resposta em palavras
-      let accumulatedText = '';
-      for (const word of words) {
-        await new Promise(resolve => setTimeout(resolve, 50)); // Pequena pausa
-        accumulatedText += word + ' ';
-        onChunk(word + ' ');
-      }
-      
-      // Quando terminar, chama onComplete com a resposta completa
-      onComplete(response.data);
-    } catch (error) {
-      console.error('Error streaming message:', error);
       throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');
     }
   },
