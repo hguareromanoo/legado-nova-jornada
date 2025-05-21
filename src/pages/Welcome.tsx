@@ -47,7 +47,7 @@ const Welcome = () => {
             Olá, <span className="font-semibold">{firstName}</span>
           </h2>
           
-          <p className="text-lg md:text-xl text-white/80 font-light">
+          <p className="text-lg md:text-xl text-white font-light">
             Seja bem-vindo à W1 Consultoria Patrimonial
           </p>
         </div>
@@ -63,13 +63,13 @@ const Welcome = () => {
             O caminho para o seu planejamento patrimonial começa aqui
           </h3>
           
-          <p className="text-base md:text-lg mb-8 leading-relaxed font-light">
+          <p className="text-base md:text-lg mb-8 leading-relaxed font-light text-white">
             Preparamos uma jornada personalizada para você organizar e proteger seu patrimônio.
             Nas próximas etapas, vamos conhecer melhor suas necessidades e objetivos para 
             desenvolver uma estratégia de holding familiar sob medida.
           </p>
           
-          <p className="text-base md:text-lg mb-12 leading-relaxed font-light">
+          <p className="text-base md:text-lg mb-12 leading-relaxed font-light text-white">
             Nossa equipe está comprometida em garantir que sua família e seu patrimônio
             estejam protegidos com soluções jurídicas eficazes e fiscalmente inteligentes.
           </p>
