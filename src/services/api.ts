@@ -73,6 +73,13 @@ export const api = {
         `/sessions/${sessionId}/messages`,
         { content: message }
       );
+      
+      // Garantir que temos o campo is_complete na resposta
+      if (response.data.is_complete === undefined) {
+        console.warn('API response does not include is_complete field, defaulting to false');
+        response.data.is_complete = false;
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);

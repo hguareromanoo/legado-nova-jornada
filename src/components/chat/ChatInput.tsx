@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useChat } from '@/contexts/ChatContext';
 
 interface ChatInputProps {
   // Make these props optional with default values
@@ -26,6 +27,7 @@ const ChatInput = ({
 }: ChatInputProps) => {
   const [message, setMessage] = useState(value || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { isSessionComplete } = useChat();
 
   // Update internal state when value prop changes
   useEffect(() => {
@@ -36,10 +38,10 @@ const ChatInput = ({
 
   // Auto-focus on the textarea when component mounts
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && !isSessionComplete) {
       textareaRef.current.focus();
     }
-  }, []);
+  }, [isSessionComplete]);
 
   // Auto-resize the textarea based on content
   useEffect(() => {
@@ -51,7 +53,7 @@ const ChatInput = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !disabled) {
+    if (message.trim() && !disabled && !isSessionComplete) {
       if (onSubmit) {
         onSubmit(message);
       } else if (onSendMessage) {
@@ -81,19 +83,28 @@ const ChatInput = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end space-x-2">
-      <Textarea
-        ref={textareaRef}
-        value={message}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Digite sua mensagem..."
-        disabled={disabled}
-        className="min-h-[48px] max-h-[200px] text-base resize-none flex-1"
-      />
+    <form onSubmit={handleSubmit} className="flex items-end space-x-2 relative">
+      <div className="flex-1 relative">
+        <Textarea
+          ref={textareaRef}
+          value={message}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={isSessionComplete 
+            ? "Sessão concluída! Prossiga para a próxima etapa." 
+            : "Digite sua mensagem..."}
+          disabled={disabled || isSessionComplete}
+          className="min-h-[48px] max-h-[200px] text-base resize-none flex-1"
+        />
+        {isSessionComplete && (
+          <div className="absolute inset-0 bg-gray-50 bg-opacity-80 flex items-center justify-center rounded-md pointer-events-none">
+            <span className="text-sm font-medium text-gray-600">Sessão concluída</span>
+          </div>
+        )}
+      </div>
       <Button 
         type="submit" 
-        disabled={!message.trim() || disabled}
+        disabled={!message.trim() || disabled || isSessionComplete}
         className="h-12 w-12 p-0 rounded-full"
         variant="w1Primary"
       >

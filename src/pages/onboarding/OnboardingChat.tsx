@@ -17,13 +17,18 @@ import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useUser } from '@/contexts/UserContext';
+import CompletionDialog from '@/components/chat/CompletionDialog';
+import CompletionBanner from '@/components/chat/CompletionBanner';
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { completeStep } = useOnboarding();
-  const { session, messages, loading, isTyping, sendMessage, error } = useChat();
+  const { session, messages, loading, isTyping, sendMessage, error, isSessionComplete } = useChat();
   const { isLoggedIn } = useUser();
+  
+  // Estado para controlar a exibição do diálogo de conclusão
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   
   // Redirecionar para login se não estiver autenticado
   useEffect(() => {
@@ -36,6 +41,23 @@ const OnboardingChat = () => {
       navigate('/login');
     }
   }, [isLoggedIn, navigate, toast]);
+  
+  // Efeito para monitorar quando a sessão é marcada como completa
+  useEffect(() => {
+    if (isSessionComplete && !showCompletionDialog) {
+      // Marcar etapa como concluída no contexto de onboarding
+      completeStep('chat');
+      
+      // Exibir diálogo de conclusão
+      setShowCompletionDialog(true);
+      
+      // Notificar o usuário
+      toast({
+        title: "Parabéns! 🎉",
+        description: "Você completou a etapa de coleta de informações com sucesso!",
+      });
+    }
+  }, [isSessionComplete, completeStep, toast, showCompletionDialog]);
   
   const handleBack = () => {
     navigate('/onboarding');
@@ -68,17 +90,6 @@ const OnboardingChat = () => {
     }
     
     await sendMessage(text);
-    
-    // Check if chat completion is sufficient to move to the next step
-    if (session && session.completion_percentage >= 0.8) {
-      completeStep('chat');
-      
-      // Show congratulations toast
-      toast({
-        title: "Parabéns! 🎉",
-        description: "Você completou as informações iniciais. Na próxima etapa, vamos organizar seus documentos.",
-      });
-    }
   };
 
   const handleConsultantRequest = () => {
@@ -159,8 +170,8 @@ const OnboardingChat = () => {
         </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="bg-white px-4 pt-2 pb-1 border-b">
+      {/* Progress Bar - Fixed position */}
+      <div className="sticky top-0 z-10 bg-white px-4 pt-2 pb-1 border-b">
         <div className="flex justify-between text-xs text-gray-600 mb-1">
           <span>Progresso da coleta de informações</span>
           <span>{Math.round((session?.completion_percentage || 0) * 100)}%</span>
@@ -196,26 +207,24 @@ const OnboardingChat = () => {
         </Alert>
       )}
       
-      {/* Main Content with Chat */}
-      <div className="flex-1 overflow-hidden">
+      {/* Main Content with Chat - Modified for better fullscreen experience */}
+      <div className="flex-1 flex flex-col h-full">
         {/* Chat Window */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 pb-32 chat-messages">
-            <MessageList messages={messages} isTyping={isTyping} />
-          </div>
-          
-          {/* Input Area */}
-          <div className="p-4 border-t bg-white">
-            <ChatInput 
-              onSendMessage={handleSendMessage} 
-              disabled={loading || !!error} 
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto p-4 chat-messages">
+          <MessageList messages={messages} isTyping={isTyping} />
+        </div>
+        
+        {/* Input Area - Fixed at bottom */}
+        <div className="sticky bottom-0 p-4 border-t bg-white">
+          <ChatInput 
+            onSendMessage={handleSendMessage} 
+            disabled={loading || !!error} 
+          />
         </div>
       </div>
       
       {/* Consultant Request Button */}
-      <div className="fixed top-20 left-4">
+      <div className="fixed top-20 left-4 z-20">
         <Button 
           variant="outline" 
           size="sm" 
@@ -225,6 +234,15 @@ const OnboardingChat = () => {
           Falar com um consultor
         </Button>
       </div>
+      
+      {/* Completion Dialog */}
+      <CompletionDialog 
+        open={showCompletionDialog}
+        onOpenChange={setShowCompletionDialog}
+      />
+      
+      {/* Banner persistente quando a sessão estiver completa e o diálogo fechado */}
+      {isSessionComplete && !showCompletionDialog && <CompletionBanner />}
     </div>
   );
 };

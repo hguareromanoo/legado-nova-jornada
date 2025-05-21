@@ -17,6 +17,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [isSessionComplete, setIsSessionComplete] = useState<boolean>(false); // Novo estado
   const { user, isLoggedIn } = useUser();
   const { toast } = useToast();
 
@@ -41,6 +42,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             const existingSession = await api.getSession(storedSessionId);
             setSession(existingSession);
             setMessages(existingSession.conversation_history || []);
+            
+            // Verificar se a sessão já está completa
+            if (existingSession.is_complete) {
+              setIsSessionComplete(true);
+            }
           } catch (error) {
             console.error('Error retrieving stored session, creating new one:', error);
             // If there's an error with the stored session, create a new one
@@ -139,15 +145,22 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
       
-      // Update session with the new profile data
+      // Update session with the new profile data and check if complete
       setSession(prevSession => {
         if (!prevSession) return null;
         return {
           ...prevSession,
           profile: response.profile,
-          completion_percentage: response.completion_percentage
+          completion_percentage: response.completion_percentage,
+          is_complete: response.is_complete || prevSession.is_complete
         };
       });
+      
+      // Verificar se a sessão foi marcada como completa
+      if (response.is_complete) {
+        setIsSessionComplete(true);
+      }
+      
     } catch (sendError) {
       console.error('Error sending message:', sendError);
       if (sendError instanceof Error) {
@@ -168,6 +181,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       loading,
       error,
       isTyping,
+      isSessionComplete,
       sendMessage
     }}>
       {children}

@@ -88,6 +88,7 @@ export interface AssistantResponse {
   content: string;
   profile: ClientProfile;
   completion_percentage: number;
+  is_complete: boolean; // Adicionado campo is_complete na resposta
 }
 
 export interface ChatContextType {
@@ -96,5 +97,6 @@ export interface ChatContextType {
   loading: boolean;
   error: string | null;
   isTyping: boolean;
+  isSessionComplete: boolean; // Adicionado flag para indicar sessão completa
   sendMessage: (content: string) => Promise<void>;
 }
