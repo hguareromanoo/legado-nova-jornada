@@ -36,7 +36,7 @@ const Cadastro = () => {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password, {
+      const { error, needsEmailConfirmation } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName
       });
@@ -56,10 +56,20 @@ const Cadastro = () => {
       
       toast({
         title: "Cadastro realizado com sucesso",
-        description: "Redirecionando para o processo de onboarding...",
+        description: needsEmailConfirmation 
+          ? "Por favor, verifique seu email para confirmar seu cadastro."
+          : "Redirecionando para o processo de onboarding...",
       });
       
-      // PublicRoute vai redirecionar automaticamente
+      // Se não precisar de confirmação por email, redirecionar para onboarding
+      if (!needsEmailConfirmation) {
+        // Definir o passo inicial do onboarding
+        localStorage.setItem('onboardingStep', 'selection');
+        
+        // Redirecionar para a página de onboarding
+        navigate('/onboarding');
+      }
+      
     } catch (error) {
       console.error("Erro ao fazer cadastro:", error);
       toast({
