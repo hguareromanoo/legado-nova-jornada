@@ -49,6 +49,9 @@ const Login = () => {
         return;
       }
 
+      // Definir hasSeenWelcome como false para mostrar a tela de boas-vindas
+      localStorage.setItem('hasSeenWelcome', 'false');
+      
       toast({
         title: "Login realizado com sucesso",
         description: "Redirecionando...",

@@ -15,6 +15,7 @@ import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
 import SimulationReport from "./pages/SimulationReport"; 
 import Login from "./pages/Login";
+import Welcome from "./pages/Welcome"; // Adicionar a importação da nova página
 import NotFound from "./pages/NotFound";
 import Cadastro from "./pages/Cadastro";
 
@@ -27,7 +28,7 @@ import DocumentReview from "./pages/onboarding/DocumentReview";
 import HumanConfirmation from "./pages/onboarding/human/Confirmation";
 import HumanPortal from "./pages/onboarding/human/Portal";
 import PlanApproval from "./pages/onboarding/human/PlanApproval";
-import Schedule from "./pages/onboarding/human/Schedule"; // Add import for Schedule page
+import Schedule from "./pages/onboarding/human/Schedule"; 
 
 // Dashboard Pages
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/simulation-report" element={<SimulationReport />} /> 
                   <Route path="/login" element={<Login />} />
                   <Route path="/cadastro" element={<Cadastro />} />
+                  <Route path="/welcome" element={<Welcome />} /> {/* Nova rota de boas-vindas */}
                 </Route>
                 
                 {/* Onboarding Routes - Accessible only during onboarding process */}

@@ -51,6 +51,9 @@ const Cadastro = () => {
         return;
       }
       
+      // Definir hasSeenWelcome como false para mostrar a tela de boas-vindas
+      localStorage.setItem('hasSeenWelcome', 'false');
+      
       toast({
         title: "Cadastro realizado com sucesso",
         description: "Redirecionando para o processo de onboarding...",
