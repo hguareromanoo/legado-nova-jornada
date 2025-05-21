@@ -95,5 +95,7 @@ export interface ChatContextType {
   messages: ConversationMessage[];
   loading: boolean;
   error: string | null;
+  isTyping: boolean;
+  streamingMessage: string;
   sendMessage: (content: string) => Promise<void>;
 }

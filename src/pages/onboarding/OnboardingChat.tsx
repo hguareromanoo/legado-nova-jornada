@@ -22,7 +22,7 @@ const OnboardingChat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { completeStep } = useOnboarding();
-  const { session, messages, loading, sendMessage, error } = useChat();
+  const { session, messages, loading, isTyping, sendMessage, error } = useChat();
   const { isLoggedIn } = useUser();
   const [showSidebar, setShowSidebar] = useState(true);
   
@@ -138,7 +138,7 @@ const OnboardingChat = () => {
             <span className="text-w1-primary-dark font-bold">R</span>
           </div>
           <span className="font-medium">Robson</span>
-          {loading && <span className="text-sm text-gray-500">(digitando...)</span>}
+          {isTyping && <span className="text-sm text-gray-500">(digitando...)</span>}
         </div>
         <div className="flex gap-2">
           <Button 
@@ -189,7 +189,7 @@ const OnboardingChat = () => {
         {/* Chat Window */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 pb-32 chat-messages">
-            <MessageList messages={messages} />
+            <MessageList messages={messages} isTyping={isTyping} />
           </div>
           
           {/* Input Area */}

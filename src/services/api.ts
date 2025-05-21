@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
 
@@ -23,7 +24,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // Increase timeout to 30 seconds for streaming
   // Important for CORS when credentials might be sent
   withCredentials: false
 });
@@ -73,6 +74,85 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
+      throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');
+    }
+  },
+  
+  // New method to stream assistant responses
+  sendMessageStreaming: async (
+    sessionId: string, 
+    message: string, 
+    onChunk: (chunk: string) => void,
+    onComplete: (response: AssistantResponse) => void
+  ): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/messages/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: message })
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      // Create a reader to read the streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finalResponse: AssistantResponse | null = null;
+
+      // Continue reading until we're done
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Convert bytes to text
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        // Process any complete JSON objects
+        let endOfJson = buffer.indexOf('\n');
+        while (endOfJson !== -1) {
+          const jsonString = buffer.substring(0, endOfJson);
+          buffer = buffer.substring(endOfJson + 1);
+
+          try {
+            const data = JSON.parse(jsonString);
+            if (data.event === 'chunk') {
+              onChunk(data.content);
+            } else if (data.event === 'complete') {
+              finalResponse = data.response;
+            }
+          } catch (e) {
+            console.error('Error parsing JSON:', e);
+          }
+
+          endOfJson = buffer.indexOf('\n');
+        }
+      }
+
+      // Process any remaining data in the buffer
+      if (buffer.trim() && !finalResponse) {
+        try {
+          const data = JSON.parse(buffer);
+          if (data.event === 'complete') {
+            finalResponse = data.response;
+          }
+        } catch (e) {
+          console.error('Error parsing final JSON:', e);
+        }
+      }
+
+      if (finalResponse) {
+        onComplete(finalResponse);
+      } else {
+        throw new Error('No complete response received');
+      }
+    } catch (error) {
+      console.error('Error streaming message:', error);
       throw new Error('Erro ao enviar mensagem. Verifique se o servidor API está rodando corretamente.');
     }
   },

@@ -16,6 +16,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [streamingMessage, setStreamingMessage] = useState<string>('');
   const { user, isLoggedIn } = useUser(); // Get user from context
   const { toast } = useToast();
 
@@ -119,39 +121,102 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
       
-      // Send message to API
-      const response = await api.sendMessage(session.session_id, content);
-      
-      // Add assistant response to the list
-      const assistantMessage: ConversationMessage = {
+      // Create a placeholder message for the assistant's response
+      const assistantPlaceholder: ConversationMessage = {
         message_id: `assist-${Date.now()}`,
         session_id: session.session_id,
         timestamp: new Date().toISOString(),
         role: 'assistant',
-        content: response.content,
+        content: '',
         extracted_entities: null
       };
       
-      setMessages(prevMessages => [...prevMessages, assistantMessage]);
-      
-      // Update session with the new profile data
-      setSession(prevSession => {
-        if (!prevSession) return null;
-        return {
-          ...prevSession,
-          profile: response.profile,
-          completion_percentage: response.completion_percentage
-        };
-      });
+      setMessages(prevMessages => [...prevMessages, assistantPlaceholder]);
+      setIsTyping(true);
+      setStreamingMessage('');
+
+      // Use streaming API
+      await api.sendMessageStreaming(
+        session.session_id, 
+        content,
+        // Handle each chunk
+        (chunk) => {
+          setStreamingMessage(prev => prev + chunk);
+          // Update the last message with new content
+          setMessages(prevMessages => {
+            const newMessages = [...prevMessages];
+            if (newMessages.length > 0) {
+              const lastMessageIndex = newMessages.length - 1;
+              newMessages[lastMessageIndex] = {
+                ...newMessages[lastMessageIndex],
+                content: newMessages[lastMessageIndex].content + chunk
+              };
+            }
+            return newMessages;
+          });
+        },
+        // Handle complete response
+        (response) => {
+          // Update session with the new profile data
+          setSession(prevSession => {
+            if (!prevSession) return null;
+            return {
+              ...prevSession,
+              profile: response.profile,
+              completion_percentage: response.completion_percentage
+            };
+          });
+          
+          // Reset streaming state
+          setStreamingMessage('');
+          setIsTyping(false);
+        }
+      );
     } catch (sendError) {
       console.error('Error sending message:', sendError);
-      if (sendError instanceof Error) {
-        setError(sendError.message);
-      } else {
-        setError('Ocorreu um erro ao enviar a mensagem.');
+      
+      // If streaming fails, fallback to regular send
+      try {
+        console.log("Falling back to regular message sending");
+        const response = await api.sendMessage(session.session_id, content);
+        
+        // Update the last message with complete content
+        setMessages(prevMessages => {
+          const newMessages = [...prevMessages];
+          if (newMessages.length > 0) {
+            const lastMessageIndex = newMessages.length - 1;
+            newMessages[lastMessageIndex] = {
+              ...newMessages[lastMessageIndex],
+              content: response.content
+            };
+          }
+          return newMessages;
+        });
+        
+        // Update session
+        setSession(prevSession => {
+          if (!prevSession) return null;
+          return {
+            ...prevSession,
+            profile: response.profile,
+            completion_percentage: response.completion_percentage
+          };
+        });
+      } catch (error) {
+        if (sendError instanceof Error) {
+          setError(sendError.message);
+        } else {
+          setError('Ocorreu um erro ao enviar a mensagem.');
+        }
+        
+        // Remove the placeholder message on error
+        setMessages(prevMessages => 
+          prevMessages.filter(msg => msg.message_id !== `assist-${Date.now()}`)
+        );
       }
     } finally {
       setLoading(false);
+      setIsTyping(false);
     }
   };
   
@@ -161,6 +226,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       messages,
       loading,
       error,
+      isTyping,
+      streamingMessage,
       sendMessage
     }}>
       {children}
