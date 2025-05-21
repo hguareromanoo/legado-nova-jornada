@@ -15,6 +15,7 @@ const determineApiUrl = () => {
 };
 
 const API_BASE_URL = determineApiUrl();
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6cmJhcnV0aWJ6aGd2Z3NvcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1MjAyNTMsImV4cCI6MjA2MzA5NjI1M30.kikgJq8SgXa81PahsYoTvkPiICqriE9iyz6ksOydVV8';
 
 console.log('Using API base URL:', API_BASE_URL);
 
@@ -23,7 +24,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6cmJhcnV0aWJ6aGd2Z3NvcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1MjAyNTMsImV4cCI6MjA2MzA5NjI1M30.kikgJq8SgXa81PahsYoTvkPiICqriE9iyz6ksOydVV8'  // Add the API key here
+    'apikey': API_KEY  // Consistent API key header
   },
   timeout: 30000, // Increase timeout to 30 seconds for streaming
   // Important for CORS when credentials might be sent
@@ -90,7 +91,8 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/messages/stream`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'apikey': API_KEY  // Make sure API key is included in fetch requests too
         },
         body: JSON.stringify({ content: message })
       });
