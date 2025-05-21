@@ -99,7 +99,7 @@ const MessageList = ({ messages, isTyping = false }: MessageListProps) => {
       
       <div ref={endOfMessagesRef} />
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .typing-animation {
           display: inline-flex;
           font-size: 24px;
@@ -128,7 +128,7 @@ const MessageList = ({ messages, isTyping = false }: MessageListProps) => {
             opacity: 1;
           }
         }
-      `}</style>
+      `}} />
     </div>
   );
 };
