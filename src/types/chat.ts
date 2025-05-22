@@ -43,8 +43,49 @@ export interface CompletionScore {
 
 export interface DocumentRecommendation {
   name: string;
+  document_key: string; // Chave única para OCR
+  category: string;
+  description: string;
   reason: string | null;
   is_mandatory: boolean;
+  priority: number;
+  item_description?: string | null;
+  how_to_obtain?: string | null;
+  estimated_cost?: string | null;
+  processing_time?: string | null;
+}
+
+export interface DocumentRecommendationsResponse {
+  success: boolean;
+  session_id: string;
+  profile_completion: number;
+  is_complete: boolean;
+  total_documents: number;
+  mandatory_documents: number;
+  recommendations: DocumentRecommendation[];
+  summary: {
+    by_category: Record<string, number>;
+    estimated_total_cost: string;
+    processing_time_range: string;
+    priority_distribution: {
+      alta_prioridade: number;
+      media_prioridade: number;
+      baixa_prioridade: number;
+    };
+  };
+  metadata: {
+    profile_id: string;
+    generated_at: string;
+    client_name: string | null;
+    marital_status: string | null;
+    items_analyzed: {
+      imoveis: number;
+      empresas: number;
+      propriedades_rurais: number;
+      membros_familia: number;
+    };
+    document_keys_generated: string[];
+  };
 }
 
 export interface ClientProfile {
@@ -97,6 +138,6 @@ export interface ChatContextType {
   loading: boolean;
   error: string | null;
   isTyping: boolean;
-  isSessionComplete: boolean; // Adicionado flag para indicar sessão completa
+  isSessionComplete: boolean;
   sendMessage: (content: string) => Promise<void>;
 }

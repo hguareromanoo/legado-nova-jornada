@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { Session, AssistantResponse, ConversationMessage } from '@/types/chat';
+import { Session, AssistantResponse, ConversationMessage, DocumentRecommendationsResponse } from '@/types/chat';
 
 // Determine the correct API URL based on environment
 const determineApiUrl = () => {
@@ -94,6 +94,35 @@ export const api = {
     } catch (error) {
       console.error('Error getting messages:', error);
       throw new Error('Erro ao buscar mensagens. Verifique se o servidor API está rodando corretamente.');
+    }
+  },
+
+  // ✨ NOVA: Buscar recomendações de documentos
+  getDocumentRecommendations: async (sessionId: string): Promise<DocumentRecommendationsResponse> => {
+    try {
+      console.log('Fetching document recommendations for session:', sessionId);
+      const response = await apiClient.get(`/sessions/${sessionId}/document-recommendations`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching document recommendations:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        throw new Error('Perfil ainda não está completo para gerar recomendações de documentos.');
+      }
+      if (axios.isAxiosError(error) && !error.response) {
+        throw new Error(`Erro de conexão com o servidor API (${API_BASE_URL}). Verifique se o servidor está rodando.`);
+      }
+      throw new Error('Erro ao buscar recomendações de documentos. Verifique se o servidor API está rodando.');
+    }
+  },
+
+  // ✨ NOVA: Verificar status de conclusão
+  getCompletionStatus: async (sessionId: string): Promise<any> => {
+    try {
+      const response = await apiClient.get(`/sessions/${sessionId}/completion-status`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching completion status:', error);
+      throw new Error('Erro ao verificar status de conclusão.');
     }
   }
 };

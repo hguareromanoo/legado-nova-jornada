@@ -6,11 +6,13 @@ import {
   Settings, 
   HelpCircle,
   AlertTriangle,
-  LogIn
+  LogIn,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';
 import { useChat } from '@/contexts/ChatContext';
@@ -19,6 +21,8 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useUser } from '@/contexts/UserContext';
 import CompletionDialog from '@/components/chat/CompletionDialog';
 import CompletionBanner from '@/components/chat/CompletionBanner';
+import { DocumentRecommendationsResponse } from '@/types/chat';
+import { api } from '@/services/api';
 
 const OnboardingChat = () => {
   const navigate = useNavigate();
@@ -29,6 +33,10 @@ const OnboardingChat = () => {
   
   // Estado para controlar a exibição do diálogo de conclusão
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  
+  // Novos estados para gerenciar documentos e loading
+  const [documentData, setDocumentData] = useState<DocumentRecommendationsResponse | null>(null);
+  const [loadingDocuments, setLoadingDocuments] = useState<boolean>(false);
   
   // Redirecionar para login se não estiver autenticado
   useEffect(() => {
@@ -92,6 +100,62 @@ const OnboardingChat = () => {
     await sendMessage(text);
   };
 
+  // Modificado: Função de transição para documentos com chamada de API
+  const handleProceedToDocuments = async () => {
+    console.log('🚀 Buscando documentos para a sessão:', session?.session_id);
+    
+    if (!session?.session_id) {
+      toast({
+        title: "Erro",
+        description: "Sessão não encontrada. Recarregue a página.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setLoadingDocuments(true);
+      
+      // Mostrar loading
+      toast({
+        title: "Preparando documentos...",
+        description: "Gerando lista personalizada de documentos necessários.",
+      });
+      
+      // ✨ FAZER CHAMADA PARA API DE DOCUMENTOS
+      const documents = await api.getDocumentRecommendations(session.session_id);
+      setDocumentData(documents);
+      
+      // Fechar diálogo após sucesso
+      setShowCompletionDialog(false);
+      
+      // Sucesso - mostrar informações dos documentos no toast
+      toast({
+        title: "Documentos preparados! 📋",
+        description: `${documents.total_documents} documentos necessários identificados. Custo estimado: ${documents.summary.estimated_total_cost}`,
+        duration: 5000,
+      });
+      
+      console.log('📋 Documentos recebidos:', documents);
+      console.log('📊 Resumo por categoria:', documents.summary.by_category);
+      console.log('🔑 Chaves geradas:', documents.metadata.document_keys_generated);
+      
+      // TODO: Aqui futuramente será a navegação para página de documentos
+      // navigate('/onboarding/documents', { state: { documentData: documents } });
+      
+    } catch (error) {
+      console.error('Erro ao buscar documentos:', error);
+      
+      toast({
+        title: "Erro ao carregar documentos",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Verifique se o servidor está rodando.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
   const handleConsultantRequest = () => {
     navigate('/onboarding/human/schedule');
   };
@@ -107,6 +171,16 @@ const OnboardingChat = () => {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   }, [messages]);
+
+  // Preparar dados do perfil para os componentes
+  const profileSummary = session?.profile ? {
+    personalComplete: session.profile.completion_score.personal > 0.8,
+    familyComplete: session.profile.completion_score.family > 0.8,
+    assetsComplete: session.profile.completion_score.assets > 0.8,
+    goalsComplete: session.profile.completion_score.goals > 0.8,
+  } : undefined;
+
+  const clientName = session?.profile?.personal_info?.name || null;
 
   // Se o usuário não estiver logado, mostrar mensagem e botão de login
   if (!isLoggedIn) {
@@ -170,17 +244,32 @@ const OnboardingChat = () => {
         </div>
       </header>
 
-      {/* Progress Bar - Fixed position */}
+      {/* Progress Bar - Fixed position - Atualizado com indicador visual de conclusão */}
       <div className="sticky top-0 z-10 bg-white px-4 pt-2 pb-1 border-b">
         <div className="flex justify-between text-xs text-gray-600 mb-1">
-          <span>Progresso da coleta de informações</span>
+          <span>
+            {isSessionComplete ? 
+              '✅ Coleta concluída - Pronto para documentos' : 
+              'Progresso da coleta de informações'
+            }
+          </span>
           <span>{Math.round((session?.completion_percentage || 0) * 100)}%</span>
         </div>
         <Progress 
           value={(session?.completion_percentage || 0) * 100} 
-          className="h-2 bg-gray-100" 
-          indicatorClassName="bg-w1-primary-accent"
+          className={`h-2 ${isSessionComplete ? 'bg-green-100' : 'bg-gray-100'}`}
+          indicatorClassName={isSessionComplete ? 'bg-green-500' : 'bg-w1-primary-accent'}
         />
+        
+        {/* Badge de conclusão */}
+        {isSessionComplete && (
+          <div className="flex items-center justify-center mt-2">
+            <Badge className="bg-green-600 text-white text-xs animate-pulse">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Informações Completas
+            </Badge>
+          </div>
+        )}
       </div>
       
       {/* API Error Alert - Improved with more debug info */}
@@ -235,14 +324,32 @@ const OnboardingChat = () => {
         </Button>
       </div>
       
-      {/* Completion Dialog */}
+      {/* Completion Dialog - Atualizado com novas props */}
       <CompletionDialog 
         open={showCompletionDialog}
         onOpenChange={setShowCompletionDialog}
+        onProceedToDocuments={handleProceedToDocuments}
+        clientName={clientName}
+        profileSummary={profileSummary}
+        isLoadingDocuments={loadingDocuments}
       />
       
-      {/* Banner persistente quando a sessão estiver completa e o diálogo fechado */}
-      {isSessionComplete && !showCompletionDialog && <CompletionBanner />}
+      {/* Banner persistente quando a sessão estiver completa e o diálogo fechado - Atualizado com novas props */}
+      {isSessionComplete && !showCompletionDialog && (
+        <CompletionBanner 
+          onProceedToDocuments={handleProceedToDocuments}
+          clientName={clientName}
+          completionPercentage={Math.round((session?.completion_percentage || 0) * 100)}
+          isLoadingDocuments={loadingDocuments}
+        />
+      )}
+      
+      {/* Mostrar dados dos documentos no console quando disponíveis (temporário para debug) */}
+      {documentData && (
+        <div className="hidden">
+          {console.log('📄 Documentos disponíveis para visualização:', documentData)}
+        </div>
+      )}
     </div>
   );
 };
