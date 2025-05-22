@@ -31,7 +31,8 @@ const DocumentUpload = ({
 
   // Function to handle document upload
   const handleDocumentUpload = (documentKey: string, recommendationId: string) => {
-    const fileInput = document.createElement('input');
+    // Using window.document instead of just document to avoid confusion with the prop named document
+    const fileInput = window.document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.pdf,.jpg,.jpeg,.png';
     fileInput.multiple = false;

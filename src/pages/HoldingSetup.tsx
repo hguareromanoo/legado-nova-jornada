@@ -12,7 +12,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarGroup,
-  SidebarGroupLabel
+  SidebarGroupLabel,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
 import { 
   Home, 
