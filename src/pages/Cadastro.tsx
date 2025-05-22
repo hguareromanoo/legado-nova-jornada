@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { FaMicrosoft } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
@@ -81,10 +80,37 @@ const Cadastro = () => {
       setLoading(false);
     }
   };
+  
+  const handleGoogleSignIn = async () => {
+    try {
+      // Implementação da autenticação com Google usando Supabase
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/welcome`
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // O redirecionamento é feito automaticamente pelo Supabase
+      // Nenhum código adicional é necessário aqui
+      
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+      toast({
+        title: "Erro na autenticação",
+        description: "Não foi possível fazer login com Google. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex">
-      {/* Right Column - 5/12 width (changed from 7/12) */}
+      {/* Right Column - 5/12 width */}
       <div className="w-full md:w-5/12 flex items-center justify-center p-6 md:p-12">
         <div className="max-w-md w-full">
           <div className="text-center mb-10">
@@ -109,18 +135,10 @@ const Cadastro = () => {
                   variant="outline" 
                   size="w1Base" 
                   className="w-full flex justify-center items-center gap-2"
+                  onClick={handleGoogleSignIn}
                 >
                   <FcGoogle size={20} />
                   <span>Cadastre-se com Google</span>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="w1Base" 
-                  className="w-full flex justify-center items-center gap-2"
-                >
-                  <FaMicrosoft size={18} className="text-blue-500" />
-                  <span>Cadastre-se com Microsoft</span>
                 </Button>
                 
                 <div className="relative my-8">
@@ -261,7 +279,7 @@ const Cadastro = () => {
         </div>
       </div>
       
-      {/* Left Column - 7/12 width (changed from 5/12) */}
+      {/* Left Column - 7/12 width */}
       <div className="hidden md:flex w-7/12 relative">
         {/* Updated background with gradient overlay */}
         <div 
