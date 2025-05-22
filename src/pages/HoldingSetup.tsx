@@ -38,12 +38,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/services/api';
 import { DocumentRecommendationsResponse, DocumentRecommendation } from '@/types/chat';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/contexts/UserContext';
 
 const HoldingSetup = () => {
   const [activeTab, setActiveTab] = useState('documents');
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user } = useUser();
   
   // Estados para documentos
   const [documentData, setDocumentData] = useState<DocumentRecommendationsResponse | null>(null);
@@ -119,7 +122,7 @@ const HoldingSetup = () => {
   }, [uploadStatus, documentData]);
 
   // Função para fazer upload de documento
-  const handleDocumentUpload = (documentKey: string) => {
+  const handleDocumentUpload = (documentKey: string, recommendationId: string) => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.pdf,.jpg,.jpeg,.png';
@@ -128,20 +131,47 @@ const HoldingSetup = () => {
     fileInput.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
-        await processDocumentUpload(documentKey, file);
+        await processDocumentUpload(documentKey, recommendationId, file);
       }
     };
     
     fileInput.click();
   };
 
-  // Processar upload do documento
-  const processDocumentUpload = async (documentKey: string, file: File) => {
+  // Processar upload do documento para o Supabase
+  const processDocumentUpload = async (documentKey: string, recommendationId: string, file: File) => {
     try {
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
+      }
+      
       setUploadStatus(prev => ({ ...prev, [documentKey]: 'uploading' }));
       
-      // Simular upload - substitua pela implementação real
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Obter extensão do arquivo
+      const fileExtension = file.name.split('.').pop() || '';
+      
+      // Criar nome do arquivo no formato solicitado: <document-key>-<user_id>-<recommendation_id>.[extensão]
+      const fileName = `${documentKey}-${user.id}-${recommendationId}.${fileExtension}`;
+      
+      // Upload do arquivo para o bucket 'documents' no Supabase
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true // Sobrescrever se já existir
+        });
+      
+      if (error) {
+        console.error('Erro no upload:', error);
+        setUploadStatus(prev => ({ ...prev, [documentKey]: 'error' }));
+        
+        toast({
+          title: "Erro no upload",
+          description: `Erro ao enviar o documento: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
       
       setUploadStatus(prev => ({ ...prev, [documentKey]: 'uploaded' }));
       
@@ -150,8 +180,15 @@ const HoldingSetup = () => {
         description: `O documento ${documentKey} foi enviado e está sendo processado.`,
       });
       
+      console.log('Upload realizado com sucesso:', data);
+      
+      // Aqui você pode adicionar lógica para registrar o upload em uma tabela de documentos se necessário
+      // Por exemplo, salvar os metadados do documento em uma tabela 'documents'
+      
     } catch (error) {
+      console.error('Erro durante o upload:', error);
       setUploadStatus(prev => ({ ...prev, [documentKey]: 'error' }));
+      
       toast({
         title: "Erro no upload",
         description: "Ocorreu um erro ao enviar o documento. Tente novamente.",
@@ -456,8 +493,8 @@ const HoldingSetup = () => {
                                   
                                   <div className="flex items-center gap-2 ml-4">
                                     <Button
-                                      onClick={() => handleDocumentUpload(doc.document_key)}
-                                      disabled={status === 'uploading' || status === 'uploaded'}
+                                      onClick={() => handleDocumentUpload(doc.document_key, doc.recommendation_id)}
+                                      disabled={status === 'uploading'}
                                       variant={status === 'uploaded' ? "outline" : "default"}
                                       size="sm"
                                     >

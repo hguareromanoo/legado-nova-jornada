@@ -260,6 +260,41 @@ export type Database = {
           },
         ]
       }
+      document_data: {
+        Row: {
+          created_at: string | null
+          data_id: string
+          data_key: string
+          data_value: string
+          document_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_id?: string
+          data_key: string
+          data_value: string
+          document_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_id?: string
+          data_key?: string
+          data_value?: string
+          document_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_data_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["document_id"]
+          },
+        ]
+      }
       document_recommendations: {
         Row: {
           alternatives: string[] | null
