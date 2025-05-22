@@ -1,20 +1,10 @@
 
-import { Navigate, Outlet } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
+import { Outlet } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 
 const ProtectedRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding } = useUser();
-
-  // Se não estiver logado, redirecionar para login
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
+  // Removed authentication check - all users can access protected routes now
   
-  // Em vez de redirecionar para etapas de onboarding, vamos mostrar o modo de preview
-  // com dados mock para todos os usuários, mesmo que não tenham completado o onboarding
-  
-  // Renderizamos o layout do dashboard com o conteúdo protegido
   return (
     <DashboardLayout>
       <Outlet />
