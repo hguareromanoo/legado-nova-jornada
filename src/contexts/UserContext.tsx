@@ -135,7 +135,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         options: {
           data: {
             first_name: userData.first_name || '',
-            last_name: userData.last_name || ''
+            last_name: userData.last_name || '',
+            // If it's a w1consultoria.com email, it will get admin role via the database trigger
+            // This is just informational - the actual role assignment happens in the database
+            role: email.includes('@w1consultoria.com') ? 'admin' : 'user'
           },
           emailRedirectTo: redirectTo
         }
