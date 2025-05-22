@@ -44,6 +44,7 @@ export interface CompletionScore {
 export interface DocumentRecommendation {
   name: string;
   document_key: string; // Chave única para OCR
+  recommendation_id: string; // Adicionando a propriedade que estava faltando
   category: string;
   description: string;
   reason: string | null;
@@ -129,7 +130,7 @@ export interface AssistantResponse {
   content: string;
   profile: ClientProfile;
   completion_percentage: number;
-  is_complete: boolean; // Adicionado campo is_complete na resposta
+  is_complete: boolean;
 }
 
 export interface ChatContextType {
