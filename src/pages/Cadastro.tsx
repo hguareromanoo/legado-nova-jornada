@@ -35,12 +35,14 @@ const Cadastro = () => {
     setLoading(true);
     
     try {
+      console.log("Iniciando cadastro de usuário:", email);
       const { error, needsEmailConfirmation } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName
       });
       
       if (error) {
+        console.error("Erro detalhado:", error);
         toast({
           title: "Erro ao criar conta",
           description: error,
@@ -66,11 +68,22 @@ const Cadastro = () => {
         navigate('/welcome');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer cadastro:", error);
+      let errorMessage = "Ocorreu um erro ao processar sua solicitação.";
+      
+      // Try to extract more specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.response?.data?.error_description) {
+        errorMessage = error.response.data.error_description;
+      }
+      
       toast({
         title: "Erro ao criar conta",
-        description: "Ocorreu um erro ao processar sua solicitação.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
