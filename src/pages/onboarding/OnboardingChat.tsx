@@ -344,12 +344,14 @@ const OnboardingChat = () => {
         />
       )}
       
-      {/* Corrigido: Apenas registra os dados no console sem tentar renderizar o resultado */}
+      {/* Log document data to console - fixed to avoid TypeError */}
       {documentData && (
-        <div className="hidden">
-          {/* Usando chaves vazias para não retornar nada do console.log */}
-          {console.log('📄 Documentos disponíveis para visualização:', documentData) || null}
-        </div>
+        <React.Fragment>
+          {(() => {
+            console.log('📄 Documentos disponíveis para visualização:', documentData);
+            return null;
+          })()}
+        </React.Fragment>
       )}
     </div>
   );
