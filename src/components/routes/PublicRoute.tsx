@@ -1,11 +1,21 @@
-
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import PublicLayout from "@/layouts/PublicLayout";
+import { useUser } from "@/contexts/UserContext";
 
 const PublicRoute = () => {
-  // Removed all authentication checks and redirects
+  const { isLoggedIn, hasCompletedOnboarding } = useUser();
   
-  // Render the public route with public layout for all users
+  // If user is logged in and has completed onboarding, redirect to dashboard
+  if (isLoggedIn && hasCompletedOnboarding) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // If user is logged in but has not completed onboarding, redirect to onboarding
+  if (isLoggedIn && !hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  // Otherwise, render the public route
   return (
     <PublicLayout>
       <Outlet />

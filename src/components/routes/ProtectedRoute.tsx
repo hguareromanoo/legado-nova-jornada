@@ -1,9 +1,15 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { useUser } from "@/contexts/UserContext";
 
 const ProtectedRoute = () => {
-  // Removed authentication check - all users can access protected routes now
+  const { isLoggedIn } = useUser();
+  
+  // If user is not logged in, redirect to login page
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
   
   return (
     <DashboardLayout>
