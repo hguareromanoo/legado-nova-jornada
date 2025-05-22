@@ -19,7 +19,7 @@ const consultants = [
     id: 1,
     name: 'Dra. Amanda Silva',
     specialty: 'Planejamento Patrimonial',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop',
+    imageUrl: 'https://img.freepik.com/fotos-gratis/mulher-de-tiro-medio-trabalhando-como-advogada_23-2151202449.jpg',
     bio: 'Especialista em proteção patrimonial com mais de 10 anos de experiência em consultoria para famílias de alto patrimônio.',
   },
   {
