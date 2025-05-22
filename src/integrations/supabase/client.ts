@@ -23,3 +23,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     }
   }
 });
+
+// Add a listener for authentication debug logs
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase Auth Event:', event);
+  console.log('Session state:', session ? 'logged in' : 'logged out');
+});

@@ -124,10 +124,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       console.log('Attempting signup for:', email, 'with user data:', userData);
       
-      // Configure redirect URL to the login page
-      const redirectTo = window.location.origin + '/login';
-      
-      // Very basic signup with minimal metadata and redirect configuration
+      // We'll try a different signup approach with minimal metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -135,11 +132,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           data: {
             first_name: userData.first_name || '',
             last_name: userData.last_name || '',
-            // If it's a w1consultoria.com email, it will get admin role via the database trigger
-            // This is just informational - the actual role assignment happens in the database
-            role: email.includes('@w1consultoria.com') ? 'admin' : 'user'
-          },
-          emailRedirectTo: redirectTo
+          }
         }
       });
       
