@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,41 +39,40 @@ const Cadastro = () => {
       console.log("Iniciando cadastro de usuário:", email);
       console.log("Dados do usuário:", { first_name: firstName, last_name: lastName });
       
-      // Try direct signup with Supabase (bypass context for testing)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          }
-        }
+      const { error, needsEmailConfirmation } = await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName
       });
       
       if (error) {
         console.error("Erro detalhado:", error);
         toast({
           title: "Erro ao criar conta",
-          description: error.message,
+          description: error,
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
       
-      console.log("Resposta do cadastro:", data);
-      
       // Definir hasSeenWelcome como false para mostrar a tela de boas-vindas
       localStorage.setItem('hasSeenWelcome', 'false');
       
       toast({
         title: "Cadastro realizado com sucesso",
-        description: "Por favor, verifique seu email para confirmar seu cadastro.",
+        description: needsEmailConfirmation 
+          ? "Por favor, verifique seu email para confirmar seu cadastro."
+          : "Redirecionando para a página de boas-vindas...",
       });
       
-      // Redirect to login page after successful registration
-      navigate('/login');
+      // Se não precisar de confirmação por email, redirecionar para welcome
+      if (!needsEmailConfirmation) {
+        // Redirecionar para a página de welcome ao invés de onboarding
+        navigate('/welcome');
+      } else {
+        // Redirecionar para login após o cadastro com confirmação de email
+        navigate('/login');
+      }
       
     } catch (error: any) {
       console.error("Erro ao fazer cadastro:", error);

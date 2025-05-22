@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,7 +125,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       console.log('Attempting signup for:', email, 'with user data:', userData);
       
-      // We'll try a different signup approach with minimal metadata
+      // Configure redirect URL to the login page
+      const redirectTo = `${window.location.origin}/login`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -132,7 +135,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           data: {
             first_name: userData.first_name || '',
             last_name: userData.last_name || '',
-          }
+          },
+          emailRedirectTo: redirectTo
         }
       });
       
