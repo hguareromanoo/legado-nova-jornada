@@ -89,6 +89,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          city: string | null
+          created_at: string
+          email: string | null
+          growth_rate: number
+          id: string
+          last_update: string
+          name: string
+          phone: string | null
+          status: string
+          total_patrimony: number
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          growth_rate?: number
+          id?: string
+          last_update?: string
+          name: string
+          phone?: string | null
+          status?: string
+          total_patrimony?: number
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          growth_rate?: number
+          id?: string
+          last_update?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          total_patrimony?: number
+        }
+        Relationships: []
+      }
       concerns: {
         Row: {
           concern_id: string
@@ -117,6 +156,74 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
         ]
+      }
+      consultant_chat_messages: {
+        Row: {
+          consultant_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_type: string
+          user_id: string
+        }
+        Insert: {
+          consultant_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender_type: string
+          user_id: string
+        }
+        Update: {
+          consultant_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_chat_messages_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "consultants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultants: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       conversation_messages: {
         Row: {
@@ -155,29 +262,121 @@ export type Database = {
       }
       document_recommendations: {
         Row: {
-          is_mandatory: boolean | null
+          alternatives: string[] | null
+          category: Database["public"]["Enums"]["document_category_type"]
+          created_at: string
+          depends_on: string[] | null
+          description: string
+          document_key: string
+          estimated_cost: string | null
+          group_id: string | null
+          how_to_obtain: string | null
+          is_mandatory: boolean
+          item_description: string | null
+          item_index: number | null
+          item_type: string | null
           name: string
+          priority: number
+          processing_time: string | null
           profile_id: string
           reason: string | null
           recommendation_id: string
+          related_to: string | null
+          updated_at: string
         }
         Insert: {
-          is_mandatory?: boolean | null
+          alternatives?: string[] | null
+          category: Database["public"]["Enums"]["document_category_type"]
+          created_at?: string
+          depends_on?: string[] | null
+          description: string
+          document_key: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          is_mandatory?: boolean
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
           name: string
+          priority?: number
+          processing_time?: string | null
           profile_id: string
           reason?: string | null
           recommendation_id?: string
+          related_to?: string | null
+          updated_at?: string
         }
         Update: {
-          is_mandatory?: boolean | null
+          alternatives?: string[] | null
+          category?: Database["public"]["Enums"]["document_category_type"]
+          created_at?: string
+          depends_on?: string[] | null
+          description?: string
+          document_key?: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          is_mandatory?: boolean
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
           name?: string
+          priority?: number
+          processing_time?: string | null
           profile_id?: string
           reason?: string | null
           recommendation_id?: string
+          related_to?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "document_recommendations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "client_profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          bucket_name: string
+          created_at: string | null
+          document_id: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          object_key: string
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          bucket_name: string
+          created_at?: string | null
+          document_id?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          object_key: string
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          bucket_name?: string
+          created_at?: string | null
+          document_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          object_key?: string
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "client_profiles"
@@ -364,11 +563,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: { requested_role: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
       search_documents_text: {
         Args: { query_text: string; user_id: string; limit_count?: number }
         Returns: {
@@ -386,6 +610,16 @@ export type Database = {
         | "investimento financeiro"
         | "propriedade rural"
         | "outro"
+      document_category_type:
+        | "pessoal"
+        | "familiar"
+        | "imovel"
+        | "veiculo"
+        | "empresa"
+        | "financeiro"
+        | "juridico"
+        | "tributario"
+        | "rural"
       goal_type:
         | "sucessão familiar"
         | "otimização fiscal"
@@ -399,6 +633,7 @@ export type Database = {
         | "viúvo"
         | "união estável"
         | "outro"
+      user_role: "user" | "admin" | "consultant"
       user_status: "active" | "pending" | "inactive" | "blocked"
       user_type: "client" | "consultant" | "admin"
     }
@@ -523,6 +758,17 @@ export const Constants = {
         "propriedade rural",
         "outro",
       ],
+      document_category_type: [
+        "pessoal",
+        "familiar",
+        "imovel",
+        "veiculo",
+        "empresa",
+        "financeiro",
+        "juridico",
+        "tributario",
+        "rural",
+      ],
       goal_type: [
         "sucessão familiar",
         "otimização fiscal",
@@ -538,6 +784,7 @@ export const Constants = {
         "união estável",
         "outro",
       ],
+      user_role: ["user", "admin", "consultant"],
       user_status: ["active", "pending", "inactive", "blocked"],
       user_type: ["client", "consultant", "admin"],
     },

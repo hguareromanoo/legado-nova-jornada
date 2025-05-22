@@ -1,4 +1,12 @@
 
-export { default as ProtectedRoute } from './ProtectedRoute';
-export { default as PublicRoute } from './PublicRoute';
-export { default as OnboardingRoute } from './OnboardingRoute';
+import PublicRoute from "./PublicRoute";
+import ProtectedRoute from "./ProtectedRoute";
+import OnboardingRoute from "./OnboardingRoute";
+import ConsultantRoute from "./ConsultantRoute";
+
+export {
+  PublicRoute,
+  ProtectedRoute,
+  OnboardingRoute,
+  ConsultantRoute
+};
