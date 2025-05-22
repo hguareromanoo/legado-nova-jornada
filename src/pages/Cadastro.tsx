@@ -57,16 +57,13 @@ const Cadastro = () => {
         title: "Cadastro realizado com sucesso",
         description: needsEmailConfirmation 
           ? "Por favor, verifique seu email para confirmar seu cadastro."
-          : "Redirecionando para o processo de onboarding...",
+          : "Redirecionando para a página de boas-vindas...",
       });
       
-      // Se não precisar de confirmação por email, redirecionar para onboarding
+      // Se não precisar de confirmação por email, redirecionar para welcome
       if (!needsEmailConfirmation) {
-        // Definir o passo inicial do onboarding
-        localStorage.setItem('onboardingStep', 'selection');
-        
-        // Redirecionar para a página de onboarding
-        navigate('/onboarding');
+        // Redirecionar para a página de welcome ao invés de onboarding
+        navigate('/welcome');
       }
       
     } catch (error) {
