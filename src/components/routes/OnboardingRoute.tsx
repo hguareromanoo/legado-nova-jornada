@@ -26,8 +26,8 @@ const OnboardingRoute = () => {
   const stepRoutes: Record<string, string> = {
     'selection': '/onboarding',
     'chat': '/onboarding/chat',
-    'documents': '/members',
-    'review': '/document-review'
+    'documents': '/members'
+    // Removed the 'review' route
   };
   
   // Check if we're on the correct path for the current step

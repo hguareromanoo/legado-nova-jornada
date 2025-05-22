@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type OnboardingPathType = 'ai' | 'human' | null;
@@ -40,8 +39,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const [steps, setSteps] = useState<OnboardingStep[]>([
     { id: 'selection', name: 'Escolha de Onboarding', completed: false, path: '/onboarding' },
     { id: 'chat', name: 'Chat com IA', completed: false, path: '/onboarding/chat' },
-    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/members' },
-    { id: 'review', name: 'Revisão de Documentos', completed: false, path: '/document-review' }
+    { id: 'documents', name: 'Coleta de Documentos', completed: false, path: '/members' }
   ]);
   
   // Calculate progress based on completed steps

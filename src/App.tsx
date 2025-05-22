@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,15 +14,14 @@ import SimulationIntro from "./pages/SimulationIntro";
 import Simulation from "./pages/Simulation";
 import SimulationReport from "./pages/SimulationReport"; 
 import Login from "./pages/Login";
-import Welcome from "./pages/Welcome"; // Adicionar a importação da nova página
+import Welcome from "./pages/Welcome";
 import NotFound from "./pages/NotFound";
 import Cadastro from "./pages/Cadastro";
 
 // Onboarding Flow
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
 import OnboardingChat from "./pages/onboarding/OnboardingChat";
-import DocumentReview from "./pages/onboarding/DocumentReview";
-import HoldingSetup from "./pages/HoldingSetup"; // New import for HoldingSetup page
+import HoldingSetup from "./pages/HoldingSetup";
 
 // Human Onboarding Flow
 import HumanConfirmation from "./pages/onboarding/human/Confirmation";
@@ -59,7 +57,7 @@ const App = () => (
                   <Route path="/simulation-report" element={<SimulationReport />} /> 
                   <Route path="/login" element={<Login />} />
                   <Route path="/cadastro" element={<Cadastro />} />
-                  <Route path="/welcome" element={<Welcome />} /> {/* Nova rota de boas-vindas */}
+                  <Route path="/welcome" element={<Welcome />} />
                 </Route>
                 
                 {/* Onboarding Routes - Accessible only during onboarding process */}
@@ -73,12 +71,10 @@ const App = () => (
                   <Route path="/onboarding/human/portal" element={<HumanPortal />} />
                   <Route path="/onboarding/human/plan-approval" element={<PlanApproval />} />
                   
-                  <Route path="/document-review" element={<DocumentReview />} />
-                  
                   {/* Add the Members route to the OnboardingRoute group as well to make it accessible during onboarding */}
                   <Route path="/members" element={<Members />} />
                   
-                  {/* New route for HoldingSetup */}
+                  {/* Route for HoldingSetup */}
                   <Route path="/holding-setup" element={<HoldingSetup />} />
                 </Route>
                 
