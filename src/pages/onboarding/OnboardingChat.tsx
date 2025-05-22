@@ -344,10 +344,11 @@ const OnboardingChat = () => {
         />
       )}
       
-      {/* Mostrar dados dos documentos no console quando disponíveis (temporário para debug) */}
+      {/* Corrigido: Apenas registra os dados no console sem tentar renderizar o resultado */}
       {documentData && (
         <div className="hidden">
-          {console.log('📄 Documentos disponíveis para visualização:', documentData)}
+          {/* Usando chaves vazias para não retornar nada do console.log */}
+          {console.log('📄 Documentos disponíveis para visualização:', documentData) || null}
         </div>
       )}
     </div>
