@@ -54,6 +54,17 @@ interface ChatMessage {
   is_read: boolean;
 }
 
+// Type for the data coming from Supabase
+interface SupabaseChatMessage {
+  id: string;
+  message: string;
+  sender_type: string; // This could be any string from the database
+  created_at: string;
+  is_read: boolean;
+  user_id: string;
+  consultant_id: string;
+}
+
 const ClientDetail = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const [client, setClient] = useState<Client | null>(null);
@@ -131,7 +142,15 @@ const ClientDetail = () => {
           if (messagesError) {
             console.error('Error fetching messages:', messagesError);
           } else if (messagesData) {
-            setChatMessages(messagesData);
+            // Transform the data to match the ChatMessage type
+            const typedMessages: ChatMessage[] = messagesData.map((msg: SupabaseChatMessage) => ({
+              id: msg.id,
+              message: msg.message,
+              sender_type: msg.sender_type as 'consultant' | 'user' | 'system',
+              created_at: msg.created_at,
+              is_read: msg.is_read
+            }));
+            setChatMessages(typedMessages);
           }
         }
       } catch (error) {
@@ -178,7 +197,15 @@ const ClientDetail = () => {
       
       // Add message to state
       if (data) {
-        setChatMessages(prev => [...prev, data]);
+        const newChatMessage: ChatMessage = {
+          id: data.id,
+          message: data.message,
+          sender_type: data.sender_type as 'consultant' | 'user' | 'system',
+          created_at: data.created_at,
+          is_read: data.is_read
+        };
+        
+        setChatMessages(prev => [...prev, newChatMessage]);
         setNewMessage("");
       }
     } catch (error) {
