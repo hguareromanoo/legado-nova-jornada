@@ -100,7 +100,7 @@ const OnboardingChat = () => {
     await sendMessage(text);
   };
 
-  // Modificado: Função de transição para documentos com chamada de API
+  // Modificado: Função de transição para documentos com chamada de API e navegação
   const handleProceedToDocuments = async () => {
     console.log('🚀 Buscando documentos para a sessão:', session?.session_id);
     
@@ -122,7 +122,7 @@ const OnboardingChat = () => {
         description: "Gerando lista personalizada de documentos necessários.",
       });
       
-      // ✨ FAZER CHAMADA PARA API DE DOCUMENTOS
+      // Fazer chamada para API de documentos
       const documents = await api.getDocumentRecommendations(session.session_id);
       setDocumentData(documents);
       
@@ -132,16 +132,19 @@ const OnboardingChat = () => {
       // Sucesso - mostrar informações dos documentos no toast
       toast({
         title: "Documentos preparados! 📋",
-        description: `${documents.total_documents} documentos necessários identificados. Custo estimado: ${documents.summary.estimated_total_cost}`,
-        duration: 5000,
+        description: `${documents.total_documents} documentos necessários identificados.`,
+        duration: 3000,
       });
       
-      console.log('📋 Documentos recebidos:', documents);
-      console.log('📊 Resumo por categoria:', documents.summary.by_category);
-      console.log('🔑 Chaves geradas:', documents.metadata.document_keys_generated);
+      console.log('📋 Navegando para página de documentos...');
       
-      // TODO: Aqui futuramente será a navegação para página de documentos
-      // navigate('/onboarding/documents', { state: { documentData: documents } });
+      // Navegar para página de holding setup
+      navigate('/holding-setup', { 
+        state: { 
+          documentData: documents,
+          sessionId: session.session_id 
+        } 
+      });
       
     } catch (error) {
       console.error('Erro ao buscar documentos:', error);
@@ -344,7 +347,7 @@ const OnboardingChat = () => {
         />
       )}
       
-      {/* Log document data to console - fixed to avoid TypeError */}
+      {/* Log document data to console - Use IIFE to avoid TypeScript void error */}
       {documentData && (
         <React.Fragment>
           {(() => {

@@ -23,6 +23,7 @@ import Cadastro from "./pages/Cadastro";
 import OnboardingSelection from "./pages/onboarding/OnboardingSelection";
 import OnboardingChat from "./pages/onboarding/OnboardingChat";
 import DocumentReview from "./pages/onboarding/DocumentReview";
+import HoldingSetup from "./pages/HoldingSetup"; // New import for HoldingSetup page
 
 // Human Onboarding Flow
 import HumanConfirmation from "./pages/onboarding/human/Confirmation";
@@ -76,6 +77,9 @@ const App = () => (
                   
                   {/* Add the Members route to the OnboardingRoute group as well to make it accessible during onboarding */}
                   <Route path="/members" element={<Members />} />
+                  
+                  {/* New route for HoldingSetup */}
+                  <Route path="/holding-setup" element={<HoldingSetup />} />
                 </Route>
                 
                 {/* Dashboard Routes - Protected, only accessible after holding setup */}
