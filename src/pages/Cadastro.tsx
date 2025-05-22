@@ -36,6 +36,8 @@ const Cadastro = () => {
     
     try {
       console.log("Iniciando cadastro de usuário:", email);
+      console.log("Dados do usuário:", { first_name: firstName, last_name: lastName });
+      
       const { error, needsEmailConfirmation } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName
@@ -70,15 +72,19 @@ const Cadastro = () => {
       
     } catch (error: any) {
       console.error("Erro ao fazer cadastro:", error);
+      console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
+      
       let errorMessage = "Ocorreu um erro ao processar sua solicitação.";
       
       // Try to extract more specific error messages
       if (error.message) {
         errorMessage = error.message;
-      }
-      
-      if (error.response?.data?.error_description) {
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
+      } else if (error.response?.data?.error_description) {
         errorMessage = error.response.data.error_description;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
       
       toast({

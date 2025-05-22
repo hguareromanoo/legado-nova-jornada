@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,7 +122,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   
   const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
     try {
-      console.log('Attempting signup for:', email);
+      console.log('Attempting signup for:', email, 'with user data:', userData);
       
       // Configure redirect URL to the login page
       const redirectTo = window.location.origin + '/login';
@@ -145,11 +144,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       });
       
       if (error) {
-        console.error('Signup error:', error.message);
+        console.error('Signup error:', error.message, error);
         return { error: error.message };
       }
       
       console.log('Signup successful, user:', data.user?.id);
+      console.log('Full signup response:', data);
       
       // Set default onboarding step
       localStorage.setItem('onboardingStep', 'selection');
@@ -162,9 +162,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
       
       return {};
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during signup:', error);
-      return { error: 'Erro ao fazer cadastro' };
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return { error: 'Erro ao fazer cadastro: ' + (error.message || JSON.stringify(error)) };
     }
   };
   
