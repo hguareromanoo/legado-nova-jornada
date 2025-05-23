@@ -117,30 +117,35 @@ const CategoryDocuments = ({
           }
         }
         
-        // Check document upload status
-        if (existingEntries && existingEntries.length > 0) {
-          // Query which documents have been uploaded already
-          const { data: uploadedDocs } = await supabase
-            .from('documents')
-            .select('document_key')
-            .eq('user_id', userId)
-            .in('document_key', documents.map(doc => doc.document_key));
-          
-          // Update local status for any documents that are already uploaded
-          if (uploadedDocs && uploadedDocs.length > 0) {
-            uploadedDocs.forEach(doc => {
-              if (doc.document_key) {
-                onStatusChange(doc.document_key, 'uploaded');
-              }
-            });
+        // Check document upload status using a separate query to avoid race conditions
+        setTimeout(async () => {
+          if (existingEntries && existingEntries.length > 0) {
+            // Query which documents have been uploaded already
+            const { data: uploadedDocs } = await supabase
+              .from('documents')
+              .select('document_key')
+              .eq('user_id', userId)
+              .in('document_key', documents.map(doc => doc.document_key));
+            
+            // Update local status for any documents that are already uploaded
+            if (uploadedDocs && uploadedDocs.length > 0) {
+              uploadedDocs.forEach(doc => {
+                if (doc.document_key) {
+                  onStatusChange(doc.document_key, 'uploaded');
+                }
+              });
+            }
           }
-        }
+        }, 0);
       } catch (error) {
         console.error('Error initializing document roadmap:', error);
       }
     };
 
-    initializeDocumentRoadmap();
+    // Use setTimeout to avoid React state update loops
+    setTimeout(() => {
+      initializeDocumentRoadmap();
+    }, 0);
   }, [userId, documents, category, onStatusChange]);
 
   const categoryInfo = getCategoryInfo(category);

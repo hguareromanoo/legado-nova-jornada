@@ -48,6 +48,25 @@ const HoldingSetup = () => {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
+  // Se necessário, atualize o estado do usuário quando a página for carregada
+  useEffect(() => {
+    const initializeUserState = async () => {
+      // Se o usuário estiver em um estado anterior a holding_setup, atualize-o
+      if (userState && 
+          userState !== 'holding_setup' && 
+          userState !== 'holding_opened') {
+        await updateUserState('holding_setup');
+      }
+    };
+    
+    // Usar setTimeout para evitar múltiplas atualizações de estado no mesmo ciclo de renderização
+    const timeoutId = setTimeout(() => {
+      initializeUserState();
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [userState, updateUserState]);
+
   // Recuperar sessionId e dados de documentos
   useEffect(() => {
     const initializeDocuments = async () => {
@@ -152,20 +171,6 @@ const HoldingSetup = () => {
   }
 
   if (!documentData) return null;
-
-  // Se necessário, atualize o estado do usuário quando a página for carregada
-  useEffect(() => {
-    const initializeUserState = async () => {
-      // Se o usuário estiver em um estado anterior a holding_setup, atualize-o
-      if (userState && 
-          userState !== 'holding_setup' && 
-          userState !== 'holding_opened') {
-        await updateUserState('holding_setup');
-      }
-    };
-    
-    initializeUserState();
-  }, [userState, updateUserState]);
 
   // Quando o usuário concluir o setup, atualize o estado
   const handleCompleteSetup = async () => {

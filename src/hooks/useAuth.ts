@@ -33,6 +33,7 @@ export const useAuth = () => {
       // Store user ID for later use
       if (data.user) {
         localStorage.setItem('currentUserId', data.user.id);
+        localStorage.setItem('isLoggedIn', 'true');  // Adicionar flag para rastreamento de estado
       }
       
       // Set default onboarding step if not set
