@@ -6,7 +6,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, user, userState, updateUserState } = useUser(); 
+  const { isLoggedIn, user } = useUser(); // Get user from context
   const { currentStep } = useOnboarding();
   
   useEffect(() => {
@@ -27,15 +27,6 @@ const Onboarding = () => {
       'review': '/document-review'
     };
     
-    // Map user states to steps (if needed)
-    if (userState === 'first_access') {
-      // Update user state to onboarding_ai if coming from welcome page
-      const updateState = async () => {
-        await updateUserState('onboarding_ai');
-      };
-      updateState();
-    }
-    
     // If we're already on the onboarding page, no need to redirect
     if (window.location.pathname === '/onboarding') {
       return;
@@ -44,7 +35,7 @@ const Onboarding = () => {
     // Navigate to the appropriate step or document collection as default
     const redirectTo = stepRoutes[currentStep] || '/document-collection';
     navigate(redirectTo);
-  }, [navigate, isLoggedIn, currentStep, userState, updateUserState]);
+  }, [navigate, isLoggedIn, currentStep]);
   
   return (
     <div className="min-h-screen flex items-center justify-center">

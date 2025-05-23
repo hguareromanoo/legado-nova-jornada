@@ -48,8 +48,8 @@ const Login = () => {
         return;
       }
 
-      // Remover a definição de hasSeenWelcome aqui para que o redirecionamento
-      // seja baseado apenas no estado do usuário armazenado no banco de dados
+      // Definir hasSeenWelcome como false para mostrar a tela de boas-vindas
+      localStorage.setItem('hasSeenWelcome', 'false');
       
       toast({
         title: "Login realizado com sucesso",
@@ -57,7 +57,6 @@ const Login = () => {
       });
       
       // O redirecionamento será feito automaticamente pelo PublicRoute
-      // baseado no estado do usuário
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       toast({
@@ -75,9 +74,7 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // Não definimos redirectTo diretamente para que o redirecionamento 
-          // seja baseado no estado do usuário após o login com Google
-          redirectTo: `${window.location.origin}`
+          redirectTo: `${window.location.origin}/welcome`
         }
       });
       

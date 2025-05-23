@@ -50,38 +50,6 @@ export type Database = {
           },
         ]
       }
-      chat_log: {
-        Row: {
-          content: string
-          created_at: string | null
-          message_id: number
-          profile_id: string
-          role: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          message_id?: number
-          profile_id: string
-          role: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          message_id?: number
-          profile_id?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_log_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
-          },
-        ]
-      }
       client_profiles: {
         Row: {
           completion_score_assets: number
@@ -291,7 +259,6 @@ export type Database = {
           reason: string | null
           recommendation_id: string
           related_to: string | null
-          sent: boolean | null
           updated_at: string
         }
         Insert: {
@@ -315,7 +282,6 @@ export type Database = {
           reason?: string | null
           recommendation_id?: string
           related_to?: string | null
-          sent?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -339,7 +305,6 @@ export type Database = {
           reason?: string | null
           recommendation_id?: string
           related_to?: string | null
-          sent?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -352,119 +317,47 @@ export type Database = {
           },
         ]
       }
-      document_roadmap: {
+      documents: {
         Row: {
-          category: string | null
+          bucket_name: string
           created_at: string | null
-          description: string | null
-          document_key: string
-          estimated_cost: string | null
-          group_id: string | null
-          how_to_obtain: string | null
-          id: string
-          is_mandatory: boolean | null
-          item_description: string | null
-          item_index: number | null
-          item_type: string | null
-          name: string
-          priority: number | null
-          processing_time: string | null
-          reason: string | null
+          document_id: string
+          document_key: string | null
+          file_data: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          object_key: string
           recommendation_id: string | null
-          related_to: string | null
-          sent: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_key: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
-          name: string
-          priority?: number | null
-          processing_time?: string | null
-          reason?: string | null
-          recommendation_id?: string | null
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_key?: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
-          name?: string
-          priority?: number | null
-          processing_time?: string | null
-          reason?: string | null
-          recommendation_id?: string | null
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
           bucket_name: string
-          created_at: string
-          document_key: string
-          file_data: string | null
-          file_name: string
-          file_size: number
-          file_type: string
-          id: string
-          object_key: string
-          recommendation_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bucket_name: string
-          created_at?: string
-          document_key: string
+          created_at?: string | null
+          document_id?: string
+          document_key?: string | null
           file_data?: string | null
           file_name: string
-          file_size: number
-          file_type: string
-          id?: string
+          file_size?: number | null
+          file_type?: string | null
           object_key: string
           recommendation_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           bucket_name?: string
-          created_at?: string
-          document_key?: string
+          created_at?: string | null
+          document_id?: string
+          document_key?: string | null
           file_data?: string | null
           file_name?: string
-          file_size?: number
-          file_type?: string
-          id?: string
+          file_size?: number | null
+          file_type?: string | null
           object_key?: string
           recommendation_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -474,6 +367,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "document_recommendations"
             referencedColumns: ["recommendation_id"]
+          },
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -585,50 +485,6 @@ export type Database = {
           },
         ]
       }
-      processed_documents: {
-        Row: {
-          document_id: string
-          document_key: string
-          extraction_result: Json | null
-          file_content_base64: string | null
-          file_name: string | null
-          processed_at: string
-          profile_id: string
-          user_id: string
-          vectorized: boolean | null
-        }
-        Insert: {
-          document_id: string
-          document_key: string
-          extraction_result?: Json | null
-          file_content_base64?: string | null
-          file_name?: string | null
-          processed_at?: string
-          profile_id: string
-          user_id: string
-          vectorized?: boolean | null
-        }
-        Update: {
-          document_id?: string
-          document_key?: string
-          extraction_result?: Json | null
-          file_content_base64?: string | null
-          file_name?: string | null
-          processed_at?: string
-          profile_id?: string
-          user_id?: string
-          vectorized?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_profile"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
-          },
-        ]
-      }
       sessions: {
         Row: {
           completion_percentage: number
@@ -684,7 +540,6 @@ export type Database = {
           last_name: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
-          user_state: Database["public"]["Enums"]["state"] | null
         }
         Insert: {
           created_at?: string
@@ -693,7 +548,6 @@ export type Database = {
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
-          user_state?: Database["public"]["Enums"]["state"] | null
         }
         Update: {
           created_at?: string
@@ -702,7 +556,6 @@ export type Database = {
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
-          user_state?: Database["public"]["Enums"]["state"] | null
         }
         Relationships: []
       }
@@ -758,12 +611,6 @@ export type Database = {
         | "viúvo"
         | "união estável"
         | "outro"
-      state:
-        | "first_access"
-        | "onboarding_ai"
-        | "onboarding_human"
-        | "holding_setup"
-        | "holding_opened"
       user_role: "consultant" | "client"
       user_status: "active" | "pending" | "inactive" | "blocked"
     }
@@ -913,13 +760,6 @@ export const Constants = {
         "viúvo",
         "união estável",
         "outro",
-      ],
-      state: [
-        "first_access",
-        "onboarding_ai",
-        "onboarding_human",
-        "holding_setup",
-        "holding_opened",
       ],
       user_role: ["consultant", "client"],
       user_status: ["active", "pending", "inactive", "blocked"],

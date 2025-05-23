@@ -54,10 +54,6 @@ export interface DocumentRecommendation {
   how_to_obtain?: string | null;
   estimated_cost?: string | null;
   processing_time?: string | null;
-  item_type?: string | null;
-  item_index?: number | null;
-  group_id?: string | null;
-  related_to?: string | null;
 }
 
 export interface DocumentRecommendationsResponse {
