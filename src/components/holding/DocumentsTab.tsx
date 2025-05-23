@@ -40,8 +40,7 @@ const DocumentsTab = ({
         // We select 'document_key' as it links to the recommendation in our local state
         const { data: uploadedFiles, error } = await supabase
           .from('documents') // Correct table name
-          .select('document_key') // Assuming document_key exists in 'documents' table
-          .eq('user_id', userId);
+          .select('document_key'); // Assuming document_key exists in 'documents' table
         
         if (error) {
           console.error('Error fetching uploaded documents from "documents" table:', error);

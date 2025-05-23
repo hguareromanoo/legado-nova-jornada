@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -34,12 +33,12 @@ const DocumentUpload = ({
     try {
       if (!userId) throw new Error('Usuário não autenticado');
       
-      // Get recommendation_id from the document prop (which now has 'recommendation_id')
+      // Get recommendation_id from the document prop
       const recommendationId = document.recommendation_id;
       
       if (!recommendationId) {
-        // Fallback: if recommendation_id is somehow missing from the prop, try to fetch from document_roadmap
-        // This handles cases where the document prop might be a legacy format.
+        // Fallback to fetch recommendation_id from document_roadmap if missing in the prop
+        // This handles cases where the document prop might be a legacy format or missing this field.
         const { data: roadmapEntry, error: roadmapError } = await supabase
           .from('document_roadmap')
           .select('recommendation_id')
@@ -51,11 +50,8 @@ const DocumentUpload = ({
           console.error('Error fetching document roadmap for missing recommendationId:', roadmapError);
           throw new Error('Documento não encontrado na roadmap ou ID da recomendação ausente. Tente recarregar a página.');
         }
-        // If fetched, use it
-        // recommendationId = roadmapEntry.recommendation_id; // This line should be:
-        // const currentRecommendationId = roadmapEntry.recommendation_id; // And then use currentRecommendationId below
-        // However, given the updated DocumentRecommendation type, document.recommendation_id should always be present.
-        // Keeping this for robustness in case `document.recommendation_id` is null or undefined for some reason.
+        // If fetched successfully, use this one
+        // recommendationId = roadmapEntry.recommendation_id; // This line is commented as `recommendationId` is const
       }
       
       // Using window.document instead of just document to avoid confusion with the prop named document
@@ -67,7 +63,8 @@ const DocumentUpload = ({
       fileInput.onchange = async (event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (file) {
-          // Use the recommendationId directly from the document prop. If the fallback was used, the variable would be named different.
+          // Use the recommendationId from the document prop, or the one fetched in fallback if applicable.
+          // For simplicity, directly using `document.recommendation_id` here assuming it's correctly populated.
           await uploadDocument(file, documentKey, document.recommendation_id); 
         }
       };
@@ -116,7 +113,7 @@ const DocumentUpload = ({
       // 2. Insert metadata into the 'documents' table
       // This table now stores the link to the storage object, not the file data itself.
       const { data: dbData, error: dbError } = await supabase
-        .from('documents') // Correct table name from types.ts
+        .from('documents') // Correct table name
         .insert({
           user_id: userId,
           recommendation_id: recommendationId,

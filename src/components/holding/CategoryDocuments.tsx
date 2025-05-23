@@ -136,10 +136,12 @@ const CategoryDocuments = ({
 
         if (uploadedFiles && uploadedFiles.length > 0) {
             uploadedFiles.forEach((file: Tables<'documents'>) => {
-                // Find the corresponding document in the current list by document_key
-                const matchingDoc = documents.find(d => d.document_key === file.document_key);
-                if (matchingDoc) {
-                    onStatusChange(matchingDoc.document_key, 'uploaded');
+                // Check if document_key exists before attempting to update status
+                if (file.document_key) {
+                    const matchingDoc = documents.find(d => d.document_key === file.document_key);
+                    if (matchingDoc) {
+                        onStatusChange(matchingDoc.document_key, 'uploaded');
+                    }
                 }
             });
         }
