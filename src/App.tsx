@@ -40,7 +40,7 @@ import Members from "./pages/Members";
 
 // Consultant Pages
 import Consultant from "./pages/consultant/Consultant";
-import Clients from "./pages/consultant/Clients";
+import ClientsList from "./pages/consultant/ClientsList";
 import ClientDetail from "./pages/consultant/ClientDetail";
 
 const queryClient = new QueryClient();
@@ -97,7 +97,7 @@ const App = () => (
                 {/* Consultant Routes - Only accessible to consultants */}
                 <Route element={<ConsultantRoute />}>
                   <Route path="/consultant" element={<Consultant />} />
-                  <Route path="/consultant/clients" element={<Clients />} />
+                  <Route path="/consultant/clients" element={<ClientsList />} />
                   <Route path="/consultant/clients/:clientId" element={<ClientDetail />} />
                 </Route>
                 

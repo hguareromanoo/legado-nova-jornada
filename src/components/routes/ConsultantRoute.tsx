@@ -1,51 +1,19 @@
 
 import { Outlet, Navigate } from "react-router-dom";
-import DashboardLayout from "@/layouts/DashboardLayout";
+import ConsultantLayout from "@/layouts/ConsultantLayout";
 import { useUser } from "@/contexts/UserContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 
 const ConsultantRoute = () => {
-  const { isLoggedIn, user } = useUser();
-  const [isConsultant, setIsConsultant] = useState<boolean | null>(null);
+  const { isLoggedIn, user, userRole } = useUser();
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const checkConsultantRole = async () => {
-      if (!isLoggedIn || !user) {
-        setIsConsultant(false);
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        // Check if user has consultant or admin role
-        const { data, error } = await supabase
-          .rpc('has_role', { requested_role: 'consultant' });
-        
-        if (error) throw error;
-        
-        if (!data) {
-          // Also check for admin role as they can access consultant pages too
-          const { data: isAdmin, error: adminError } = await supabase
-            .rpc('has_role', { requested_role: 'admin' });
-            
-          if (adminError) throw adminError;
-          
-          setIsConsultant(!!isAdmin);
-        } else {
-          setIsConsultant(true);
-        }
-      } catch (error) {
-        console.error("Error checking consultant role:", error);
-        setIsConsultant(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkConsultantRole();
-  }, [isLoggedIn, user]);
+    // Set loading to false after userRole is fetched
+    if (userRole !== null || !isLoggedIn) {
+      setLoading(false);
+    }
+  }, [userRole, isLoggedIn]);
   
   if (loading) {
     return (
@@ -61,15 +29,15 @@ const ConsultantRoute = () => {
   }
   
   // If user is not a consultant, redirect to dashboard
-  if (!isConsultant) {
+  if (userRole !== 'consultant') {
     return <Navigate to="/dashboard" replace />;
   }
   
   // Render the consultant dashboard if the user is a consultant
   return (
-    <DashboardLayout>
+    <ConsultantLayout>
       <Outlet />
-    </DashboardLayout>
+    </ConsultantLayout>
   );
 };
 

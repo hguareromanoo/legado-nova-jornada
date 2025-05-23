@@ -157,74 +157,6 @@ export type Database = {
           },
         ]
       }
-      consultant_chat_messages: {
-        Row: {
-          consultant_id: string
-          created_at: string
-          id: string
-          is_read: boolean
-          message: string
-          sender_type: string
-          user_id: string
-        }
-        Insert: {
-          consultant_id: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message: string
-          sender_type: string
-          user_id: string
-        }
-        Update: {
-          consultant_id?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message?: string
-          sender_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "consultant_chat_messages_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "consultants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      consultants: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string
-          id: string
-          name: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       conversation_messages: {
         Row: {
           content: string
@@ -266,7 +198,8 @@ export type Database = {
           data_id: string
           data_key: string
           data_value: string
-          document_id: string
+          profile_id: string
+          recommendation_id: string
           updated_at: string | null
         }
         Insert: {
@@ -274,7 +207,8 @@ export type Database = {
           data_id?: string
           data_key: string
           data_value: string
-          document_id: string
+          profile_id: string
+          recommendation_id: string
           updated_at?: string | null
         }
         Update: {
@@ -282,16 +216,24 @@ export type Database = {
           data_id?: string
           data_key?: string
           data_value?: string
-          document_id?: string
+          profile_id?: string
+          recommendation_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "document_data_document_id_fkey"
-            columns: ["document_id"]
+            foreignKeyName: "document_data_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["document_id"]
+            referencedRelation: "client_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "document_data_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "document_recommendations"
+            referencedColumns: ["recommendation_id"]
           },
         ]
       }
@@ -580,6 +522,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
         Insert: {
@@ -587,6 +530,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
         Update: {
@@ -594,28 +538,8 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["user_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          user_id?: string
         }
         Relationships: []
       }
@@ -624,9 +548,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: { requested_role: Database["public"]["Enums"]["user_role"] }
-        Returns: boolean
+      get_document_data_grouped_by_document_key: {
+        Args: { p_profile_id: string }
+        Returns: {
+          document_key: string
+          data: Json
+        }[]
       }
       search_documents_text: {
         Args: { query_text: string; user_id: string; limit_count?: number }
@@ -668,9 +595,8 @@ export type Database = {
         | "viúvo"
         | "união estável"
         | "outro"
-      user_role: "user" | "admin" | "consultant"
+      user_role: "consultant" | "client"
       user_status: "active" | "pending" | "inactive" | "blocked"
-      user_type: "client" | "consultant" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -819,9 +745,8 @@ export const Constants = {
         "união estável",
         "outro",
       ],
-      user_role: ["user", "admin", "consultant"],
+      user_role: ["consultant", "client"],
       user_status: ["active", "pending", "inactive", "blocked"],
-      user_type: ["client", "consultant", "admin"],
     },
   },
 } as const

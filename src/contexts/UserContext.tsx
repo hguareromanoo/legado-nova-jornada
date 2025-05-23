@@ -9,6 +9,7 @@ interface UserContextType {
   user: User | null;
   session: Session | null;
   hasCompletedOnboarding: boolean;
+  userRole: string | null;
   login: (email: string, password: string) => Promise<{error?: string}>;
   signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string; needsEmailConfirmation?: boolean}>;
   logout: () => Promise<void>;
@@ -36,7 +37,31 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Fetch user role from database
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+      
+      if (data) {
+        console.log('User role fetched:', data.role);
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserRole:', error);
+    }
+  };
   
   // Configure Supabase auth state listener and check for existing session
   useEffect(() => {
@@ -47,6 +72,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoggedIn(!!currentSession);
+        
+        // Fetch user role if logged in
+        if (currentSession?.user) {
+          fetchUserRole(currentSession.user.id);
+        }
         
         // Check onboarding status
         if (currentSession) {
@@ -69,6 +99,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoggedIn(!!currentSession);
+      
+      // Fetch user role if logged in
+      if (currentSession?.user) {
+        fetchUserRole(currentSession.user.id);
+      }
       
       // Check onboarding status
       if (currentSession) {
@@ -194,6 +229,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         user,
         session,
         hasCompletedOnboarding,
+        userRole,
         login,
         signUp,
         logout,

@@ -1,9 +1,15 @@
+
 import { Outlet, Navigate } from "react-router-dom";
 import PublicLayout from "@/layouts/PublicLayout";
 import { useUser } from "@/contexts/UserContext";
 
 const PublicRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding } = useUser();
+  const { isLoggedIn, hasCompletedOnboarding, userRole } = useUser();
+  
+  // If user is a consultant, redirect to consultant dashboard
+  if (isLoggedIn && userRole === 'consultant') {
+    return <Navigate to="/consultant" replace />;
+  }
   
   // If user is logged in and has completed onboarding, redirect to dashboard
   if (isLoggedIn && hasCompletedOnboarding) {
