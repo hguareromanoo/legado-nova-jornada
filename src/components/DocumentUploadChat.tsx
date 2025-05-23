@@ -51,6 +51,7 @@ const DocumentUploadChat = ({
     }
   }, [messages]);
 
+  // Upload document with base64 encoding directly to database
   const processDocumentUpload = async (file: File) => {
     try {
       setIsUploading(true);
@@ -81,47 +82,46 @@ const DocumentUploadChat = ({
       
       const cleanup = simulateProgress();
       
-      // Gerar nome único do arquivo
-      const timestamp = Date.now();
-      const documentKey = document?.id || 'document';
-      const fileName = `${currentUser.id}/${documentKey}_${timestamp}_${file.name}`;
-      
-      // Upload para storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+      // Verificar tamanho do arquivo
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Arquivo muito grande. Máximo 10MB.');
       }
-
-      // Salvar metadados na tabela documents
-      const { data: docData, error: docError } = await supabase
+      
+      // Convert to base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const documentKey = document?.id || 'document';
+      
+      // Save directly to documents table
+      const { data, error } = await supabase
         .from('documents')
         .insert({
-          profile_id: currentUser.id,
-          bucket_name: 'documents',
-          object_key: uploadData.path,
+          user_id: currentUser.id,
+          recommendation_id: document?.id, // Link with document_recommendation
+          bucket_name: 'local_storage',
+          object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
           file_type: file.type,
-          file_size: file.size
+          file_size: file.size,
+          file_data: base64Data,
+          document_key: documentKey,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (docError) {
-        console.error('Database error:', docError);
-        
-        // Se falhou ao salvar no banco, remover arquivo do storage
-        await supabase.storage.from('documents').remove([uploadData.path]);
-        throw docError;
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Erro ao salvar: ${error.message}`);
       }
 
-      console.log('✅ Documento salvo com sucesso:', docData);
+      console.log('✅ Documento salvo com sucesso:', data);
       
       // Add confirmation message from the assistant
       setMessages(prev => [...prev, {

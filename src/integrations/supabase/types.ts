@@ -322,42 +322,58 @@ export type Database = {
           bucket_name: string
           created_at: string | null
           document_id: string
+          document_key: string | null
+          file_data: string | null
           file_name: string
           file_size: number | null
           file_type: string | null
           object_key: string
-          profile_id: string
+          recommendation_id: string | null
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           bucket_name: string
           created_at?: string | null
           document_id?: string
+          document_key?: string | null
+          file_data?: string | null
           file_name: string
           file_size?: number | null
           file_type?: string | null
           object_key: string
-          profile_id: string
+          recommendation_id?: string | null
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           bucket_name?: string
           created_at?: string | null
           document_id?: string
+          document_key?: string | null
+          file_data?: string | null
           file_name?: string
           file_size?: number | null
           file_type?: string | null
           object_key?: string
-          profile_id?: string
+          recommendation_id?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "documents_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "documents_recommendation_id_fkey"
+            columns: ["recommendation_id"]
             isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
+            referencedRelation: "document_recommendations"
+            referencedColumns: ["recommendation_id"]
+          },
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
           },
         ]
       }

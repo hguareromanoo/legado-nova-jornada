@@ -40,73 +40,65 @@ const DocumentUpload = ({
     fileInput.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
-        await processDocumentUpload(file, documentKey);
+        await uploadDocument(file, documentKey, recommendationId);
       }
     };
     
     fileInput.click();
   };
 
-  // Process upload of the document to Supabase
-  const processDocumentUpload = async (file: File, documentKey: string) => {
+  // Upload document with base64 encoding directly to database
+  const uploadDocument = async (file: File, documentKey: string, recommendationId: string) => {
     try {
+      if (!userId) throw new Error('Usuário não autenticado');
+      if (!file) throw new Error('Nenhum arquivo selecionado');
+      if (!recommendationId) throw new Error('ID da recomendação é obrigatório');
+      if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande. Máximo 10MB.');
+      
       onStatusChange(documentKey, 'uploading');
       
-      // 1. Verificar autenticação
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        throw new Error('Usuário não autenticado');
-      }
+      // Convert to base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
       
-      // 2. Gerar nome único do arquivo
-      const timestamp = Date.now();
-      const fileName = `${currentUser.id}/${documentKey}_${timestamp}_${file.name}`;
-      
-      // 3. Upload para storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-  
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-  
-      // 4. Salvar metadados na tabela documents (usando estrutura existente)
-      const { data: docData, error: docError } = await supabase
+      // Save directly to documents table
+      const { data, error } = await supabase
         .from('documents')
         .insert({
-          profile_id: currentUser.id,
-          bucket_name: 'documents',
-          object_key: uploadData.path, // caminho no storage
+          user_id: userId,                     // Use user_id instead of profile_id
+          recommendation_id: recommendationId, // Link with document_recommendation
+          bucket_name: 'local_storage',
+          object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
           file_type: file.type,
           file_size: file.size,
+          file_data: base64Data,
+          document_key: documentKey,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .select()
         .single();
-  
-      if (docError) {
-        console.error('Database error:', docError);
-        
-        // Se falhou ao salvar no banco, remover arquivo do storage
-        await supabase.storage.from('documents').remove([uploadData.path]);
-        throw docError;
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Erro ao salvar: ${error.message}`);
       }
-  
-      console.log('✅ Documento salvo com sucesso:', docData);
+      
+      console.log('✅ Documento salvo com sucesso:', data);
       onStatusChange(documentKey, 'uploaded');
       
       toast({
         title: "Documento enviado com sucesso!",
         description: `${file.name} foi enviado e salvo.`,
       });
-  
+      
+      return data;
+      
     } catch (error: any) {
       console.error('❌ Erro no upload:', error);
       onStatusChange(documentKey, 'error');
@@ -114,6 +106,73 @@ const DocumentUpload = ({
       toast({
         title: "Erro no upload",
         description: `Erro ao enviar o documento: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Helper function to list user documents
+  const listUserDocuments = async (documentKey: string, recommendationId: string | null = null) => {
+    try {
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      let query = supabase
+        .from('documents')
+        .select(`
+          document_id, 
+          document_key, 
+          file_name, 
+          file_type, 
+          file_size, 
+          created_at,
+          recommendation_id
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (recommendationId) {
+        query = query.eq('recommendation_id', recommendationId);
+      }
+      
+      if (documentKey) {
+        query = query.eq('document_key', documentKey);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erro ao listar documentos:', error);
+      return [];
+    }
+  };
+
+  // Function to download a document
+  const downloadDocument = async (documentId: string, fileName?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('file_data, file_name, user_id')
+        .eq('document_id', documentId)
+        .single();
+      
+      if (error) throw error;
+      if (!data?.file_data) throw new Error('Arquivo não encontrado');
+      if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo');
+      
+      const link = document.createElement('a');
+      link.href = data.file_data;
+      link.download = fileName || data.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error: any) {
+      console.error('Erro ao baixar documento:', error);
+      toast({
+        title: "Erro ao baixar documento",
+        description: error.message,
         variant: "destructive",
       });
     }

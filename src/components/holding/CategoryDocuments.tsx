@@ -3,6 +3,7 @@ import { FileText, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DocumentRecommendation } from '@/types/chat';
 import DocumentUpload from './DocumentUpload';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface CategoryDocumentsProps {
   category: string;
@@ -10,6 +11,7 @@ interface CategoryDocumentsProps {
   uploadStatus: Record<string, 'pending' | 'uploading' | 'uploaded' | 'error'>;
   expandedCards: Set<string>;
   userId: string | undefined;
+  user: SupabaseUser | null;
   onToggleCardExpansion: (cardId: string) => void;
   onStatusChange: (documentKey: string, status: 'pending' | 'uploading' | 'uploaded' | 'error') => void;
 }
@@ -20,6 +22,7 @@ const CategoryDocuments = ({
   uploadStatus,
   expandedCards,
   userId,
+  user,
   onToggleCardExpansion,
   onStatusChange
 }: CategoryDocumentsProps) => {

@@ -4,6 +4,7 @@ import { DocumentRecommendationsResponse } from '@/types/chat';
 import ProgressTracker from './ProgressTracker';
 import CategoryDocuments from './CategoryDocuments';
 import DocumentSummary from './DocumentSummary';
+import { useUser } from '@/contexts/UserContext';
 
 interface DocumentsTabProps {
   documentData: DocumentRecommendationsResponse;
@@ -24,6 +25,7 @@ const DocumentsTab = ({
   onToggleCardExpansion,
   onStatusChange
 }: DocumentsTabProps) => {
+  const { user } = useUser();
   const uploadedCount = Object.values(uploadStatus).filter(status => status === 'uploaded').length;
   
   // Group documents by category
@@ -72,6 +74,7 @@ const DocumentsTab = ({
             uploadStatus={uploadStatus}
             expandedCards={expandedCards}
             userId={userId}
+            user={user} // Pass the full user object from context
             onToggleCardExpansion={onToggleCardExpansion}
             onStatusChange={onStatusChange}
           />
