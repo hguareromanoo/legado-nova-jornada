@@ -1,3 +1,4 @@
+
 import { Outlet, Navigate } from "react-router-dom";
 import PublicLayout from "@/layouts/PublicLayout";
 import { useUser } from "@/contexts/UserContext";
@@ -8,11 +9,15 @@ const PublicRoute = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Set loading to false after userRole is fetched
-    if (userRole !== null || !isLoggedIn) {
+    // User role condition check
+    if (isLoggedIn && userRole !== null) {
+      console.log('PublicRoute - User role loaded:', userRole);
+      setLoading(false);
+    } else if (!isLoggedIn) {
+      console.log('PublicRoute - User not logged in');
       setLoading(false);
     }
-  }, [userRole, isLoggedIn]);
+  }, [isLoggedIn, userRole]);
   
   if (loading) {
     return (

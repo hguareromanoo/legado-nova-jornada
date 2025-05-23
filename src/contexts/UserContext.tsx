@@ -38,40 +38,54 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
   const { toast } = useToast();
   
   // Fetch user role from database
   const fetchUserRole = async (userId: string) => {
     try {
       console.log('Fetching user role for user ID:', userId);
+      setIsRoleLoading(true);
+      
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('role')
+        .select('role, first_name, last_name')
         .eq('id', userId)
         .single();
       
       if (error) {
         console.error('Error fetching user role:', error);
+        setUserRole('client'); // Default to client on error
+        setIsRoleLoading(false);
         return;
       }
       
       if (data) {
-        console.log('User role fetched:', data.role);
+        console.log('User profile fetched:', data);
         setUserRole(data.role);
+        // Store name in localStorage for easy access
+        if (data.first_name) {
+          localStorage.setItem('userFirstName', data.first_name);
+        }
       } else {
-        console.log('No user profile found');
+        console.log('No user profile found, defaulting to client role');
         setUserRole('client'); // Default role if not found
       }
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
+      setUserRole('client'); // Default to client on error
+    } finally {
+      setIsRoleLoading(false);
     }
   };
   
   // Configure Supabase auth state listener and check for existing session
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -79,7 +93,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         
         // Fetch user role if logged in
         if (currentSession?.user) {
-          fetchUserRole(currentSession.user.id);
+          await fetchUserRole(currentSession.user.id);
         } else {
           // Reset role when logged out
           setUserRole(null);
@@ -102,14 +116,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    const checkExistingSession = async () => {
+      console.log('Checking for existing session');
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoggedIn(!!currentSession);
       
       // Fetch user role if logged in
       if (currentSession?.user) {
-        fetchUserRole(currentSession.user.id);
+        await fetchUserRole(currentSession.user.id);
       }
       
       // Check onboarding status
@@ -117,7 +134,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
         setHasCompletedOnboarding(completed);
       }
-    });
+    };
+    
+    checkExistingSession();
 
     return () => {
       subscription.unsubscribe();

@@ -9,12 +9,17 @@ const ConsultantRoute = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Set loading to false after userRole is fetched
-    if (userRole !== null || !isLoggedIn) {
+    // User role condition check
+    if (isLoggedIn && userRole !== null) {
+      console.log('ConsultantRoute - User role loaded:', userRole);
+      setLoading(false);
+    } else if (!isLoggedIn) {
+      console.log('ConsultantRoute - User not logged in');
       setLoading(false);
     }
-  }, [userRole, isLoggedIn]);
+  }, [isLoggedIn, userRole]);
   
+  // Show loading while checking auth status and role
   if (loading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-gray-900">
@@ -31,7 +36,8 @@ const ConsultantRoute = () => {
   
   // If user is not a consultant, redirect to dashboard
   if (userRole !== 'consultant') {
-    console.log("User is not a consultant, redirecting to dashboard");
+    console.log("User is not a consultant, role is:", userRole);
+    console.log("Redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
