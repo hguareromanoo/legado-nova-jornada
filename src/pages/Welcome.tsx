@@ -16,14 +16,14 @@ const Welcome = () => {
     
     // Give auth state a moment to initialize
     const authCheckTimeout = setTimeout(() => {
-      if (!isLoggedIn) {
+      if (isLoggedIn === false) {
         console.log('User not logged in, redirecting to login');
         navigate('/login');
         return;
       }
       
       setLoading(false);
-    }, 500);
+    }, 1000); // Increased timeout to give more time for auth to initialize
     
     return () => clearTimeout(authCheckTimeout);
   }, [navigate, isLoggedIn, user, userState]);
@@ -36,6 +36,7 @@ const Welcome = () => {
   const handleContinue = async () => {
     // Atualizar o estado do usuário para onboarding_ai
     if (userState === 'first_access') {
+      console.log('Updating user state to onboarding_ai');
       await updateUserState('onboarding_ai');
     }
     

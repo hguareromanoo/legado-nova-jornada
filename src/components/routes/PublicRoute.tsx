@@ -9,6 +9,8 @@ const PublicRoute = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    console.log('PublicRoute - Initial state:', { isLoggedIn, userRole, userState });
+    
     // Simple loading state management with a maximum wait time
     const timeoutId = setTimeout(() => {
       if (loading) {
@@ -47,6 +49,16 @@ const PublicRoute = () => {
     if (userRole === 'consultant') {
       console.log("User is a consultant, redirecting to consultant dashboard");
       return <Navigate to="/consultant" replace />;
+    }
+    
+    // Special case for welcome page - allow access to welcome page when in first_access state
+    if (window.location.pathname === '/welcome' && userState === 'first_access') {
+      console.log("User is in first_access state on welcome page, allowing access");
+      return (
+        <PublicLayout>
+          <Outlet />
+        </PublicLayout>
+      );
     }
     
     // Redirecionamento baseado no estado do usuário
