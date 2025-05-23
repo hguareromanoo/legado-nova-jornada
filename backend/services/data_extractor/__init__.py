@@ -1,0 +1,1 @@
+from services.data_extractor.extractors import run_data_extraction_process

@@ -5,6 +5,9 @@ from models.pydantic_models import (
 )
 from typing import Optional, List, Dict, Any, Set
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class ExtractionOutput(BaseModel):
     personal_info_updates: Optional[PersonalInfo] = None
