@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Toast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 export class DocumentUploadService {
   static async uploadDocument(
