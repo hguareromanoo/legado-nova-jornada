@@ -12,18 +12,18 @@ interface UserProviderProps {
 }
 
 // Improved fetchUserProfile function that directly queries the database
-const fetchUserProfile = async (userId: string) => {
+const fetchUserProfile = async (userId: string): Promise<{ role: string, user_state: UserState }> => {
   try {
     console.log(`[UserContext] Fetching user profile for ${userId}`);
     
-    // Query the user_profiles table to get user role and state
-    // Logging the query details for debugging
-    console.log(`[UserContext] Querying user_profiles table with user_id = ${userId}`);
+    // Ensure we're querying the right table and column
+    // Debug log for easy identification of the exact query being executed
+    console.log(`[UserContext] QUERY: SELECT role, user_state FROM user_profiles WHERE user_id = '${userId}'`);
     
     const { data, error } = await supabase
-      .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
-      .select('role, user_state')  // Kept as 'role' (not 'user_role')
-      .eq('user_id', userId)  // Changed from 'id' to 'user_id'
+      .from('user_profiles')
+      .select('role, user_state')
+      .eq('user_id', userId)
       .single();
     
     if (error) {
@@ -38,16 +38,18 @@ const fetchUserProfile = async (userId: string) => {
     }
     
     console.log('[UserContext] Profile data retrieved:', JSON.stringify(data));
+    
     return {
-      role: data.role || 'user', // Correct column name 'role'
-      user_state: data.user_state || 'onboarding_started'
+      role: data.role || 'user',
+      // Using type assertion for the user_state
+      user_state: (data.user_state as UserState) || ('onboarding_started' as UserState)
     };
   } catch (error) {
     console.error('[UserContext] Error in fetchUserProfile:', error);
     // Return default values instead of throwing to prevent crashing
     return {
       role: 'user',
-      user_state: 'onboarding_started'
+      user_state: 'onboarding_started' as UserState
     };
   }
 };
@@ -103,13 +105,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Set role with fallback
       setUserRole(profileData.role || 'user');
       
-      // Set user state with fallback
-      if (profileData.user_state) {
-        setUserState(profileData.user_state);
-      } else {
-        // Use type assertion to fix TypeScript error
-        setUserState('onboarding_started' as UserState);
-      }
+      // Use the correctly typed state setter for UserState
+      setUserState(() => profileData.user_state);
       
       // Update hasCompletedOnboarding based on user state
       setHasCompletedOnboarding(profileData.user_state === 'holding_opened');
@@ -119,8 +116,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       console.error('[UserContext] Error initializing user profile:', error);
       // Set default values on error to avoid null states
       setUserRole('user');
-      // Use type assertion to fix TypeScript error
-      setUserState('onboarding_started' as UserState);
+      
+      // Use a functional update to fix type compatibility
+      setUserState(() => 'onboarding_started' as UserState);
+      
       setHasCompletedOnboarding(false);
       return null;
     } finally {
@@ -188,7 +187,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           console.error('[UserContext] Error during profile initialization:', error);
           // Set default values if initialization fails
           setUserRole('user');
-          setUserState('onboarding_started');
+          
+          // Use a functional update to fix type compatibility
+          setUserState(() => 'onboarding_started' as UserState);
+          
           setHasCompletedOnboarding(false);
           setIsRoleLoading(false);
         }
@@ -240,7 +242,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       if (result.success) {
         console.log(`[UserContext] User state successfully updated to ${state} in database`);
-        setUserState(state);
+        
+        // Use a functional update to fix type compatibility
+        setUserState(() => state);
         
         if (state === 'holding_opened') {
           setHasCompletedOnboarding(true);
