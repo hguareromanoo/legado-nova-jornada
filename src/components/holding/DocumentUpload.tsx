@@ -9,7 +9,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { DocumentRecommendation } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
 
 interface DocumentUploadProps {
   document: DocumentRecommendation;
@@ -30,97 +29,24 @@ const DocumentUpload = ({
 }: DocumentUploadProps) => {
   const { toast } = useToast();
 
-  // Ensure we have a valid recommendation_id
-  const ensureRecommendationId = async (document: DocumentRecommendation) => {
-    if (!document.recommendation_id) {
-      // Generate a new UUID for this recommendation
-      const generatedId = uuidv4();
-      
-      // Store document details in document_roadmap table
-      await storeDocumentRoadmap({
-        ...document,
-        recommendation_id: generatedId
-      });
-      
-      return generatedId;
-    }
-    
-    return document.recommendation_id;
-  };
-
-  // Function to store document details in document_roadmap table
-  const storeDocumentRoadmap = async (doc: DocumentRecommendation) => {
-    try {
-      if (!userId) throw new Error('Usuário não autenticado');
-      
-      console.log('📋 Salvando detalhes do documento na roadmap:', doc);
-      
-      // Check if entry already exists
-      const { data: existingData } = await supabase
-        .from('document_roadmap')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('document_key', doc.document_key)
-        .maybeSingle();
-      
-      if (existingData) {
-        console.log('Documento já existe na roadmap, atualizando...');
-        await supabase
-          .from('document_roadmap')
-          .update({
-            recommendation_id: doc.recommendation_id,
-            name: doc.name,
-            description: doc.description,
-            category: doc.category,
-            priority: doc.priority,
-            is_mandatory: doc.is_mandatory,
-            item_description: doc.item_description || null,
-            // Add optional properties with fallbacks
-            item_type: (doc as any).item_type || null,
-            item_index: (doc as any).item_index || null,
-            group_id: (doc as any).group_id || null,
-            how_to_obtain: doc.how_to_obtain || null,
-            processing_time: doc.processing_time || null,
-            estimated_cost: doc.estimated_cost || null,
-            reason: doc.reason || null,
-            related_to: (doc as any).related_to || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingData.id);
-      } else {
-        // Insert new entry
-        await supabase.from('document_roadmap').insert({
-          recommendation_id: doc.recommendation_id,
-          user_id: userId,
-          document_key: doc.document_key,
-          name: doc.name,
-          description: doc.description,
-          category: doc.category,
-          priority: doc.priority,
-          is_mandatory: doc.is_mandatory,
-          item_description: doc.item_description || null,
-          // Add optional properties with fallbacks
-          item_type: (doc as any).item_type || null,
-          item_index: (doc as any).item_index || null,
-          group_id: (doc as any).group_id || null,
-          how_to_obtain: doc.how_to_obtain || null,
-          processing_time: doc.processing_time || null,
-          estimated_cost: doc.estimated_cost || null,
-          reason: doc.reason || null,
-          related_to: (doc as any).related_to || null,
-          sent: false
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao salvar documento na roadmap:', error);
-    }
-  };
-
   // Function to handle document upload
   const handleDocumentUpload = async (documentKey: string) => {
     try {
-      // Ensure we have a valid recommendation_id
-      const recommendationId = await ensureRecommendationId(document);
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      // Get recommendation_id from document_roadmap 
+      const { data: roadmapEntry, error: roadmapError } = await supabase
+        .from('document_roadmap')
+        .select('recommendation_id')
+        .eq('user_id', userId)
+        .eq('document_key', documentKey)
+        .maybeSingle();
+      
+      if (roadmapError || !roadmapEntry) {
+        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
+      }
+      
+      const recommendationId = roadmapEntry.recommendation_id;
       
       // Using window.document instead of just document to avoid confusion with the prop named document
       const fileInput = window.document.createElement('input');
@@ -136,11 +62,11 @@ const DocumentUpload = ({
       };
       
       fileInput.click();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao preparar upload:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível preparar o upload do documento.",
+        description: `Não foi possível preparar o upload do documento: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -168,8 +94,8 @@ const DocumentUpload = ({
       const { data, error } = await supabase
         .from('documents')
         .insert({
-          user_id: userId,                     // Use user_id instead of profile_id
-          recommendation_id: recommendationId, // Link with document_recommendation
+          user_id: userId,
+          recommendation_id: recommendationId,
           bucket_name: 'local_storage',
           object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
@@ -216,43 +142,6 @@ const DocumentUpload = ({
         variant: "destructive",
       });
       throw error;
-    }
-  };
-
-  // Helper function to list user documents
-  const listUserDocuments = async (documentKey: string, recommendationId: string | null = null) => {
-    try {
-      if (!userId) throw new Error('Usuário não autenticado');
-      
-      let query = supabase
-        .from('documents')
-        .select(`
-          document_id, 
-          document_key, 
-          file_name, 
-          file_type, 
-          file_size, 
-          created_at,
-          recommendation_id
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (recommendationId) {
-        query = query.eq('recommendation_id', recommendationId);
-      }
-      
-      if (documentKey) {
-        query = query.eq('document_key', documentKey);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Erro ao listar documentos:', error);
-      return [];
     }
   };
 
