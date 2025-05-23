@@ -2,7 +2,9 @@ from pydantic_ai import Agent, RunContext
 from typing import Optional, List, Dict, Any, Set
 from pydantic import BaseModel, Field
 from models.pydantic_models import ClientProfile, ConversationMessage, PersonalInfo, FamilyMember, Asset, Goal, Concern, MaritalStatus
+from dotenv import load_dotenv
 
+load_dotenv()
 class ConversationDependencies:
     profile: ClientProfile
     conversation_history: List[ConversationMessage]

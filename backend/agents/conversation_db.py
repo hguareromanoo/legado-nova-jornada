@@ -5,7 +5,9 @@ from uuid import UUID
 from models.pydantic_models import ClientProfile, ConversationMessage
 from agents.conversation import NextQuestionOutput
 from services.session_service import SessionService
+from dotenv import load_dotenv
 
+load_dotenv()
 class ConversationDependencies:
     profile: ClientProfile
     conversation_history: List[ConversationMessage]

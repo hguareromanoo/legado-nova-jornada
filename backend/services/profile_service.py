@@ -172,7 +172,8 @@ class ProfileService:
                 how_to_obtain=doc_data.get("how_to_obtain"),
                 estimated_cost=doc_data.get("estimated_cost"),
                 processing_time=doc_data.get("processing_time"),
-                group_id=doc_data.get("group_id")
+                group_id=doc_data.get("group_id"),
+                recommendation_id=doc_data.get("recommendation_id")
             ))
             
             # Constrói CompletionScore
@@ -732,9 +733,14 @@ class ProfileService:
             # Ordenar por prioridade (maior primeiro) e depois por categoria
             recommendations.sort(key=lambda x: (-x.priority, x.category.value, x.name))
             
+            for rec in recommendations:
+                recom = rec.dict()
+                self.document_repo.add_document_recommendation(profile_id, recom)
+
+            
             logger.info(f"Geradas {len(recommendations)} recomendações de documentos OBRIGATÓRIOS para perfil {profile_id}")
             return recommendations
-            
+
         except Exception as e:
             logger.error(f"Erro ao recomendar documentos para perfil {profile_id}: {str(e)}")
             raise

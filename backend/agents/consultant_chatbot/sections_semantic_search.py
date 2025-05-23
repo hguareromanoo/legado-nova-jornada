@@ -1,7 +1,7 @@
 from sentence_transformers import CrossEncoder
 from functools import lru_cache
 from typing import Literal
-from services import get_collection, client
+from services.documents_section_processing import get_collection, client
 from sentence_transformers import SentenceTransformer, util
 from torch import topk
 from pydantic import BaseModel
