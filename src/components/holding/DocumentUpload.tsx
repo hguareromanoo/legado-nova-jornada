@@ -1,16 +1,17 @@
 
 import { useState } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Para o botão de Upload
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import type { CollapsibleProps as RadixCollapsibleProps } from '@radix-ui/react-collapsible';
 import { DocumentRecommendation } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentUploadProps {
-  document: DocumentRecommendation & { recommendation_id: string };
+  document: DocumentRecommendation;
   uploadStatus: 'pending' | 'uploading' | 'uploaded' | 'error';
   isExpanded: boolean;
   userId: string | undefined;
@@ -31,26 +32,21 @@ const DocumentUpload = ({
   const handleDocumentUpload = async (documentKey: string) => {
     try {
       if (!userId) throw new Error('Usuário não autenticado');
-      
       const recommendationId = document.recommendation_id;
-      
       if (!recommendationId) {
         console.error('Error: recommendation_id não encontrado no objeto document.', document);
         throw new Error('ID da recomendação não encontrado. Verifique os dados da recomendação.');
       }
-      
       const fileInput = window.document.createElement('input');
       fileInput.type = 'file';
       fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx';
       fileInput.multiple = false;
-      
       fileInput.onchange = async (event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (file) {
           await uploadDocument(file, documentKey, recommendationId);
         }
       };
-      
       fileInput.click();
     } catch (error: any) {
       console.error('Erro ao preparar upload:', error);
@@ -141,6 +137,7 @@ const DocumentUpload = ({
     }
   };
 
+  // downloadDocument e getStatusIcon permanecem os mesmos...
   const downloadDocument = async (documentId: string, fileName?: string) => {
     try {
       const { data, error } = await supabase
@@ -180,30 +177,31 @@ const DocumentUpload = ({
     }
   };
 
+
+  const handleOpenChange: RadixCollapsibleProps['onOpenChange'] = (_open) => {
+    onToggleExpand(document.document_key);
+  };
+
   return (
     <Card key={document.document_key} className="bg-gray-800/50 border-gray-700/50">
       <CardContent className="p-4">
-        {/* Envolve todo o conteúdo expansível, incluindo o trigger, em um único Collapsible */}
+        {/* Esta é a linha 146 ou próxima dela onde o erro TS2589 ocorre */}
         <Collapsible 
           open={isExpanded} 
-          // A função onOpenChange é chamada pelo Collapsible quando há uma interação para mudar o estado.
-          // Ela deve chamar onToggleExpand para que o estado no componente pai seja atualizado.
-          onOpenChange={() => onToggleExpand(document.document_key)}
+          onOpenChange={handleOpenChange}
         >
-          <div className="flex items-center justify-between"> {/* Linha do cabeçalho do Card */}
-            <div className="flex items-center gap-4 flex-1 min-w-0"> {/* Lado esquerdo: Ícone, Nome, Prioridade, Descrição */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               {getStatusIcon(uploadStatus)}
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-medium text-white truncate" title={document.name}>{document.name}</h4>
-                  {document.priority != null && (
-                    <Badge 
-                      variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
-                      className="flex-shrink-0"
-                    >
-                      {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
-                    </Badge>
-                  )}
+                  <Badge 
+                    variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
+                    className="flex-shrink-0"
+                  >
+                    {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-300 truncate" title={document.description}>{document.description}</p>
                 {document.item_description && (
@@ -214,7 +212,7 @@ const DocumentUpload = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-2 ml-4 flex-shrink-0"> {/* Lado direito: Botão Upload, Botão Chevron */}
+            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
               <Button
                 onClick={() => handleDocumentUpload(document.document_key)}
                 disabled={uploadStatus === 'uploading'}
@@ -227,21 +225,17 @@ const DocumentUpload = ({
                  'Enviar'}
               </Button>
               
-              {/* CollapsibleTrigger agora é filho do Collapsible principal */}
-              {/* O Button dentro de CollapsibleTrigger asChild não precisa de um onClick explícito para alternar o estado, */}
-              {/* pois o próprio CollapsibleTrigger manipula isso e chama onOpenChange. */}
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                >
-                  {isExpanded ? <ChevronUp /> : <ChevronDown />}
-                </Button>
+              {/* ETAPA DE DIAGNÓSTICO: CollapsibleTrigger simplificado */}
+              <CollapsibleTrigger>
+                {/* Substitua o Button anterior por um div simples para teste */}
+                {/* Adicione classes para estilização básica, se necessário para visualização */}
+                <div className="p-1.5 rounded-md hover:bg-gray-700 cursor-pointer flex items-center justify-center w-9 h-9"> {/* Ajuste o padding/size conforme o Button original */}
+                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CollapsibleTrigger>
             </div>
           </div>
           
-          {/* CollapsibleContent também é filho do Collapsible principal */}
           <CollapsibleContent className="mt-4 pt-4 border-t border-gray-700/50">
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               {document.how_to_obtain && (
