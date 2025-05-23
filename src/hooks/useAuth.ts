@@ -1,0 +1,106 @@
+
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { UserData } from '@/types/user';
+
+export const useAuth = () => {
+  const [authError, setAuthError] = useState<string | null>(null);
+  
+  // Login function
+  const login = async (email: string, password: string) => {
+    try {
+      console.log('Attempting login for:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Login error:', error.message);
+        
+        // Specific error handling for email not confirmed
+        if (error.message === 'Email not confirmed') {
+          return { 
+            error: 'Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.' 
+          };
+        }
+        
+        return { error: error.message };
+      }
+      
+      console.log('Login successful, user:', data.user?.id);
+      
+      // Set default onboarding step if not set
+      if (!localStorage.getItem('onboardingStep')) {
+        localStorage.setItem('onboardingStep', 'selection');
+      }
+      
+      return {};
+    } catch (error) {
+      console.error('Error during login:', error);
+      return { error: 'Erro ao fazer login' };
+    }
+  };
+  
+  // Sign up function
+  const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
+    try {
+      console.log('Attempting signup for:', email, 'with user data:', userData);
+      
+      // Configure redirect URL to the login page
+      const redirectTo = `${window.location.origin}/login`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+          },
+          emailRedirectTo: redirectTo
+        }
+      });
+      
+      if (error) {
+        console.error('Signup error:', error.message, error);
+        return { error: error.message };
+      }
+      
+      console.log('Signup successful, user:', data.user?.id);
+      console.log('Full signup response:', data);
+      
+      // Set default onboarding step
+      localStorage.setItem('onboardingStep', 'selection');
+      
+      // Check if confirmation email was sent
+      if (data?.user && !data.user.email_confirmed_at) {
+        return { 
+          needsEmailConfirmation: true,
+        };
+      }
+      
+      return {};
+    } catch (error: any) {
+      console.error('Error during signup:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return { error: 'Erro ao fazer cadastro: ' + (error.message || JSON.stringify(error)) };
+    }
+  };
+  
+  // Logout function
+  const logout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('user');
+    localStorage.removeItem('onboardingStep');
+    localStorage.removeItem('holdingSetupCompleted');
+    localStorage.setItem('isLoggedIn', 'false');
+  };
+  
+  return {
+    login,
+    signUp,
+    logout,
+    authError
+  };
+};
