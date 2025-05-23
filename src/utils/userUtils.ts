@@ -23,6 +23,8 @@ export const fetchUserProfile = async (userId: string) => {
       };
     }
     
+    console.log('User profile data:', data);
+    
     // Store name in localStorage for easy access
     if (data?.first_name) {
       localStorage.setItem('userFirstName', data.first_name);
@@ -62,14 +64,45 @@ export const updateUserStateInDb = async (userId: string, state: UserState) => {
     
     console.log(`Updating user state to: ${state} for user: ${userId}`);
     
-    const { error } = await supabase
+    // Verificar se o perfil do usuário existe
+    const { data: existingProfile } = await supabase
       .from('user_profiles')
-      .update({ user_state: state })
-      .eq('id', userId);
+      .select('id')
+      .eq('id', userId)
+      .single();
       
-    if (error) {
-      console.error('Error updating user state:', error);
-      return { success: false, error: error.message };
+    if (!existingProfile) {
+      console.log(`User profile does not exist for ID ${userId}, creating new profile`);
+      
+      // Criar perfil se não existir
+      const { error: insertError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: userId,
+          role: 'client',
+          user_state: state,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+        
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+        return { success: false, error: insertError.message };
+      }
+    } else {
+      // Atualizar estado do usuário existente
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          user_state: state,
+          updated_at: new Date()
+        })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error('Error updating user state:', error);
+        return { success: false, error: error.message };
+      }
     }
     
     // Update local storage if state is holding_opened

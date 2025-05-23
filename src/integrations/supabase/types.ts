@@ -390,15 +390,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "document_roadmap_recommendation_id_fkey"
-            columns: ["recommendation_id"]
-            isOneToOne: false
-            referencedRelation: "document_recommendations"
-            referencedColumns: ["recommendation_id"]
-          },
-        ]
+        Relationships: []
       }
       documents: {
         Row: {

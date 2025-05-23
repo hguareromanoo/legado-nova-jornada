@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -48,28 +47,47 @@ const HoldingSetup = () => {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  // Se necessário, atualize o estado do usuário quando a página for carregada
+  // Garantir que o estado do usuário está correto quando a página for carregada
   useEffect(() => {
-    const initializeUserState = async () => {
-      // Se o usuário estiver em um estado anterior a holding_setup, atualize-o
-      if (userState && 
-          userState !== 'holding_setup' && 
-          userState !== 'holding_opened') {
-        await updateUserState('holding_setup');
+    if (!user) {
+      console.log("No user found, redirecting to login");
+      navigate('/login');
+      return;
+    }
+    
+    console.log("Current user state:", userState);
+    
+    const setupUserState = async () => {
+      // Se o usuário não estiver no estado correto para holding_setup, atualize-o
+      if (userState && userState !== 'holding_setup' && userState !== 'holding_opened') {
+        console.log(`Updating user state from ${userState} to holding_setup`);
+        try {
+          await updateUserState('holding_setup');
+          console.log("State updated to holding_setup");
+        } catch (err) {
+          console.error("Error updating state:", err);
+          toast({
+            title: "Erro ao atualizar estado",
+            description: "Não foi possível atualizar seu progresso.",
+            variant: "destructive"
+          });
+        }
       }
     };
     
-    // Usar setTimeout para evitar múltiplas atualizações de estado no mesmo ciclo de renderização
+    // Usar setTimeout para evitar problemas de renderização
     const timeoutId = setTimeout(() => {
-      initializeUserState();
-    }, 0);
+      setupUserState();
+    }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [userState, updateUserState]);
+  }, [user, userState, updateUserState, navigate, toast]);
 
   // Recuperar sessionId e dados de documentos
   useEffect(() => {
     const initializeDocuments = async () => {
+      if (!user) return;
+      
       try {
         setLoading(true);
         
@@ -82,7 +100,7 @@ const HoldingSetup = () => {
           initializeUploadStatus(passedData.recommendations);
         } else {
           // Fallback: tentar recuperar sessionId do localStorage
-          const userId = localStorage.getItem('currentUserId');
+          const userId = user.id || localStorage.getItem('currentUserId');
           const sessionId = userId ? localStorage.getItem(`chatSessionId_${userId}`) : null;
           
           if (sessionId) {
@@ -109,8 +127,13 @@ const HoldingSetup = () => {
       }
     };
 
-    initializeDocuments();
-  }, [location.state, toast]);
+    // Usar setTimeout para evitar problemas de renderização
+    const timeoutId = setTimeout(() => {
+      initializeDocuments();
+    }, 200);
+    
+    return () => clearTimeout(timeoutId);
+  }, [location.state, toast, user]);
 
   // Inicializar status de upload
   const initializeUploadStatus = (recommendations: DocumentRecommendationsResponse['recommendations']) => {
@@ -174,8 +197,18 @@ const HoldingSetup = () => {
 
   // Quando o usuário concluir o setup, atualize o estado
   const handleCompleteSetup = async () => {
-    await updateUserState('holding_opened');
-    navigate('/members');
+    try {
+      await updateUserState('holding_opened');
+      console.log("User state updated to holding_opened");
+      navigate('/members');
+    } catch (err) {
+      console.error("Error completing setup:", err);
+      toast({
+        title: "Erro ao finalizar setup",
+        description: "Não foi possível concluir o processo.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

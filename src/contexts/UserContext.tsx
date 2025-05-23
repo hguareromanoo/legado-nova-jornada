@@ -28,8 +28,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const initUserProfile = async (userId: string) => {
     try {
       setIsRoleLoading(true);
+      console.log(`Initializing user profile for ${userId}`);
       const profileData = await fetchUserProfile(userId);
       
+      console.log('Profile data loaded:', profileData);
       setUserRole(profileData.role);
       setUserState(profileData.user_state);
       
@@ -122,15 +124,18 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       return;
     }
     
+    console.log(`Attempting to update user state to ${state}`);
     const result = await updateUserStateInDb(user.id, state);
     
     if (result.success) {
+      console.log(`User state successfully updated to ${state} in database`);
       setUserState(state);
       
       if (state === 'holding_opened') {
         setHasCompletedOnboarding(true);
       }
     } else {
+      console.error(`Failed to update user state: ${result.error}`);
       toast({
         title: "Erro ao atualizar estado",
         description: "Não foi possível atualizar seu progresso no sistema.",
