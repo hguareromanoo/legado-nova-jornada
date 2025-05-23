@@ -50,6 +50,38 @@ export type Database = {
           },
         ]
       }
+      chat_log: {
+        Row: {
+          content: string
+          created_at: string | null
+          message_id: number
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          message_id?: number
+          profile_id: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          message_id?: number
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "client_profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       client_profiles: {
         Row: {
           completion_score_assets: number
