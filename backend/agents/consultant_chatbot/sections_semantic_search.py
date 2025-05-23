@@ -55,7 +55,7 @@ def get_by_similarity(client_id, search: Literal['title', 'document_type'], inpu
 
 
 def search_sections(client_id, extracted_data: BaseModel, threshold: float = 0.65):
-    "Get closest sections by infered filters and BiEncoder and CrossEncoder similarity."
+    "Get closest sections by infered filters and using BiEncoder and CrossEncoder similarity."
     collection = get_collection(client=client, client_id=client_id)
 
     section_filters = []

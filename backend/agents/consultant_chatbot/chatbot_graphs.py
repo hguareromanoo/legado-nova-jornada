@@ -127,6 +127,7 @@ class State(TypedDict):
     prompt: Optional[str]
     formatted_data: Optional[str]
     formatted_info: Optional[str]
+    log: Optional[List[tuple]]
 
 
 
@@ -247,6 +248,9 @@ def response_agent(state: State):
 
         Seções e documentos relevantes (se disponíveis):
         {'\n'.join(state.get('sections', ['Não foram encontradas seções relevantes.']))}
+
+        Últimas mensagens do chat para contexto:
+        {"\n\n".join(["\n".join(pair) for pair in state['log']])}
 
 
         Com base nessas informações, elabore uma resposta precisa, clara e profissional.
@@ -429,6 +433,33 @@ def router(state: State):
     return state
 
 
+# ------------ Persist Chat Log ------------
+
+async def save_chat_log(state: State):
+    """Persist user entry and chat response in database."""
+    db = state["database"]
+    query = state["query"]
+    assistant_msgs = [m for m in state["messages"] if isinstance(m, AIMessage)]
+    user_id = state["client_id"]
+    await db.insert(table="chat_log", data={
+        "content": query,
+        "role": "user",
+        "client_id": user_id
+    })
+    await db.insert(table="chat_log", data={
+        "content": assistant_msgs[-1].content,
+        "role": "assistant",
+        "client_id": user_id
+    })
+
+
+async def get_chat_log(state: State):
+        """Get last ten messages in chat filtered by client_id"""
+        db = state["database"]
+        log = await db.select(table="chat_log", filters={"profile_id": state["client_id"]}, order="created_at")
+        return [(msg["content"], msg["role"]) for msg in reversed(log)[:10]]
+
+
 
 
 #========================================================================
@@ -501,7 +532,7 @@ graph = graph_builder.compile()
 
 # ------------ Consultant Chatbot ------------
 
-async def run_chatbot(query: str,client_id: str | int = 1):
+async def run_chatbot(query: str,client_id):
     """
     Processa uma consulta enviada pelo usuário e retorna a resposta gerada pelo chatbot.
 
@@ -522,6 +553,7 @@ async def run_chatbot(query: str,client_id: str | int = 1):
     """
     db = await initialize_db()
     state = {"messages": [], "client_id":client_id, "database": db}
+    state["log"] = await get_chat_log(state)
 
     state['query'] = query
 
@@ -531,6 +563,7 @@ async def run_chatbot(query: str,client_id: str | int = 1):
 
     assistant_msgs = [m for m in state["messages"] if isinstance(m, AIMessage)]
     if assistant_msgs:
+        await save_chat_log(state)
         return assistant_msgs[-1].content
     else:
         raise ValueError("Falha em processar resposta.")

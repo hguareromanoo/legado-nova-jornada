@@ -35,11 +35,12 @@ async def initialize_db():
 # ------------ Chat Log ------------
 
 class State(TypedDict):
-    messages: Annotated[List[dict], add_messages]
+    messages: Annotated[list, add_messages]
     doc_type: str
     output_model: Optional[type[BaseModel]]
     prompt: Optional[str]
     extracted_data: Optional[dict | BaseModel]
+    database: SupabaseManager
 
 
 # ------------ Enums ------------
@@ -342,8 +343,6 @@ def extract_data_agent(state: State):
     return state
 
 
-
-
 #====================================
 #               Graphs
 #====================================
@@ -377,10 +376,10 @@ async def run_data_extraction_process(user_id: str, doc_id: str, doc_type: str, 
     Returns:
         Dict[str, Any]: Dictionary of extracted key-value pairs.
     """
-    db: SupabaseManager = initialize_db()
+    db = await initialize_db()
     document_content ="\n".join([page.page_content.strip() for page in PyMuPDFLoader(path).load()])
 
-    state = {"messages": [{"role": "user", "content": document_content}], "doc_type": doc_type}
+    state = {"messages": [{"role": "user", "content": document_content}], "doc_type": doc_type, "database": db}
 
     state = graph.invoke(state)
 
