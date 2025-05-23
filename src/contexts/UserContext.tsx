@@ -256,4 +256,251 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
         // Se não houver sessão, o onAuthStateChange já terá sido chamado com INITIAL_SESSION (ou equivalente)
         // e currentUser será null, então handleAuthChange já terá definido isRoleLoading = false.
-        // Se houver sessão, o handleAuthChange será chamado com SIGNED_IN (
+        // Se houver sessão, o handleAuthChange será chamado com SIGNED_IN (ou equivalente),
+        // e o initUserProfile será chamado, e isRoleLoading será tratado lá.
+        // A lógica aqui é simplificada porque onAuthStateChange lida com a configuração inicial.
+        // No entanto, para garantir, se não houver usuário na sessão inicial, explicitamente setamos loading false.
+        if (!currentInitialSession?.user) {
+            setSession(null);
+            setUser(null);
+            setIsLoggedIn(false);
+            setUserRole(null);
+            setUserState(null);
+            setHasCompletedOnboarding(false);
+            setIsRoleLoading(false);
+            console.log(
+                '[UserContext] checkExistingSession: Nenhuma sessão inicial ou usuário, isRoleLoading = false',
+            );
+        } else {
+            // Se existe sessão, o onAuthStateChange vai lidar com initUserProfile e isRoleLoading.
+            // Apenas para garantir que o listener seja configurado antes de qualquer coisa:
+            // setSession(currentInitialSession);
+            // setUser(currentInitialSession.user);
+            // setIsLoggedIn(true);
+            // await initUserProfile(currentInitialSession.user.id); // initUserProfile definirá isRoleLoading = false
+        }
+
+      } catch (error: any) {
+        if (!isMounted) return;
+        console.error(
+          '[UserContext] checkExistingSession: Exceção ao verificar sessão:',
+          error.message,
+        );
+        setIsLoggedIn(false);
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        setUserState(null);
+        setHasCompletedOnboarding(false);
+        setIsRoleLoading(false);
+        console.log(
+          '[UserContext] checkExistingSession: Exceção, isRoleLoading = false',
+        );
+      }
+    };
+
+    checkExistingSession();
+
+    return () => {
+      console.log(
+        '[UserContext] useEffect: Desinscrevendo listener de authStateChange.',
+      );
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [toast, initUserProfile]); // Adicionado initUserProfile como dependência de useCallback
+
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<{ error?: string }> => {
+    console.log(`[UserContext] login: Tentando login para ${email}`);
+    setIsRoleLoading(true); // Define loading ao iniciar o login
+    const result = await authLogin(email, password);
+    if (result.error) {
+      console.error(`[UserContext] login: Erro no login: ${result.error}`);
+      setIsRoleLoading(false); // Define false se o login falhar
+      return { error: result.error };
+    }
+    // O perfil será inicializado por onAuthStateChange, que também setará isRoleLoading = false
+    console.log(`[UserContext] login: Login bem-sucedido para ${email}. Aguardando onAuthStateChange.`);
+    return {};
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: Partial<UserData>,
+  ): Promise<{ error?: string; needsEmailConfirmation?: boolean }> => {
+    console.log(`[UserContext] signUp: Tentando cadastro para ${email}`);
+    setIsRoleLoading(true); // Define loading ao iniciar signup
+    const result = await authSignUp(email, password, userData);
+    // Se o signup precisar de confirmação, o usuário não estará logado imediatamente.
+    // onAuthStateChange cuidará do estado de loading quando a confirmação acontecer ou se não for necessária.
+    if(result.error || result.needsEmailConfirmation) {
+        setIsRoleLoading(false);
+    }
+    return result;
+  };
+
+  const logout = async (): Promise<void> => {
+    console.log('[UserContext] logout: Iniciando processo de logout.');
+    await authLogout();
+    // Estados serão resetados por onAuthStateChange, que também setará isRoleLoading = false
+    console.log('[UserContext] logout: Logout concluído.');
+  };
+
+  const updateUserState = useCallback(async (
+    state: UserState,
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!user?.id) {
+      console.error(
+        '[UserContext] updateUserState: Não pode atualizar estado, ID do usuário ausente.',
+      );
+      return { success: false, error: 'ID do usuário não disponível' };
+    }
+    console.log(
+      `[UserContext] updateUserState: Tentando atualizar estado para ${state}`,
+    );
+    const result = await updateUserStateInDb(user.id, state);
+    if (result.success) {
+      console.log(
+        `[UserContext] updateUserState: Estado atualizado para ${state} localmente.`,
+      );
+      setUserState(state); // Atualiza o estado local
+      if (state === 'holding_opened') {
+        setHasCompletedOnboarding(true);
+      }
+      return { success: true };
+    } else {
+      toast({
+        title: 'Erro ao atualizar estado',
+        description: result.error || 'Não foi possível atualizar seu progresso no sistema.',
+        variant: 'destructive',
+      });
+      return { success: false, error: result.error };
+    }
+  }, [user, toast]); // Adicionado toast como dependência
+
+  const completeOnboarding = useCallback(async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    console.log(
+      '[UserContext] completeOnboarding: Completando onboarding, definindo estado para holding_opened.',
+    );
+    const result = await updateUserState('holding_opened');
+    if (result.success) {
+      setHasCompletedOnboarding(true); // Garante que o estado local também seja atualizado
+      localStorage.setItem('holdingSetupCompleted', 'true');
+    }
+    return result;
+  }, [updateUserState]);
+
+  const updateUser = useCallback(async (
+    data: Partial<UserData>,
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!user?.id) {
+      console.error(
+        '[UserContext] updateUser: Não pode atualizar usuário, ID do usuário ausente.',
+      );
+      return { success: false, error: 'ID do usuário não disponível' };
+    }
+    try {
+      console.log('[UserContext] updateUser: Atualizando dados do usuário:', data);
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error(
+          '[UserContext] updateUser: Erro ao atualizar usuário:',
+          updateError,
+        );
+        return { success: false, error: updateError.message };
+      }
+      
+      // Atualizar o estado local do usuário se campos relevantes mudarem
+      // Isso é um pouco simplista; o ideal seria refetchar o user.user_metadata ou o perfil completo
+      setUser(prevUser => {
+        if (!prevUser) return null;
+        const newUserMetadata = { ...prevUser.user_metadata };
+        if (data.first_name) newUserMetadata.first_name = data.first_name;
+        if (data.last_name) newUserMetadata.last_name = data.last_name;
+        // Adicione outros campos de metadata se necessário
+        return { ...prevUser, user_metadata: newUserMetadata };
+      });
+
+      // Se o role ou user_state foram alterados em 'data', atualize os estados locais
+      if (data.role && typeof data.role === 'string') setUserRole(data.role);
+      if (data.user_state) setUserState(data.user_state as UserState);
+
+
+      console.log('[UserContext] updateUser: Dados do usuário atualizados com sucesso.');
+      return { success: true };
+    } catch (error: any) {
+      console.error('[UserContext] updateUser: Exceção:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro desconhecido',
+      };
+    }
+  }, [user]); // Adicionado user como dependência
+
+  useEffect(() => {
+    console.log('[UserContext] EFETIVO (MUDANÇA DE ESTADO):', {
+      isLoggedIn,
+      userRole,
+      userState,
+      hasCompletedOnboarding,
+      isRoleLoading,
+      userId: user?.id,
+      sessionDefined: !!session,
+    });
+  }, [
+    isLoggedIn,
+    userRole,
+    userState,
+    hasCompletedOnboarding,
+    isRoleLoading,
+    user,
+    session,
+  ]);
+
+  return (
+    <UserContext.Provider
+      value={{
+        isLoggedIn,
+        user,
+        session,
+        hasCompletedOnboarding,
+        userRole,
+        userState,
+        login,
+        signUp,
+        logout,
+        completeOnboarding,
+        updateUser,
+        updateUserState,
+      }}
+    >
+      {!isRoleLoading ? (
+        children
+      ) : (
+        <div className="w-full min-h-screen flex items-center justify-center bg-white">
+          {/* Mantido o fundo branco para a tela de loading */}
+          <div className="animate-pulse text-gray-700">Carregando usuário...</div>
+        </div>
+      )}
+    </UserContext.Provider>
+  );
+};
+
+export const useUser = (): UserContextType => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
