@@ -5,19 +5,19 @@ import { useUser } from "@/contexts/UserContext";
 import { useState, useEffect } from "react";
 
 const PublicRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding, userRole } = useUser();
+  const { isLoggedIn, hasCompletedOnboarding, userRole, userState } = useUser();
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // User role condition check
-    if (isLoggedIn && userRole !== null) {
-      console.log('PublicRoute - User role loaded:', userRole);
+    // User role/state condition check
+    if (isLoggedIn && userRole !== null && userState !== null) {
+      console.log('PublicRoute - User state loaded:', userState);
       setLoading(false);
     } else if (!isLoggedIn) {
       console.log('PublicRoute - User not logged in');
       setLoading(false);
     }
-  }, [isLoggedIn, userRole]);
+  }, [isLoggedIn, userRole, userState]);
   
   if (loading) {
     return (
@@ -27,26 +27,45 @@ const PublicRoute = () => {
     );
   }
   
-  // If user is a consultant, redirect to consultant dashboard
-  if (isLoggedIn && userRole === 'consultant') {
-    console.log("User is a consultant, redirecting to consultant dashboard");
-    return <Navigate to="/consultant" replace />;
-  }
-  
-  // If user is logged in and has completed onboarding, redirect to dashboard
-  if (isLoggedIn && hasCompletedOnboarding) {
-    console.log("User has completed onboarding, redirecting to dashboard");
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // If user is logged in but has not completed onboarding, redirect to onboarding
-  if (isLoggedIn && !hasCompletedOnboarding) {
-    console.log("User has not completed onboarding, redirecting to onboarding");
-    return <Navigate to="/onboarding" replace />;
+  // Se o usuário está autenticado, redirecione com base no estado
+  if (isLoggedIn) {
+    // Se o usuário é um consultor, redirecione para o dashboard do consultor
+    if (userRole === 'consultant') {
+      console.log("User is a consultant, redirecting to consultant dashboard");
+      return <Navigate to="/consultant" replace />;
+    }
+    
+    // Redirecionamento baseado no estado do usuário
+    switch (userState) {
+      case 'first_access':
+        console.log("User is in first_access state, redirecting to welcome page");
+        return <Navigate to="/welcome" replace />;
+        
+      case 'onboarding_ai':
+        console.log("User is in onboarding_ai state, redirecting to AI onboarding");
+        return <Navigate to="/onboarding/chat" replace />;
+        
+      case 'onboarding_human':
+        console.log("User is in onboarding_human state, redirecting to human onboarding");
+        return <Navigate to="/onboarding/human/schedule" replace />;
+        
+      case 'holding_setup':
+        console.log("User is in holding_setup state, redirecting to holding setup");
+        return <Navigate to="/holding-setup" replace />;
+        
+      case 'holding_opened':
+        console.log("User is in holding_opened state, redirecting to members page");
+        return <Navigate to="/members" replace />;
+        
+      default:
+        // Fallback para o estado de acesso inicial
+        console.log("User state unknown, redirecting to welcome page as fallback");
+        return <Navigate to="/welcome" replace />;
+    }
   }
   
   console.log("User is not logged in, showing public content");
-  // Otherwise, render the public route
+  // Se não estiver autenticado, renderizar a rota pública
   return (
     <PublicLayout>
       <Outlet />

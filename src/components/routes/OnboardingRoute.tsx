@@ -4,19 +4,19 @@ import OnboardingLayout from "@/layouts/OnboardingLayout";
 import { useUser } from "@/contexts/UserContext";
 
 const OnboardingRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding } = useUser();
+  const { isLoggedIn, hasCompletedOnboarding, userState } = useUser();
   
-  // If user is not logged in, redirect to login page
+  // Se o usuário não estiver autenticado, redirecione para a página de login
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
   
-  // If user has completed onboarding, redirect to dashboard
-  if (hasCompletedOnboarding) {
+  // Se o usuário estiver no estado holding_opened, redirecione para o dashboard
+  if (userState === 'holding_opened' || hasCompletedOnboarding) {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Render the onboarding layout with the current step
+  // Renderize o layout de onboarding com a etapa atual
   return (
     <OnboardingLayout>
       <Outlet />

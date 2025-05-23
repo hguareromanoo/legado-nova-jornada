@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -152,6 +151,34 @@ const HoldingSetup = () => {
   }
 
   if (!documentData) return null;
+
+  // Precisamos importar o hook useUser e a função updateUserState
+  import { useUser } from '@/contexts/UserContext';
+
+  // Dentro do componente HoldingSetup, adicione:
+  const { updateUserState, userState } = useUser();
+
+  // Se necessário, atualize o estado do usuário quando a página for carregada
+  useEffect(() => {
+    const initializeUserState = async () => {
+      // Se o usuário estiver em um estado anterior a holding_setup, atualize-o
+      if (userState && 
+          userState !== 'holding_setup' && 
+          userState !== 'holding_opened') {
+        await updateUserState('holding_setup');
+      }
+    };
+    
+    initializeUserState();
+  }, [userState, updateUserState]);
+
+  // Quando o usuário concluir o setup, atualize o estado
+  const handleCompleteSetup = async () => {
+    await updateUserState('holding_opened');
+    navigate('/members');
+  };
+
+  // Certifique-se de chamar handleCompleteSetup nos botões/ações relevantes
 
   return (
     <SidebarProvider>

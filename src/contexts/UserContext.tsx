@@ -1,8 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+// Definindo os tipos de estado do usuário
+export type UserState = 'first_access' | 'onboarding_ai' | 'onboarding_human' | 'holding_setup' | 'holding_opened';
 
 interface UserContextType {
   isLoggedIn: boolean;
@@ -10,11 +12,13 @@ interface UserContextType {
   session: Session | null;
   hasCompletedOnboarding: boolean;
   userRole: string | null;
+  userState: UserState | null;
   login: (email: string, password: string) => Promise<{error?: string}>;
   signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string; needsEmailConfirmation?: boolean}>;
   logout: () => Promise<void>;
   completeOnboarding: () => void;
   updateUser: (data: Partial<UserData>) => void;
+  updateUserState: (state: UserState) => Promise<void>;
 }
 
 interface UserData {
@@ -38,24 +42,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userState, setUserState] = useState<UserState | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
   const { toast } = useToast();
   
-  // Fetch user role from database
-  const fetchUserRole = async (userId: string) => {
+  // Fetch user role and state from database
+  const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching user role for user ID:', userId);
+      console.log('Fetching user profile for user ID:', userId);
       setIsRoleLoading(true);
       
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('role, first_name, last_name')
+        .select('role, first_name, last_name, user_state')
         .eq('id', userId)
         .single();
       
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Error fetching user profile:', error);
         setUserRole('client'); // Default to client on error
+        setUserState('first_access'); // Default state on error
         setIsRoleLoading(false);
         return;
       }
@@ -63,17 +69,31 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       if (data) {
         console.log('User profile fetched:', data);
         setUserRole(data.role);
+        setUserState(data.user_state as UserState || 'first_access');
+        
         // Store name in localStorage for easy access
         if (data.first_name) {
           localStorage.setItem('userFirstName', data.first_name);
         }
+        
+        // Update hasCompletedOnboarding based on user state
+        if (data.user_state === 'holding_opened') {
+          setHasCompletedOnboarding(true);
+          localStorage.setItem('holdingSetupCompleted', 'true');
+        } else {
+          setHasCompletedOnboarding(false);
+          localStorage.setItem('holdingSetupCompleted', 'false');
+        }
+        
       } else {
-        console.log('No user profile found, defaulting to client role');
+        console.log('No user profile found, defaulting to client role and first_access state');
         setUserRole('client'); // Default role if not found
+        setUserState('first_access'); // Default state if not found
       }
     } catch (error) {
-      console.error('Error in fetchUserRole:', error);
+      console.error('Error in fetchUserProfile:', error);
       setUserRole('client'); // Default to client on error
+      setUserState('first_access'); // Default to first_access on error
     } finally {
       setIsRoleLoading(false);
     }
@@ -91,18 +111,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setUser(currentSession?.user ?? null);
         setIsLoggedIn(!!currentSession);
         
-        // Fetch user role if logged in
+        // Fetch user profile (role and state) if logged in
         if (currentSession?.user) {
-          await fetchUserRole(currentSession.user.id);
+          await fetchUserProfile(currentSession.user.id);
         } else {
-          // Reset role when logged out
+          // Reset role and state when logged out
           setUserRole(null);
-        }
-        
-        // Check onboarding status
-        if (currentSession) {
-          const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
-          setHasCompletedOnboarding(completed);
+          setUserState(null);
+          setHasCompletedOnboarding(false);
         }
         
         // Show toast for successful email confirmation
@@ -124,15 +140,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setUser(currentSession?.user ?? null);
       setIsLoggedIn(!!currentSession);
       
-      // Fetch user role if logged in
+      // Fetch user profile if logged in
       if (currentSession?.user) {
-        await fetchUserRole(currentSession.user.id);
-      }
-      
-      // Check onboarding status
-      if (currentSession) {
-        const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
-        setHasCompletedOnboarding(completed);
+        await fetchUserProfile(currentSession.user.id);
       }
     };
     
@@ -165,10 +175,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
       
       console.log('Login successful, user:', data.user?.id);
-      
-      // Check onboarding status
-      const completed = localStorage.getItem('holdingSetupCompleted') === 'true';
-      setHasCompletedOnboarding(completed);
       
       // Set default onboarding step if not set
       if (!localStorage.getItem('onboardingStep')) {
@@ -230,21 +236,69 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
     setIsLoggedIn(false);
+    setUserRole(null);
+    setUserState(null);
+    setHasCompletedOnboarding(false);
     localStorage.removeItem('user');
     localStorage.removeItem('onboardingStep');
+    localStorage.removeItem('holdingSetupCompleted');
     localStorage.setItem('isLoggedIn', 'false');
   };
   
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
     setHasCompletedOnboarding(true);
     localStorage.setItem('holdingSetupCompleted', 'true');
+    
+    // Update user state to holding_opened
+    await updateUserState('holding_opened');
   };
   
   const updateUser = (data: Partial<UserData>) => {
     if (user) {
       // Here we could update user metadata in Supabase
       console.log('Updating user data:', data);
+    }
+  };
+  
+  // Novo método para atualizar o estado do usuário
+  const updateUserState = async (state: UserState) => {
+    try {
+      if (!user?.id) {
+        console.error('Cannot update user state: No user ID');
+        return;
+      }
+      
+      console.log(`Updating user state to: ${state} for user: ${user.id}`);
+      
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ user_state: state })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error('Error updating user state:', error);
+        toast({
+          title: "Erro ao atualizar estado",
+          description: "Não foi possível atualizar seu progresso no sistema.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update local state
+      setUserState(state);
+      
+      // Update onboarding completion flag if state is holding_opened
+      if (state === 'holding_opened') {
+        setHasCompletedOnboarding(true);
+        localStorage.setItem('holdingSetupCompleted', 'true');
+      }
+      
+      console.log(`✅ User state updated to: ${state}`);
+    } catch (error) {
+      console.error('Error in updateUserState:', error);
     }
   };
   
@@ -256,11 +310,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         session,
         hasCompletedOnboarding,
         userRole,
+        userState,
         login,
         signUp,
         logout,
         completeOnboarding,
-        updateUser
+        updateUser,
+        updateUserState
       }}
     >
       {children}

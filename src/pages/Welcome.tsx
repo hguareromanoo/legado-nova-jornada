@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, userState, updateUserState } = useUser();
   
   // Redirecionar para login se não estiver autenticado
   useEffect(() => {
@@ -21,9 +21,15 @@ const Welcome = () => {
                    user?.user_metadata?.full_name?.split(' ')[0] || 
                    'Cliente';
   
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    // Atualizar o estado do usuário para onboarding_ai
+    if (userState === 'first_access') {
+      await updateUserState('onboarding_ai');
+    }
+    
     // Marcar que o usuário já viu a tela de boas-vindas
     localStorage.setItem('hasSeenWelcome', 'true');
+    
     // Redirecionar para a próxima etapa do onboarding
     navigate('/onboarding');
   };
