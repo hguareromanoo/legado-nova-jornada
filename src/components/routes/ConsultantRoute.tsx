@@ -25,14 +25,17 @@ const ConsultantRoute = () => {
   
   // If user is not logged in, redirect to login page
   if (!isLoggedIn) {
+    console.log("User is not logged in, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
   // If user is not a consultant, redirect to dashboard
   if (userRole !== 'consultant') {
+    console.log("User is not a consultant, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
+  console.log("User is a consultant, showing consultant dashboard");
   // Render the consultant dashboard if the user is a consultant
   return (
     <ConsultantLayout>

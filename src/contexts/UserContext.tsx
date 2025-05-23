@@ -43,6 +43,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // Fetch user role from database
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('Fetching user role for user ID:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('role')
@@ -57,6 +58,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       if (data) {
         console.log('User role fetched:', data.role);
         setUserRole(data.role);
+      } else {
+        console.log('No user profile found');
+        setUserRole('client'); // Default role if not found
       }
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
@@ -76,6 +80,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         // Fetch user role if logged in
         if (currentSession?.user) {
           fetchUserRole(currentSession.user.id);
+        } else {
+          // Reset role when logged out
+          setUserRole(null);
         }
         
         // Check onboarding status
