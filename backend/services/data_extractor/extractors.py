@@ -394,7 +394,7 @@ async def run_data_extraction_process(user_id: str, doc_id: str, doc_type: str, 
 
     for data_key, data_value in data.items():
         await db.insert(table="document_data", data={
-            "recommendation_id": doc_id,
+            "document_id": doc_id,
             "profile_id": user_id,
             "data_key": data_key,
             "data_value": str(data_value)

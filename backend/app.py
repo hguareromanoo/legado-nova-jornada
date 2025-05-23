@@ -44,8 +44,14 @@ app = FastAPI(title="Chat Onboarding API")
 # Adicionar middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://preview--legado-nova-jornada.lovable.app", "http://localhost:3000", "http://localhost:8080", "https://legado-nova-jornada.lovable.app"],
-    allow_credentials=True,
+    allow_origins=[
+        "https://preview--legado-nova-jornada.lovable.app",
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://legado-nova-jornada.lovable.app",
+        "http://localhost:5500",  # Adicione esta linha para Live Server padrão
+        "http://127.0.0.1:5500"  # E esta também, caso use o IP
+    ],    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -613,7 +619,7 @@ async def get_document_keys():
 
 
 # Novo endpoint para o chatbot do consultor
-@app.post("/consultant_chatbot/{user_id}/messages", response_model=ChatbotResponse)
+@app.post("/consultant_chatbot/messages", response_model=ChatbotResponse)
 async def consultant_chatbot(request: ChatbotRequest):
     """
     Recebe a mensagem do consultor e o ID do cliente, processa através do chatbot 

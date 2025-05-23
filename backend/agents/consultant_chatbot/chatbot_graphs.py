@@ -273,7 +273,7 @@ def format_data(state: State):
         entries = doc.get("data", [])
         if entries:
             for item in entries:
-                key = item.get("key", "").strip().captalize()
+                key = item.get("key", "").strip().capitalize()
                 value = item.get("value", "").strip()
                 output.append(f"{key} - {value}")
         else:
@@ -444,20 +444,20 @@ async def save_chat_log(state: State):
     await db.insert(table="chat_log", data={
         "content": query,
         "role": "user",
-        "client_id": user_id
+        "profile_id": user_id
     })
     await db.insert(table="chat_log", data={
         "content": assistant_msgs[-1].content,
         "role": "assistant",
-        "client_id": user_id
+        "profile_id": user_id
     })
 
 
 async def get_chat_log(state: State):
-        """Get last ten messages in chat filtered by client_id"""
-        db = state["database"]
-        log = await db.select(table="chat_log", filters={"profile_id": state["client_id"]}, order="created_at")
-        return [(msg["content"], msg["role"]) for msg in reversed(log)[:10]]
+    """Get last ten messages in chat filtered by client_id"""
+    db = state["database"]
+    log = await db.select(table="chat_log", filters={"profile_id": state["client_id"]}, order="created_at")
+    return [(msg["content"], msg["role"]) for msg in list(reversed(log))[:10]]
 
 
 

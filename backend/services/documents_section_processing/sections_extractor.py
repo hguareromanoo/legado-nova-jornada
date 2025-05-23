@@ -119,7 +119,7 @@ def summarier_agent(state: State):
 
 graph_builder = StateGraph(State)
 
-graph_builder.add_node("extrator_agent", section_extractor_agent)
+graph_builder.add_node("extractor_agent", section_extractor_agent)
 graph_builder.add_node("summarier_agent", summarier_agent)
 
 graph_builder.add_edge(START, "extractor_agent")
