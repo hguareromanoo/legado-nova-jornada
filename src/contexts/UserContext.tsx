@@ -22,7 +22,7 @@ const fetchUserProfile = async (userId: string) => {
     
     const { data, error } = await supabase
       .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
-      .select('user_role, user_state')  // Changed from 'role' to 'user_role'
+      .select('role, user_state')  // Kept as 'role' (not 'user_role')
       .eq('user_id', userId)  // Changed from 'id' to 'user_id'
       .single();
     
@@ -39,7 +39,7 @@ const fetchUserProfile = async (userId: string) => {
     
     console.log('[UserContext] Profile data retrieved:', JSON.stringify(data));
     return {
-      role: data.user_role || 'user', // Changed from data.role to data.user_role
+      role: data.role || 'user', // Correct column name 'role'
       user_state: data.user_state || 'onboarding_started'
     };
   } catch (error) {
@@ -270,10 +270,18 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       console.log('[UserContext] Updating user data:', data);
       
+      // Map from UserData to database columns
+      const dbData = { ...data };
+      
+      // Convert role property if it exists (important for type safety)
+      if ('role' in data) {
+        dbData.role = data.role; // Using 'role' as the correct column name
+      }
+      
       const { error } = await supabase
-        .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);  // Changed from 'id' to 'user_id'
+        .from('user_profiles')
+        .update({ ...dbData, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);
       
       if (error) {
         console.error('[UserContext] Error updating user:', error);
