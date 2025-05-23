@@ -1,7 +1,9 @@
-
-import { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // Adicionado useCallback
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { DocumentRecommendationsResponse } from '@/types/chat';
+import {
+  DocumentRecommendationsResponse,
+  DocumentRecommendation,
+} from '@/types/chat';
 import ProgressTracker from './ProgressTracker';
 import CategoryDocuments from './CategoryDocuments';
 import DocumentSummary from './DocumentSummary';
@@ -15,7 +17,10 @@ interface DocumentsTabProps {
   uploadProgress: number;
   userId: string | undefined;
   onToggleCardExpansion: (cardId: string) => void;
-  onStatusChange: (documentKey: string, status: 'pending' | 'uploading' | 'uploaded' | 'error') => void;
+  onStatusChange: (
+    documentKey: string,
+    status: 'pending' | 'uploading' | 'uploaded' | 'error',
+  ) => void;
 }
 
 const DocumentsTab = ({
@@ -25,62 +30,84 @@ const DocumentsTab = ({
   uploadProgress,
   userId,
   onToggleCardExpansion,
-  onStatusChange
+  onStatusChange,
 }: DocumentsTabProps) => {
   const { user } = useUser();
-  const uploadedCount = Object.values(uploadStatus).filter(status => status === 'uploaded').length;
-  
-  // Fetch already uploaded documents on mount
+  const uploadedCount = Object.values(uploadStatus).filter(
+    (status) => status === 'uploaded',
+  ).length;
+
+  // Estado para armazenar os documentos após a inicialização do roadmap por categoria
+  const [
+    initializedDocumentsByCategory,
+    setInitializedDocumentsByCategory,
+  ] = useState<Record<string, DocumentRecommendation[]>>({});
+
+  // Callback para ser chamada por CategoryDocuments quando o roadmap da categoria for inicializado
+  const handleRoadmapInitialized = useCallback(
+    (initializedDocs: DocumentRecommendation[], category: string) => {
+      setInitializedDocumentsByCategory((prevMap) => ({
+        ...prevMap,
+        [category]: initializedDocs,
+      }));
+      console.log(
+        `[DocumentsTab] Roadmap inicializado/atualizado para categoria: ${category}`,
+        initializedDocs,
+      );
+    },
+    [],
+  ); // Sem dependências, pois a função em si não muda
+
   useEffect(() => {
     const fetchUploadedDocuments = async () => {
       if (!userId) return;
-      
+
       try {
-        // Query document_roadmap to find which documents are already marked as sent
         const { data: sentDocuments, error } = await supabase
           .from('document_roadmap')
           .select('document_key')
           .eq('user_id', userId)
           .eq('sent', true);
-        
+
         if (error) {
           console.error('Error fetching uploaded documents:', error);
           return;
         }
-        
-        // Update the upload status for documents that are already sent
+
         if (sentDocuments && sentDocuments.length > 0) {
-          sentDocuments.forEach(doc => {
+          sentDocuments.forEach((doc) => {
             if (doc.document_key) {
               onStatusChange(doc.document_key, 'uploaded');
             }
           });
-          
-          console.log(`✅ Found ${sentDocuments.length} documents already uploaded`);
+          console.log(
+            `✅ Found ${sentDocuments.length} documents already uploaded`,
+          );
         }
       } catch (error) {
         console.error('Error checking uploaded documents:', error);
       }
     };
-    
+
     fetchUploadedDocuments();
   }, [userId, onStatusChange]);
-  
-  // Group documents by category
-  const groupDocumentsByCategory = (recommendations: DocumentRecommendationsResponse['recommendations']) => {
-    const grouped: Record<string, typeof recommendations> = {};
-    
-    recommendations.forEach(doc => {
+
+  const groupDocumentsByCategory = (
+    recommendations: DocumentRecommendation[],
+  ) => {
+    const grouped: Record<string, DocumentRecommendation[]> = {};
+    recommendations.forEach((doc) => {
       if (!grouped[doc.category]) {
         grouped[doc.category] = [];
       }
       grouped[doc.category].push(doc);
     });
-    
     return grouped;
   };
 
-  const groupedDocuments = groupDocumentsByCategory(documentData.recommendations);
+  const groupedInitialDocuments = groupDocumentsByCategory(
+    documentData.recommendations,
+  );
 
   return (
     <div className="p-6">
@@ -88,13 +115,13 @@ const DocumentsTab = ({
         <div>
           <h1 className="text-2xl font-bold text-white">Envio de Documentos</h1>
           <p className="text-gray-300">
-            Olá, {documentData.metadata.client_name || 'Cliente'}! Envie os documentos necessários para sua holding.
+            Olá, {documentData.metadata.client_name || 'Cliente'}! Envie os
+            documentos necessários para sua holding.
           </p>
         </div>
         <SidebarTrigger />
       </header>
 
-      {/* Progress Bar */}
       <ProgressTracker
         uploadProgress={uploadProgress}
         uploadedCount={uploadedCount}
@@ -102,27 +129,26 @@ const DocumentsTab = ({
         uploadStatus={uploadStatus}
       />
 
-      {/* Documentos por Categoria */}
       <div className="space-y-6">
-        {Object.entries(groupedDocuments).map(([category, docs]) => (
+        {Object.entries(groupedInitialDocuments).map(([category, docs]) => (
           <CategoryDocuments
             key={category}
             category={category}
-            documents={docs}
+            documents={initializedDocumentsByCategory[category] || docs} // Usa docs inicializados se disponíveis
             uploadStatus={uploadStatus}
             expandedCards={expandedCards}
             userId={userId}
             user={user}
             onToggleCardExpansion={onToggleCardExpansion}
             onStatusChange={onStatusChange}
+            onRoadmapInitialized={handleRoadmapInitialized} // Prop adicionada
           />
         ))}
       </div>
-      
-      {/* Resumo Final */}
-      <DocumentSummary 
-        documentData={documentData} 
-        uploadedCount={uploadedCount} 
+
+      <DocumentSummary
+        documentData={documentData}
+        uploadedCount={uploadedCount}
       />
     </div>
   );
