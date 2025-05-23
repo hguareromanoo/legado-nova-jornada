@@ -1,10 +1,8 @@
-import { supabase } from '@/integrations/supabase/client';
-// Corrigido: Importar 'toast' com 't' minúsculo e renomear para evitar conflito se necessário.
-// Se você estiver usando o 'toast' globalmente e não como parâmetro, pode manter 'toast'.
-// Para este exemplo, assumo que a função toast passada como parâmetro é a que deve ser usada.
-// import { toast as uiToast } from '@/components/ui/use-toast';
 
-// Define o tipo para a função toast que será passada como parâmetro
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast'; // Corrected import
+
+// Define the type for the function toast that will be passed as parameter
 type ToastFunction = (props: { title: string; description: string; variant?: "default" | "destructive" }) => void;
 
 export class DocumentUploadService {
@@ -14,7 +12,6 @@ export class DocumentUploadService {
     recommendationId: string,
     userId: string,
     onProgress: (status: 'pending' | 'uploading' | 'uploaded' | 'error') => void,
-    // Renomeado o parâmetro para clareza e tipado explicitamente
     toastFn: ToastFunction
   ) {
     try {
@@ -60,22 +57,22 @@ export class DocumentUploadService {
       console.log('✅ Documento salvo com sucesso na tabela documents:', documentData);
       
       const { error: recommendationUpdateError } = await supabase
-        .from('document_recommendations') // Ou 'document_roadmap' se for o caso de apenas marcar como 'sent'
+        .from('document_recommendations')
         .update({ 
-            sent: true, // Certifique-se que esta é a coluna e valor corretos
+            sent: true,
             updated_at: timestamp 
         })
-        .eq('recommendation_id', recommendationId); // Ou .eq('document_key', documentKey).eq('user_id', userId) se for roadmap
+        .eq('recommendation_id', recommendationId);
       
       if (recommendationUpdateError) {
-        console.error('Erro ao atualizar a recomendação/roadmap:', recommendationUpdateError);
-        throw new Error(`Documento salvo, mas falha ao atualizar status da recomendação: ${recommendationUpdateError.message}`);
+        console.error('Erro ao atualizar a coluna sent em document_recommendations:', recommendationUpdateError);
+        throw new Error(`Documento salvo, mas falha ao atualizar o status (sent) da recomendação: ${recommendationUpdateError.message}`);
       }
       
-      console.log('✅ Status da recomendação/roadmap atualizado.');
+      console.log('✅ Coluna sent da recomendação atualizada para true.');
       onProgress('uploaded');
       
-      toastFn({ // Usar o parâmetro toastFn
+      toastFn({
         title: "Documento enviado com sucesso!",
         description: `${file.name} foi enviado e o status da recomendação foi atualizado.`,
       });
@@ -86,22 +83,19 @@ export class DocumentUploadService {
       console.error('❌ Erro no upload:', error);
       onProgress('error');
       
-      toastFn({ // Usar o parâmetro toastFn
+      toastFn({
         title: "Erro no upload",
         description: `Erro ao processar o documento: ${error.message}`,
         variant: "destructive",
       });
-      // Considerar se deve relançar o erro ou retornar um valor/objeto de erro
-      // throw error; // Se quem chama o serviço precisar saber do erro
     }
   }
 
-  // Corrigido: Parâmetro obrigatório 'toastFn' movido antes do parâmetro opcional 'fileName'
   static async downloadDocument(
-    documentId: string,             // Obrigatório
-    userId: string | undefined,     // Obrigatório (mas pode ser undefined)
-    toastFn: ToastFunction,         // Obrigatório - movido para antes de fileName
-    fileName?: string               // Opcional
+    documentId: string,
+    userId: string | undefined,
+    toastFn: ToastFunction,
+    fileName?: string
   ) {
     try {
       if (userId === undefined) {
@@ -111,7 +105,7 @@ export class DocumentUploadService {
       const { data, error } = await supabase
         .from('documents')
         .select('file_data, file_name, user_id')
-        .eq('id', documentId) // Supondo que 'id' é a PK da tabela 'documents'
+        .eq('id', documentId) 
         .single();
       
       if (error) throw error;
