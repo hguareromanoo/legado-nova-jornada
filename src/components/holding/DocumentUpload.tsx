@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DocumentRecommendation } from '@/types/chat'; // Certifique-se que este tipo inclui recommendation_id
+import { DocumentRecommendation } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -75,7 +75,7 @@ const DocumentUpload = ({
       const base64Data = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (errorEvent) => reject(new Error(`Erro ao ler o arquivo: ${reader.error?.message || 'Erro desconhecido'}`));
+        reader.onerror = (_errorEvent) => reject(new Error(`Erro ao ler o arquivo: ${reader.error?.message || 'Erro desconhecido'}`));
         reader.readAsDataURL(file);
       });
       
@@ -106,11 +106,10 @@ const DocumentUpload = ({
       
       console.log('✅ Documento salvo com sucesso na tabela documents:', documentData);
       
-      // Atualizar a coluna 'sent' na tabela 'document_recommendations'
       const { error: recommendationUpdateError } = await supabase
         .from('document_recommendations')
         .update({ 
-            sent: true, // Atualiza a coluna 'sent' para true
+            sent: true,
             updated_at: timestamp 
         })
         .eq('recommendation_id', recommendationId);
@@ -184,60 +183,65 @@ const DocumentUpload = ({
   return (
     <Card key={document.document_key} className="bg-gray-800/50 border-gray-700/50">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            {getStatusIcon(uploadStatus)}
-            
-            <div className="flex-1 overflow-hidden">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-medium text-white truncate" title={document.name}>{document.name}</h4>
-                {document.priority != null && (
-                  <Badge 
-                    variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
-                    className="flex-shrink-0"
-                  >
-                    {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
-                  </Badge>
+        {/* Envolve todo o conteúdo expansível, incluindo o trigger, em um único Collapsible */}
+        <Collapsible 
+          open={isExpanded} 
+          // A função onOpenChange é chamada pelo Collapsible quando há uma interação para mudar o estado.
+          // Ela deve chamar onToggleExpand para que o estado no componente pai seja atualizado.
+          onOpenChange={() => onToggleExpand(document.document_key)}
+        >
+          <div className="flex items-center justify-between"> {/* Linha do cabeçalho do Card */}
+            <div className="flex items-center gap-4 flex-1 min-w-0"> {/* Lado esquerdo: Ícone, Nome, Prioridade, Descrição */}
+              {getStatusIcon(uploadStatus)}
+              <div className="flex-1 overflow-hidden">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-medium text-white truncate" title={document.name}>{document.name}</h4>
+                  {document.priority != null && (
+                    <Badge 
+                      variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
+                      className="flex-shrink-0"
+                    >
+                      {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-300 truncate" title={document.description}>{document.description}</p>
+                {document.item_description && (
+                  <p className="text-sm text-blue-400 mt-1 truncate" title={document.item_description}>
+                    <strong>Item específico:</strong> {document.item_description}
+                  </p>
                 )}
               </div>
-              <p className="text-sm text-gray-300 truncate" title={document.description}>{document.description}</p>
-              
-              {document.item_description && (
-                <p className="text-sm text-blue-400 mt-1 truncate" title={document.item_description}>
-                  <strong>Item específico:</strong> {document.item_description}
-                </p>
-              )}
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-            <Button
-              onClick={() => handleDocumentUpload(document.document_key)}
-              disabled={uploadStatus === 'uploading'}
-              variant={uploadStatus === 'uploaded' ? "outline" : "default"}
-              size="sm"
-            >
-              {uploadStatus === 'uploaded' ? 'Enviado' :
-               uploadStatus === 'uploading' ? 'Enviando...' :
-               uploadStatus === 'error' ? 'Tentar Novamente' :
-               'Enviar'}
-            </Button>
             
-            <Collapsible>
+            <div className="flex items-center gap-2 ml-4 flex-shrink-0"> {/* Lado direito: Botão Upload, Botão Chevron */}
+              <Button
+                onClick={() => handleDocumentUpload(document.document_key)}
+                disabled={uploadStatus === 'uploading'}
+                variant={uploadStatus === 'uploaded' ? "outline" : "default"}
+                size="sm"
+              >
+                {uploadStatus === 'uploaded' ? 'Enviado' :
+                 uploadStatus === 'uploading' ? 'Enviando...' :
+                 uploadStatus === 'error' ? 'Tentar Novamente' :
+                 'Enviar'}
+              </Button>
+              
+              {/* CollapsibleTrigger agora é filho do Collapsible principal */}
+              {/* O Button dentro de CollapsibleTrigger asChild não precisa de um onClick explícito para alternar o estado, */}
+              {/* pois o próprio CollapsibleTrigger manipula isso e chama onOpenChange. */}
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onToggleExpand(document.document_key)}
                 >
                   {isExpanded ? <ChevronUp /> : <ChevronDown />}
                 </Button>
               </CollapsibleTrigger>
-            </Collapsible>
+            </div>
           </div>
-        </div>
-        
-        <Collapsible open={isExpanded} onOpenChange={() => onToggleExpand(document.document_key)}>
+          
+          {/* CollapsibleContent também é filho do Collapsible principal */}
           <CollapsibleContent className="mt-4 pt-4 border-t border-gray-700/50">
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               {document.how_to_obtain && (
@@ -246,21 +250,18 @@ const DocumentUpload = ({
                   <p className="text-gray-400 mt-1 whitespace-pre-wrap">{document.how_to_obtain}</p>
                 </div>
               )}
-              
               {document.processing_time && (
                 <div>
                   <strong className="text-gray-300">Prazo:</strong>
                   <p className="text-gray-400 mt-1">{document.processing_time}</p>
                 </div>
               )}
-              
               {document.estimated_cost && (
                 <div>
                   <strong className="text-gray-300">Custo estimado:</strong>
                   <p className="text-gray-400 mt-1">{document.estimated_cost}</p>
                 </div>
               )}
-              
               <div>
                 <strong className="text-gray-300">ID da Recomendação:</strong>
                 <p className="text-gray-400 mt-1 font-mono text-xs">{document.recommendation_id}</p>
@@ -270,7 +271,6 @@ const DocumentUpload = ({
                 <p className="text-gray-400 mt-1 font-mono text-xs">{document.document_key}</p>
               </div>
             </div>
-            
             {document.reason && (
               <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
                 <strong className="text-blue-400">Por que é necessário:</strong>
