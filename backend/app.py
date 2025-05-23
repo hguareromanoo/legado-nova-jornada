@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 import uvicorn
 import json
@@ -25,6 +25,7 @@ from agents.conversation import conversation_agent
 from agents.conversation_db import prepare_conversation_agent_context, save_agent_response
 from agents.extraction import extraction_agent
 from agents.extraction_db import prepare_extraction_agent_context, process_extraction_result
+from agents import run_chatbot
 
 # Verificar variáveis de ambiente
 import os
@@ -67,6 +68,15 @@ class DocumentUploadRequest(BaseModel):
     document_key: str
     file_content_base64: str
     file_name: Optional[str] = None
+
+# Model para request do chatbot do consultor
+class ChatbotRequest(BaseModel):
+    client_id: Union[str, int] # Aceita string ou int para client_id
+    message: str
+
+# Model para resposta do chatbot do consultor
+class ChatbotResponse(BaseModel):
+    response: str
 
 # Inicializar serviço de documentos
 document_service = DocumentService(db_manager)
@@ -600,6 +610,57 @@ async def get_document_keys():
     except Exception as e:
         logger.error(f"Erro ao listar chaves de documentos: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Novo endpoint para o chatbot do consultor
+@app.post("/consultant_chatbot/{user_id}/messages", response_model=ChatbotResponse)
+async def consultant_chatbot(request: ChatbotRequest):
+    """
+    Recebe a mensagem do consultor e o ID do cliente, processa através do chatbot 
+    e retorna a resposta gerada pela IA.
+    
+    Args:
+        request: Objeto contendo client_id e message
+        
+    Returns:
+        Resposta do chatbot no formato {"response": "string"}
+    """
+    try:
+        logger.info(f"Recebida mensagem para chatbot do consultor. Cliente ID: {request.client_id}")
+        
+        # Validar se client_id é um UUID válido se for string
+        client_id_processed = request.client_id
+        if isinstance(request.client_id, str):
+            try:
+                # Tenta converter para UUID para validar o formato, se aplicável ao seu sistema
+                # Se o client_id não for UUID, ajuste esta validação
+                UUID(request.client_id)
+            except ValueError:
+                 # Se não for UUID, pode ser um ID numérico ou outro formato string.
+                 # Se for sempre UUID, descomente o raise abaixo.
+                 # logger.error(f"Client ID inválido: {request.client_id}")
+                 # raise HTTPException(status_code=400, detail="Client ID inválido.")
+                 pass # Assume que é um ID string válido não-UUID ou numérico
+
+        # Chamar a função do chatbot
+        chatbot_response = await run_chatbot(query=request.message, client_id=client_id_processed)
+        
+        # Verificar se a resposta foi gerada corretamente
+        if not chatbot_response or not isinstance(chatbot_response, str):
+             logger.error(f"Resposta inválida do chatbot para client_id {request.client_id}")
+             raise HTTPException(status_code=500, detail="Erro ao gerar resposta do chatbot.")
+
+        logger.info(f"Resposta gerada com sucesso para client_id {request.client_id}")
+        
+        # Retornar a resposta no formato especificado
+        return ChatbotResponse(response=chatbot_response)
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions para manter o status code original
+        raise
+    except Exception as e:
+        logger.error(f"Erro no endpoint /chatbot/consultant: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro interno no servidor: {str(e)}")
 
 if __name__ == "__main__":
     print("\n🏢 Iniciando API do Chat Onboarding para Consultoria Patrimonial...\n")
