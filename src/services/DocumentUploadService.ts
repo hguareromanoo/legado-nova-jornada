@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast'; // Corrected import (toast, not Toast)
+import { toast } from '@/hooks/use-toast'; // Corrected import
 
 // Define the type for the function toast that will be passed as parameter
 type ToastFunction = (props: { title: string; description: string; variant?: "default" | "destructive" }) => void;
@@ -12,7 +12,7 @@ export class DocumentUploadService {
     recommendationId: string,
     userId: string,
     onProgress: (status: 'pending' | 'uploading' | 'uploaded' | 'error') => void,
-    toastFn: ToastFunction // Required parameter can't follow optional parameter
+    toastFn: ToastFunction
   ) {
     try {
       if (!userId) throw new Error('Usuário não autenticado');

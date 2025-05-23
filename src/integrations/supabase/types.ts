@@ -424,6 +424,59 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          bucket_name: string
+          created_at: string
+          document_key: string
+          file_data: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          object_key: string
+          recommendation_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bucket_name: string
+          created_at?: string
+          document_key: string
+          file_data?: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id?: string
+          object_key: string
+          recommendation_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bucket_name?: string
+          created_at?: string
+          document_key?: string
+          file_data?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          object_key?: string
+          recommendation_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "document_recommendations"
+            referencedColumns: ["recommendation_id"]
+          },
+        ]
+      }
       family_members: {
         Row: {
           age: number | null
