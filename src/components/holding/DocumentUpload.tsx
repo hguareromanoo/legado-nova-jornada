@@ -2,16 +2,15 @@
 import { useState } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DocumentRecommendation } from '@/types/chat';
+import { DocumentRecommendation } from '@/types/chat'; // Certifique-se que este tipo inclui recommendation_id
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentUploadProps {
-  document: DocumentRecommendation;
+  document: DocumentRecommendation & { recommendation_id: string };
   uploadStatus: 'pending' | 'uploading' | 'uploaded' | 'error';
   isExpanded: boolean;
   userId: string | undefined;
@@ -29,34 +28,20 @@ const DocumentUpload = ({
 }: DocumentUploadProps) => {
   const { toast } = useToast();
 
-  // Function to handle document upload
   const handleDocumentUpload = async (documentKey: string) => {
     try {
       if (!userId) throw new Error('Usuário não autenticado');
       
-      // Get recommendation_id from document_roadmap 
-      const { data: roadmapEntry, error: roadmapError } = await supabase
-        .from('document_roadmap')
-        .select('recommendation_id')
-        .eq('user_id', userId)
-        .eq('document_key', documentKey)
-        .maybeSingle();
+      const recommendationId = document.recommendation_id;
       
-      if (roadmapError) {
-        console.error('Error fetching document roadmap:', roadmapError);
-        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
+      if (!recommendationId) {
+        console.error('Error: recommendation_id não encontrado no objeto document.', document);
+        throw new Error('ID da recomendação não encontrado. Verifique os dados da recomendação.');
       }
       
-      if (!roadmapEntry) {
-        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
-      }
-      
-      const recommendationId = roadmapEntry.recommendation_id;
-      
-      // Using window.document instead of just document to avoid confusion with the prop named document
       const fileInput = window.document.createElement('input');
       fileInput.type = 'file';
-      fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+      fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx';
       fileInput.multiple = false;
       
       fileInput.onchange = async (event) => {
@@ -74,10 +59,10 @@ const DocumentUpload = ({
         description: `Não foi possível preparar o upload do documento: ${error.message}`,
         variant: "destructive",
       });
+      onStatusChange(documentKey, 'error');
     }
   };
 
-  // Upload document with base64 encoding directly to database
   const uploadDocument = async (file: File, documentKey: string, recommendationId: string) => {
     try {
       if (!userId) throw new Error('Usuário não autenticado');
@@ -87,55 +72,63 @@ const DocumentUpload = ({
       
       onStatusChange(documentKey, 'uploading');
       
-      // Convert to base64
       const base64Data = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = (errorEvent) => reject(new Error(`Erro ao ler o arquivo: ${reader.error?.message || 'Erro desconhecido'}`));
         reader.readAsDataURL(file);
       });
       
-      // Save directly to documents table
-      const { data, error } = await supabase
+      const timestamp = new Date().toISOString();
+
+      const { data: documentData, error: documentsError } = await supabase
         .from('documents')
         .insert({
           user_id: userId,
           recommendation_id: recommendationId,
-          bucket_name: 'local_storage',
-          object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          bucket_name: 'database_storage',
+          object_key: `${userId}/${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
           file_type: file.type,
           file_size: file.size,
           file_data: base64Data,
           document_key: documentKey,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: timestamp,
+          updated_at: timestamp
         })
         .select()
         .single();
       
-      if (error) {
-        console.error('Database error:', error);
-        throw new Error(`Erro ao salvar: ${error.message}`);
+      if (documentsError) {
+        console.error('Erro ao salvar na tabela documents:', documentsError);
+        throw new Error(`Erro ao salvar documento: ${documentsError.message}`);
       }
       
-      console.log('✅ Documento salvo com sucesso:', data);
+      console.log('✅ Documento salvo com sucesso na tabela documents:', documentData);
       
-      // Update document_roadmap to mark this document as sent
-      await supabase
-        .from('document_roadmap')
-        .update({ sent: true, updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('document_key', documentKey);
+      // Atualizar a coluna 'sent' na tabela 'document_recommendations'
+      const { error: recommendationUpdateError } = await supabase
+        .from('document_recommendations')
+        .update({ 
+            sent: true, // Atualiza a coluna 'sent' para true
+            updated_at: timestamp 
+        })
+        .eq('recommendation_id', recommendationId);
       
+      if (recommendationUpdateError) {
+        console.error('Erro ao atualizar a coluna sent em document_recommendations:', recommendationUpdateError);
+        throw new Error(`Documento salvo, mas falha ao atualizar o status (sent) da recomendação: ${recommendationUpdateError.message}`);
+      }
+      
+      console.log('✅ Coluna sent da recomendação atualizada para true.');
       onStatusChange(documentKey, 'uploaded');
       
       toast({
         title: "Documento enviado com sucesso!",
-        description: `${file.name} foi enviado e salvo.`,
+        description: `${file.name} foi enviado e o status da recomendação foi atualizado.`,
       });
       
-      return data;
+      return documentData;
       
     } catch (error: any) {
       console.error('❌ Erro no upload:', error);
@@ -143,33 +136,32 @@ const DocumentUpload = ({
       
       toast({
         title: "Erro no upload",
-        description: `Erro ao enviar o documento: ${error.message}`,
+        description: `Erro ao processar o documento: ${error.message}`,
         variant: "destructive",
       });
-      throw error;
     }
   };
 
-  // Function to download a document
   const downloadDocument = async (documentId: string, fileName?: string) => {
     try {
       const { data, error } = await supabase
         .from('documents')
         .select('file_data, file_name, user_id')
-        .eq('document_id', documentId)
+        .eq('id', documentId) 
         .single();
       
       if (error) throw error;
-      if (!data?.file_data) throw new Error('Arquivo não encontrado');
-      if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo');
+      if (!data?.file_data) throw new Error('Arquivo não encontrado ou dados do arquivo ausentes.');
+      if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo.');
       
-      // Use window.document to avoid confusion with the prop named document
       const link = window.document.createElement('a');
       link.href = data.file_data;
-      link.download = fileName || data.file_name;
+      link.download = fileName || data.file_name || 'downloaded_file';
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
+      link.remove();
+
     } catch (error: any) {
       console.error('Erro ao baixar documento:', error);
       toast({
@@ -180,7 +172,6 @@ const DocumentUpload = ({
     }
   };
 
-  // Get status icon based on upload status
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'uploaded': return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -194,27 +185,32 @@ const DocumentUpload = ({
     <Card key={document.document_key} className="bg-gray-800/50 border-gray-700/50">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             {getStatusIcon(uploadStatus)}
             
-            <div className="flex-1">
+            <div className="flex-1 overflow-hidden">
               <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-medium text-white">{document.name}</h4>
-                <Badge variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}>
-                  {'★'.repeat(document.priority)}
-                </Badge>
+                <h4 className="font-medium text-white truncate" title={document.name}>{document.name}</h4>
+                {document.priority != null && (
+                  <Badge 
+                    variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
+                    className="flex-shrink-0"
+                  >
+                    {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
+                  </Badge>
+                )}
               </div>
-              <p className="text-sm text-gray-300">{document.description}</p>
+              <p className="text-sm text-gray-300 truncate" title={document.description}>{document.description}</p>
               
               {document.item_description && (
-                <p className="text-sm text-blue-400 mt-1">
+                <p className="text-sm text-blue-400 mt-1 truncate" title={document.item_description}>
                   <strong>Item específico:</strong> {document.item_description}
                 </p>
               )}
             </div>
           </div>
           
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
             <Button
               onClick={() => handleDocumentUpload(document.document_key)}
               disabled={uploadStatus === 'uploading'}
@@ -223,7 +219,7 @@ const DocumentUpload = ({
             >
               {uploadStatus === 'uploaded' ? 'Enviado' :
                uploadStatus === 'uploading' ? 'Enviando...' :
-               uploadStatus === 'error' ? 'Tentar novamente' :
+               uploadStatus === 'error' ? 'Tentar Novamente' :
                'Enviar'}
             </Button>
             
@@ -241,13 +237,13 @@ const DocumentUpload = ({
           </div>
         </div>
         
-        <Collapsible open={isExpanded}>
+        <Collapsible open={isExpanded} onOpenChange={() => onToggleExpand(document.document_key)}>
           <CollapsibleContent className="mt-4 pt-4 border-t border-gray-700/50">
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               {document.how_to_obtain && (
                 <div>
                   <strong className="text-gray-300">Como obter:</strong>
-                  <p className="text-gray-400 mt-1">{document.how_to_obtain}</p>
+                  <p className="text-gray-400 mt-1 whitespace-pre-wrap">{document.how_to_obtain}</p>
                 </div>
               )}
               
@@ -266,7 +262,11 @@ const DocumentUpload = ({
               )}
               
               <div>
-                <strong className="text-gray-300">ID do documento:</strong>
+                <strong className="text-gray-300">ID da Recomendação:</strong>
+                <p className="text-gray-400 mt-1 font-mono text-xs">{document.recommendation_id}</p>
+              </div>
+              <div>
+                <strong className="text-gray-300">Chave do Documento:</strong>
                 <p className="text-gray-400 mt-1 font-mono text-xs">{document.document_key}</p>
               </div>
             </div>
@@ -274,7 +274,7 @@ const DocumentUpload = ({
             {document.reason && (
               <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
                 <strong className="text-blue-400">Por que é necessário:</strong>
-                <p className="text-blue-300 mt-1">{document.reason}</p>
+                <p className="text-blue-300 mt-1 whitespace-pre-wrap">{document.reason}</p>
               </div>
             )}
           </CollapsibleContent>
