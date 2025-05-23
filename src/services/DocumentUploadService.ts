@@ -1,15 +1,21 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+// Corrigido: Importar 'toast' com 't' minúsculo
+import { toast as uiToast } from '@/components/ui/use-toast'; // Renomeado para uiToast para evitar conflito com o parâmetro
+
+// Define o tipo para a função toast que será passada como parâmetro
+type ToastFunction = (props: { title: string; description: string; variant?: "default" | "destructive" }) => void;
 
 export class DocumentUploadService {
   static async uploadDocument(
     file: File,
     documentKey: string,
     recommendationId: string,
-    userId: string,
+    userId: string, // userId é obrigatório aqui
     onProgress: (status: 'pending' | 'uploading' | 'uploaded' | 'error') => void,
-    toast: (props: { title: string; description: string; variant?: "default" | "destructive" }) => void
+    // Usar o nome 'toastParam' para o parâmetro para não conflitar com o 'uiToast' importado, se necessário
+    // ou garantir que o toast importado não seja usado diretamente neste escopo se um parâmetro tem o mesmo nome.
+    // Para clareza, vamos assumir que o toast passado como parâmetro é o que deve ser usado.
+    toastFn: ToastFunction // Renomeado o parâmetro para clareza e tipado
   ) {
     try {
       if (!userId) throw new Error('Usuário não autenticado');
@@ -69,7 +75,7 @@ export class DocumentUploadService {
       console.log('✅ Coluna sent da recomendação atualizada para true.');
       onProgress('uploaded');
       
-      toast({
+      toastFn({ // Usar o parâmetro toastFn
         title: "Documento enviado com sucesso!",
         description: `${file.name} foi enviado e o status da recomendação foi atualizado.`,
       });
@@ -80,21 +86,30 @@ export class DocumentUploadService {
       console.error('❌ Erro no upload:', error);
       onProgress('error');
       
-      toast({
+      toastFn({ // Usar o parâmetro toastFn
         title: "Erro no upload",
         description: `Erro ao processar o documento: ${error.message}`,
         variant: "destructive",
       });
+      // Não é necessário retornar nada aqui, pois o erro é tratado e o fluxo termina.
+      // Se a função tem um tipo de retorno esperado em caso de erro, adicione-o (ex: return null; ou return undefined;)
+      // Mas como é um método de serviço, lançar o erro ou não retornar nada é comum.
     }
   }
 
+  // Corrigido: Parâmetro obrigatório 'toastFn' movido antes do parâmetro opcional 'fileName'
   static async downloadDocument(
-    documentId: string,
-    userId: string | undefined,
-    fileName?: string,
-    toast: (props: { title: string; description: string; variant?: "default" | "destructive" }) => void
+    documentId: string, // Obrigatório
+    userId: string | undefined, // Obrigatório (mas pode ser undefined)
+    toastFn: ToastFunction, // Obrigatório - movido para antes de fileName
+    fileName?: string // Opcional
   ) {
     try {
+      // Verificar userId explicitamente se a lógica de permissão depender dele não ser undefined
+      if (userId === undefined) { // Adicionada verificação para maior clareza, embora o !== abaixo já cubra
+        throw new Error('ID do usuário não fornecido para verificação de permissão.');
+      }
+
       const { data, error } = await supabase
         .from('documents')
         .select('file_data, file_name, user_id')
@@ -103,6 +118,7 @@ export class DocumentUploadService {
       
       if (error) throw error;
       if (!data?.file_data) throw new Error('Arquivo não encontrado ou dados do arquivo ausentes.');
+      // A comparação data.user_id !== userId só faz sentido se userId não for undefined aqui.
       if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo.');
       
       const link = window.document.createElement('a');
@@ -115,7 +131,7 @@ export class DocumentUploadService {
 
     } catch (error: any) {
       console.error('Erro ao baixar documento:', error);
-      toast({
+      toastFn({ // Usar o parâmetro toastFn
         title: "Erro ao baixar documento",
         description: error.message,
         variant: "destructive",
