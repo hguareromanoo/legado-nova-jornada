@@ -50,38 +50,6 @@ export type Database = {
           },
         ]
       }
-      chat_log: {
-        Row: {
-          content: string
-          created_at: string | null
-          message_id: number
-          profile_id: string
-          role: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          message_id?: number
-          profile_id: string
-          role: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          message_id?: number
-          profile_id?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_log_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
-          },
-        ]
-      }
       client_profiles: {
         Row: {
           completion_score_assets: number
@@ -118,45 +86,6 @@ export type Database = {
           profile_id?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      clients: {
-        Row: {
-          city: string | null
-          created_at: string
-          email: string | null
-          growth_rate: number
-          id: string
-          last_update: string
-          name: string
-          phone: string | null
-          status: string
-          total_patrimony: number
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string
-          email?: string | null
-          growth_rate?: number
-          id?: string
-          last_update?: string
-          name: string
-          phone?: string | null
-          status?: string
-          total_patrimony?: number
-        }
-        Update: {
-          city?: string | null
-          created_at?: string
-          email?: string | null
-          growth_rate?: number
-          id?: string
-          last_update?: string
-          name?: string
-          phone?: string | null
-          status?: string
-          total_patrimony?: number
         }
         Relationships: []
       }
@@ -224,123 +153,27 @@ export type Database = {
           },
         ]
       }
-      document_data: {
-        Row: {
-          created_at: string | null
-          data_id: string
-          data_key: string
-          data_value: string
-          profile_id: string
-          recommendation_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data_id?: string
-          data_key: string
-          data_value: string
-          profile_id: string
-          recommendation_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data_id?: string
-          data_key?: string
-          data_value?: string
-          profile_id?: string
-          recommendation_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "document_data_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "document_data_recommendation_id_fkey"
-            columns: ["recommendation_id"]
-            isOneToOne: false
-            referencedRelation: "document_recommendations"
-            referencedColumns: ["recommendation_id"]
-          },
-        ]
-      }
       document_recommendations: {
         Row: {
-          alternatives: string[] | null
-          category: Database["public"]["Enums"]["document_category_type"]
-          created_at: string
-          depends_on: string[] | null
-          description: string
-          document_key: string
-          estimated_cost: string | null
-          group_id: string | null
-          how_to_obtain: string | null
-          is_mandatory: boolean
-          item_description: string | null
-          item_index: number | null
-          item_type: string | null
+          is_mandatory: boolean | null
           name: string
-          priority: number
-          processing_time: string | null
           profile_id: string
           reason: string | null
           recommendation_id: string
-          related_to: string | null
-          sent: boolean | null
-          updated_at: string
         }
         Insert: {
-          alternatives?: string[] | null
-          category: Database["public"]["Enums"]["document_category_type"]
-          created_at?: string
-          depends_on?: string[] | null
-          description: string
-          document_key: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          is_mandatory?: boolean
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
+          is_mandatory?: boolean | null
           name: string
-          priority?: number
-          processing_time?: string | null
           profile_id: string
           reason?: string | null
           recommendation_id?: string
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string
         }
         Update: {
-          alternatives?: string[] | null
-          category?: Database["public"]["Enums"]["document_category_type"]
-          created_at?: string
-          depends_on?: string[] | null
-          description?: string
-          document_key?: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          is_mandatory?: boolean
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
+          is_mandatory?: boolean | null
           name?: string
-          priority?: number
-          processing_time?: string | null
           profile_id?: string
           reason?: string | null
           recommendation_id?: string
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string
         }
         Relationships: [
           {
@@ -349,131 +182,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "client_profiles"
             referencedColumns: ["profile_id"]
-          },
-        ]
-      }
-      document_roadmap: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          document_key: string
-          estimated_cost: string | null
-          group_id: string | null
-          how_to_obtain: string | null
-          id: string
-          is_mandatory: boolean | null
-          item_description: string | null
-          item_index: number | null
-          item_type: string | null
-          name: string
-          priority: number | null
-          processing_time: string | null
-          reason: string | null
-          recommendation_id: string | null
-          related_to: string | null
-          sent: boolean | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_key: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
-          name: string
-          priority?: number | null
-          processing_time?: string | null
-          reason?: string | null
-          recommendation_id?: string | null
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_key?: string
-          estimated_cost?: string | null
-          group_id?: string | null
-          how_to_obtain?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          item_description?: string | null
-          item_index?: number | null
-          item_type?: string | null
-          name?: string
-          priority?: number | null
-          processing_time?: string | null
-          reason?: string | null
-          recommendation_id?: string | null
-          related_to?: string | null
-          sent?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          bucket_name: string
-          created_at: string
-          document_key: string
-          file_data: string | null
-          file_name: string
-          file_size: number
-          file_type: string
-          id: string
-          object_key: string
-          recommendation_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bucket_name: string
-          created_at?: string
-          document_key: string
-          file_data?: string | null
-          file_name: string
-          file_size: number
-          file_type: string
-          id?: string
-          object_key: string
-          recommendation_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bucket_name?: string
-          created_at?: string
-          document_key?: string
-          file_data?: string | null
-          file_name?: string
-          file_size?: number
-          file_type?: string
-          id?: string
-          object_key?: string
-          recommendation_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_recommendation_id_fkey"
-            columns: ["recommendation_id"]
-            isOneToOne: false
-            referencedRelation: "document_recommendations"
-            referencedColumns: ["recommendation_id"]
           },
         ]
       }
@@ -585,50 +293,6 @@ export type Database = {
           },
         ]
       }
-      processed_documents: {
-        Row: {
-          document_id: string
-          document_key: string
-          extraction_result: Json | null
-          file_content_base64: string | null
-          file_name: string | null
-          processed_at: string
-          profile_id: string
-          user_id: string
-          vectorized: boolean | null
-        }
-        Insert: {
-          document_id: string
-          document_key: string
-          extraction_result?: Json | null
-          file_content_base64?: string | null
-          file_name?: string | null
-          processed_at?: string
-          profile_id: string
-          user_id: string
-          vectorized?: boolean | null
-        }
-        Update: {
-          document_id?: string
-          document_key?: string
-          extraction_result?: Json | null
-          file_content_base64?: string | null
-          file_name?: string | null
-          processed_at?: string
-          profile_id?: string
-          user_id?: string
-          vectorized?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_profile"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "client_profiles"
-            referencedColumns: ["profile_id"]
-          },
-        ]
-      }
       sessions: {
         Row: {
           completion_percentage: number
@@ -682,27 +346,21 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
-          user_state: Database["public"]["Enums"]["state"] | null
         }
         Insert: {
           created_at?: string
           first_name?: string | null
           id: string
           last_name?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
-          user_state?: Database["public"]["Enums"]["state"] | null
         }
         Update: {
           created_at?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
-          user_state?: Database["public"]["Enums"]["state"] | null
         }
         Relationships: []
       }
@@ -711,13 +369,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_document_data_grouped_by_document_key: {
-        Args: { p_profile_id: string }
-        Returns: {
-          document_key: string
-          data: Json
-        }[]
-      }
       search_documents_text: {
         Args: { query_text: string; user_id: string; limit_count?: number }
         Returns: {
@@ -735,16 +386,6 @@ export type Database = {
         | "investimento financeiro"
         | "propriedade rural"
         | "outro"
-      document_category_type:
-        | "pessoal"
-        | "familiar"
-        | "imovel"
-        | "veiculo"
-        | "empresa"
-        | "financeiro"
-        | "juridico"
-        | "tributario"
-        | "rural"
       goal_type:
         | "sucessão familiar"
         | "otimização fiscal"
@@ -758,14 +399,8 @@ export type Database = {
         | "viúvo"
         | "união estável"
         | "outro"
-      state:
-        | "first_access"
-        | "onboarding_ai"
-        | "onboarding_human"
-        | "holding_setup"
-        | "holding_opened"
-      user_role: "consultant" | "client"
       user_status: "active" | "pending" | "inactive" | "blocked"
+      user_type: "client" | "consultant" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -888,17 +523,6 @@ export const Constants = {
         "propriedade rural",
         "outro",
       ],
-      document_category_type: [
-        "pessoal",
-        "familiar",
-        "imovel",
-        "veiculo",
-        "empresa",
-        "financeiro",
-        "juridico",
-        "tributario",
-        "rural",
-      ],
       goal_type: [
         "sucessão familiar",
         "otimização fiscal",
@@ -914,15 +538,8 @@ export const Constants = {
         "união estável",
         "outro",
       ],
-      state: [
-        "first_access",
-        "onboarding_ai",
-        "onboarding_human",
-        "holding_setup",
-        "holding_opened",
-      ],
-      user_role: ["consultant", "client"],
       user_status: ["active", "pending", "inactive", "blocked"],
+      user_type: ["client", "consultant", "admin"],
     },
   },
 } as const

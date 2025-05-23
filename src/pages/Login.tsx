@@ -9,8 +9,6 @@ import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { FcGoogle } from "react-icons/fc";
-import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -48,8 +46,8 @@ const Login = () => {
         return;
       }
 
-      // Remover a definição de hasSeenWelcome aqui para que o redirecionamento
-      // seja baseado apenas no estado do usuário armazenado no banco de dados
+      // Definir hasSeenWelcome como false para mostrar a tela de boas-vindas
+      localStorage.setItem('hasSeenWelcome', 'false');
       
       toast({
         title: "Login realizado com sucesso",
@@ -57,7 +55,6 @@ const Login = () => {
       });
       
       // O redirecionamento será feito automaticamente pelo PublicRoute
-      // baseado no estado do usuário
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       toast({
@@ -67,33 +64,6 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          // Não definimos redirectTo diretamente para que o redirecionamento 
-          // seja baseado no estado do usuário após o login com Google
-          redirectTo: `${window.location.origin}`
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // O redirecionamento é feito automaticamente pelo Supabase
-      
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-      toast({
-        title: "Erro na autenticação",
-        description: "Não foi possível fazer login com Google. Tente novamente.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -123,25 +93,6 @@ const Login = () => {
             </AlertDescription>
           </Alert>
         )}
-
-        <Button 
-          variant="outline" 
-          size="w1Base" 
-          className="w-full flex justify-center items-center gap-2"
-          onClick={handleGoogleLogin}
-        >
-          <FcGoogle size={20} />
-          <span>Entrar com Google</span>
-        </Button>
-        
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-gray-500">ou</span>
-          </div>
-        </div>
 
         <form onSubmit={handleLogin} className="mt-8 space-y-6">
           <div className="space-y-4">

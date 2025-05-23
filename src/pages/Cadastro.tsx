@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
+import { FaMicrosoft } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
 
 const Cadastro = () => {
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -36,16 +36,12 @@ const Cadastro = () => {
     setLoading(true);
     
     try {
-      console.log("Iniciando cadastro de usuário:", email);
-      console.log("Dados do usuário:", { first_name: firstName, last_name: lastName });
-      
       const { error, needsEmailConfirmation } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName
       });
       
       if (error) {
-        console.error("Erro detalhado:", error);
         toast({
           title: "Erro ao criar conta",
           description: error,
@@ -62,75 +58,33 @@ const Cadastro = () => {
         title: "Cadastro realizado com sucesso",
         description: needsEmailConfirmation 
           ? "Por favor, verifique seu email para confirmar seu cadastro."
-          : "Redirecionando para a página de boas-vindas...",
+          : "Redirecionando para o processo de onboarding...",
       });
       
-      // Se não precisar de confirmação por email, redirecionar para welcome
+      // Se não precisar de confirmação por email, redirecionar para onboarding
       if (!needsEmailConfirmation) {
-        // Redirecionar para a página de welcome ao invés de onboarding
-        navigate('/welcome');
-      } else {
-        // Redirecionar para login após o cadastro com confirmação de email
-        navigate('/login');
+        // Definir o passo inicial do onboarding
+        localStorage.setItem('onboardingStep', 'selection');
+        
+        // Redirecionar para a página de onboarding
+        navigate('/onboarding');
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao fazer cadastro:", error);
-      console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
-      
-      let errorMessage = "Ocorreu um erro ao processar sua solicitação.";
-      
-      // Try to extract more specific error messages
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error_description) {
-        errorMessage = error.error_description;
-      } else if (error.response?.data?.error_description) {
-        errorMessage = error.response.data.error_description;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
       toast({
         title: "Erro ao criar conta",
-        description: errorMessage,
+        description: "Ocorreu um erro ao processar sua solicitação.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-  
-  const handleGoogleSignIn = async () => {
-    try {
-      // Implementação da autenticação com Google usando Supabase
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/welcome`
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // O redirecionamento é feito automaticamente pelo Supabase
-      // Nenhum código adicional é necessário aqui
-      
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-      toast({
-        title: "Erro na autenticação",
-        description: "Não foi possível fazer login com Google. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen w-full flex">
-      {/* Right Column - 5/12 width */}
+      {/* Right Column - 5/12 width (changed from 7/12) */}
       <div className="w-full md:w-5/12 flex items-center justify-center p-6 md:p-12">
         <div className="max-w-md w-full">
           <div className="text-center mb-10">
@@ -155,10 +109,18 @@ const Cadastro = () => {
                   variant="outline" 
                   size="w1Base" 
                   className="w-full flex justify-center items-center gap-2"
-                  onClick={handleGoogleSignIn}
                 >
                   <FcGoogle size={20} />
                   <span>Cadastre-se com Google</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="w1Base" 
+                  className="w-full flex justify-center items-center gap-2"
+                >
+                  <FaMicrosoft size={18} className="text-blue-500" />
+                  <span>Cadastre-se com Microsoft</span>
                 </Button>
                 
                 <div className="relative my-8">
@@ -299,7 +261,7 @@ const Cadastro = () => {
         </div>
       </div>
       
-      {/* Left Column - 7/12 width */}
+      {/* Left Column - 7/12 width (changed from 5/12) */}
       <div className="hidden md:flex w-7/12 relative">
         {/* Updated background with gradient overlay */}
         <div 

@@ -44,7 +44,6 @@ export interface CompletionScore {
 export interface DocumentRecommendation {
   name: string;
   document_key: string; // Chave única para OCR
-  recommendation_id: string; // Adicionando a propriedade que estava faltando
   category: string;
   description: string;
   reason: string | null;
@@ -54,10 +53,6 @@ export interface DocumentRecommendation {
   how_to_obtain?: string | null;
   estimated_cost?: string | null;
   processing_time?: string | null;
-  item_type?: string | null;
-  item_index?: number | null;
-  group_id?: string | null;
-  related_to?: string | null;
 }
 
 export interface DocumentRecommendationsResponse {
@@ -134,7 +129,7 @@ export interface AssistantResponse {
   content: string;
   profile: ClientProfile;
   completion_percentage: number;
-  is_complete: boolean;
+  is_complete: boolean; // Adicionado campo is_complete na resposta
 }
 
 export interface ChatContextType {

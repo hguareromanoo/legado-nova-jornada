@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -206,16 +207,6 @@ const OnboardingChat = () => {
       </div>
     );
   }
-
-  const { updateUserState } = useUser();
-
-  const handleCompleteChatOnboarding = async () => {
-    // Atualizar o estado do usuário para onboarding_human ou holding_setup, dependendo do fluxo
-    await updateUserState('onboarding_human');
-    
-    // Redirecionar para a próxima etapa
-    navigate('/onboarding/human/schedule');
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

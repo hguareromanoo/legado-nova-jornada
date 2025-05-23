@@ -24,8 +24,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'apikey': API_KEY,
-    'Authorization': `Bearer ${API_KEY}`  // Add Bearer token for authorization
+    'apikey': API_KEY  // Consistent API key header
   },
   timeout: 30000, // Increased timeout for long responses
   // Important for CORS when credentials might be sent

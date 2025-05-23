@@ -1,103 +1,55 @@
 
-import { Outlet, Navigate } from "react-router-dom";
-import PublicLayout from "@/layouts/PublicLayout";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
-import { useState, useEffect } from "react";
+import PublicLayout from "@/layouts/PublicLayout";
 
 const PublicRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding, userRole, userState, user } = useUser();
-  const [loading, setLoading] = useState(true);
+  const { isLoggedIn, hasCompletedOnboarding } = useUser();
+  const location = useLocation();
   
-  useEffect(() => {
-    console.log('[PublicRoute] Initial state:', { 
-      isLoggedIn, 
-      userRole, 
-      userState, 
-      userId: user?.id,
-      hasUser: !!user
-    });
-    
-    // Simple loading state management with a maximum wait time
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.log('[PublicRoute] Forced loading state to complete after timeout');
-        setLoading(false);
-      }
-    }, 2000);
-    
-    // User role/state condition check
-    if (isLoggedIn !== undefined) {
-      if (isLoggedIn && userRole !== null && userState !== null) {
-        console.log('[PublicRoute] User state loaded:', userState);
-        setLoading(false);
-      } else if (!isLoggedIn) {
-        console.log('[PublicRoute] User not logged in');
-        setLoading(false);
-      }
-    }
-    
-    return () => clearTimeout(timeoutId);
-  }, [isLoggedIn, userRole, userState, loading, user]);
-  
-  if (loading) {
+  // Never redirect if we're on the home page
+  if (location.pathname === "/") {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Carregando...</div>
-      </div>
+      <PublicLayout>
+        <Outlet />
+      </PublicLayout>
     );
   }
   
-  // Se o usuário está autenticado, redirecione com base no estado
-  if (isLoggedIn) {
-    console.log('[PublicRoute] User is logged in with state:', userState);
+  // Check if the user has seen the welcome page
+  const hasSeenWelcome = localStorage.getItem('hasSeenWelcome') === 'true';
+  
+  // If logged in and completed onboarding, redirect to dashboard
+  if (isLoggedIn && hasCompletedOnboarding) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // If logged in, hasn't seen welcome page yet, and isn't already on welcome page
+  if (isLoggedIn && !hasSeenWelcome && location.pathname !== '/welcome') {
+    return <Navigate to="/welcome" replace />;
+  }
+  
+  // If logged in but not completed onboarding, redirect to appropriate step
+  if (isLoggedIn && !hasCompletedOnboarding && hasSeenWelcome) {
+    const currentStep = localStorage.getItem('onboardingStep') || 'selection';
     
-    // Se o usuário é um consultor, redirecione para o dashboard do consultor
-    if (userRole === 'consultant') {
-      console.log("[PublicRoute] User is a consultant, redirecting to consultant dashboard");
-      return <Navigate to="/consultant" replace />;
-    }
+    // Map steps to routes
+    const stepRoutes: Record<string, string> = {
+      'selection': '/onboarding',
+      'chat': '/onboarding/chat',
+      'schedule': '/onboarding/schedule',
+      'documents': '/members',
+      'review': '/document-review'
+    };
     
-    // Special case for welcome page - allow access to welcome page when in first_access state
-    if (window.location.pathname === '/welcome' && userState === 'first_access') {
-      console.log("[PublicRoute] User is in first_access state on welcome page, allowing access");
-      return (
-        <PublicLayout>
-          <Outlet />
-        </PublicLayout>
-      );
-    }
-    
-    // Redirecionamento baseado no estado do usuário
-    switch (userState) {
-      case 'first_access':
-        console.log("[PublicRoute] User is in first_access state, redirecting to welcome page");
-        return <Navigate to="/welcome" replace />;
-        
-      case 'onboarding_ai':
-        console.log("[PublicRoute] User is in onboarding_ai state, redirecting to AI onboarding");
-        return <Navigate to="/onboarding/chat" replace />;
-        
-      case 'onboarding_human':
-        console.log("[PublicRoute] User is in onboarding_human state, redirecting to human onboarding");
-        return <Navigate to="/onboarding/human/schedule" replace />;
-        
-      case 'holding_setup':
-        console.log("[PublicRoute] User is in holding_setup state, redirecting to holding setup");
-        return <Navigate to="/holding-setup" replace />;
-        
-      case 'holding_opened':
-        console.log("[PublicRoute] User is in holding_opened state, redirecting to members page");
-        return <Navigate to="/members" replace />;
-        
-      default:
-        // Fallback para o estado de acesso inicial
-        console.log("[PublicRoute] User state unknown, redirecting to welcome page as fallback");
-        return <Navigate to="/welcome" replace />;
+    // Não redirecionar se já estivermos na página de login ou cadastro
+    if (location.pathname === '/login' || location.pathname === '/cadastro') {
+      const redirectTo = stepRoutes[currentStep] || '/onboarding';
+      return <Navigate to={redirectTo} replace />;
     }
   }
   
-  console.log("[PublicRoute] User is not logged in, showing public content");
-  // Se não estiver autenticado, renderizar a rota pública
+  // If not logged in, render the public route with public layout
   return (
     <PublicLayout>
       <Outlet />

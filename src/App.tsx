@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { ChatProvider } from "./contexts/ChatContext";
-import { ProtectedRoute, PublicRoute, OnboardingRoute, ConsultantRoute } from "./components/routes";
+import { ProtectedRoute, PublicRoute, OnboardingRoute } from "./components/routes";
 
 // Public Pages
 import Index from "./pages/Index";
@@ -37,11 +36,6 @@ import Assets from "./pages/Assets";
 import Structure from "./pages/dashboard/Structure";
 import Assistant from "./pages/dashboard/Assistant";
 import Members from "./pages/Members";
-
-// Consultant Pages
-import Consultant from "./pages/consultant/Consultant";
-import ClientsList from "./pages/consultant/ClientsList";
-import ClientDetail from "./pages/consultant/ClientDetail";
 
 const queryClient = new QueryClient();
 
@@ -92,13 +86,6 @@ const App = () => (
                   <Route path="/members" element={<Members />} />
                   <Route path="/structure" element={<Structure />} />
                   <Route path="/assistant" element={<Assistant />} />
-                </Route>
-                
-                {/* Consultant Routes - Only accessible to consultants */}
-                <Route element={<ConsultantRoute />}>
-                  <Route path="/consultant" element={<Consultant />} />
-                  <Route path="/consultant/clients" element={<ClientsList />} />
-                  <Route path="/consultant/clients/:clientId" element={<ClientDetail />} />
                 </Route>
                 
                 {/* Legacy route redirects */}

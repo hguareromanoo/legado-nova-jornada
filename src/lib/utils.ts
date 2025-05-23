@@ -1,27 +1,25 @@
 
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
- 
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL' 
-  }).format(value);
-}
-
-export function formatDate(dateString: string): string {
-  if (!dateString) return '';
+export function formatCurrency(value: number | string | undefined, locale = 'pt-BR', currency = 'BRL'): string {
+  if (value === undefined || value === null) {
+    return '';
+  }
   
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
+  const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numericValue)) {
+    return String(value);
+  }
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    maximumFractionDigits: 0,
+  }).format(numericValue);
 }

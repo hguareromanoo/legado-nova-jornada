@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
@@ -7,53 +7,26 @@ import { motion } from 'framer-motion';
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const { user, userState, updateUserState, isLoggedIn } = useUser();
-  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
   
-  // Check authentication status and redirect if necessary
+  // Redirecionar para login se não estiver autenticado
   useEffect(() => {
-    console.log('Welcome page - Auth check:', { isLoggedIn, user, userState });
-    
-    // Give auth state a moment to initialize
-    const authCheckTimeout = setTimeout(() => {
-      if (isLoggedIn === false) {
-        console.log('User not logged in, redirecting to login');
-        navigate('/login');
-        return;
-      }
-      
-      setLoading(false);
-    }, 1000); // Increased timeout to give more time for auth to initialize
-    
-    return () => clearTimeout(authCheckTimeout);
-  }, [navigate, isLoggedIn, user, userState]);
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
   
   // Obter o primeiro nome do usuário
   const firstName = user?.user_metadata?.first_name || 
                    user?.user_metadata?.full_name?.split(' ')[0] || 
                    'Cliente';
   
-  const handleContinue = async () => {
-    // Atualizar o estado do usuário para onboarding_ai
-    if (userState === 'first_access') {
-      console.log('Updating user state to onboarding_ai');
-      await updateUserState('onboarding_ai');
-    }
-    
+  const handleContinue = () => {
     // Marcar que o usuário já viu a tela de boas-vindas
     localStorage.setItem('hasSeenWelcome', 'true');
-    
     // Redirecionar para a próxima etapa do onboarding
     navigate('/onboarding');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-dark flex flex-col items-center justify-center px-4 md:px-8">
-        <div className="text-white text-xl animate-pulse">Carregando...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-dark flex flex-col items-center justify-center px-4 md:px-8">
