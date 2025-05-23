@@ -40,7 +40,7 @@ const DocumentUpload = ({
     fileInput.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
-        await processDocumentUpload(documentKey, recommendationId, file);
+        await processDocumentUpload(file, documentKey);
       }
     };
     
@@ -48,56 +48,72 @@ const DocumentUpload = ({
   };
 
   // Process upload of the document to Supabase
-  const processDocumentUpload = async (documentKey: string, recommendationId: string, file: File) => {
+  const processDocumentUpload = async (file: File, documentKey: string) => {
     try {
-      if (!userId) {
+      onStatusChange(documentKey, 'uploading');
+      
+      // 1. Verificar autenticação
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
         throw new Error('Usuário não autenticado');
       }
       
-      onStatusChange(documentKey, 'uploading');
+      // 2. Gerar nome único do arquivo
+      const timestamp = Date.now();
+      const fileName = `${currentUser.id}/${documentKey}_${timestamp}_${file.name}`;
       
-      // Get file extension
-      const fileExtension = file.name.split('.').pop() || '';
-      
-      // Create filename in the required format: <document-key>-<user_id>-<recommendation_id>.[extension]
-      const fileName = `${documentKey}-${userId}-${recommendationId}.${fileExtension}`;
-      
-      // Upload file to 'documents' bucket in Supabase
-      const { data, error } = await supabase.storage
+      // 3. Upload para storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: true // Overwrite if exists
+          upsert: true
         });
-      
-      if (error) {
-        console.error('Upload error:', error);
-        onStatusChange(documentKey, 'error');
-        
-        toast({
-          title: "Erro no upload",
-          description: `Erro ao enviar o documento: ${error.message}`,
-          variant: "destructive",
-        });
-        return;
+  
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
       }
-      
+  
+      // 4. Salvar metadados na tabela documents (usando estrutura existente)
+      const { data: docData, error: docError } = await supabase
+        .from('documents')
+        .insert({
+          profile_id: currentUser.id,
+          bucket_name: 'documents',
+          object_key: uploadData.path, // caminho no storage
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+  
+      if (docError) {
+        console.error('Database error:', docError);
+        
+        // Se falhou ao salvar no banco, remover arquivo do storage
+        await supabase.storage.from('documents').remove([uploadData.path]);
+        throw docError;
+      }
+  
+      console.log('✅ Documento salvo com sucesso:', docData);
       onStatusChange(documentKey, 'uploaded');
       
       toast({
         title: "Documento enviado com sucesso!",
-        description: `O documento ${documentKey} foi enviado e está sendo processado.`,
+        description: `${file.name} foi enviado e salvo.`,
       });
-      
-      console.log('Upload successful:', data);
-      
-    } catch (error) {
-      console.error('Error during upload:', error);
+  
+    } catch (error: any) {
+      console.error('❌ Erro no upload:', error);
       onStatusChange(documentKey, 'error');
       
       toast({
         title: "Erro no upload",
-        description: "Ocorreu um erro ao enviar o documento. Tente novamente.",
+        description: `Erro ao enviar o documento: ${error.message}`,
         variant: "destructive",
       });
     }

@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RoadmapStep } from './VerticalRoadmap';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentUploadChatProps {
   document: RoadmapStep | null;
@@ -49,46 +50,120 @@ const DocumentUploadChat = ({
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  const processDocumentUpload = async (file: File) => {
+    try {
+      setIsUploading(true);
+      setUploadedFile(file);
+      
+      // Add message that file is being uploaded
+      setMessages(prev => [...prev, {
+        type: 'user',
+        content: `Enviando arquivo: ${file.name}`
+      }]);
+
+      // Verificar autenticação
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      // Progress simulation
+      const simulateProgress = () => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 10;
+          setUploadProgress(progress);
+          if (progress >= 100) clearInterval(interval);
+        }, 200);
+        return () => clearInterval(interval);
+      };
+      
+      const cleanup = simulateProgress();
+      
+      // Gerar nome único do arquivo
+      const timestamp = Date.now();
+      const documentKey = document?.id || 'document';
+      const fileName = `${currentUser.id}/${documentKey}_${timestamp}_${file.name}`;
+      
+      // Upload para storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      // Salvar metadados na tabela documents
+      const { data: docData, error: docError } = await supabase
+        .from('documents')
+        .insert({
+          profile_id: currentUser.id,
+          bucket_name: 'documents',
+          object_key: uploadData.path,
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size
+        })
+        .select()
+        .single();
+
+      if (docError) {
+        console.error('Database error:', docError);
+        
+        // Se falhou ao salvar no banco, remover arquivo do storage
+        await supabase.storage.from('documents').remove([uploadData.path]);
+        throw docError;
+      }
+
+      console.log('✅ Documento salvo com sucesso:', docData);
+      
+      // Add confirmation message from the assistant
+      setMessages(prev => [...prev, {
+        type: 'assistant',
+        content: `Recebi seu arquivo ${file.name}. Obrigado! Você pode prosseguir para o próximo documento ou concluir este.`
+      }]);
+      
+      toast({
+        title: "✅ Documento recebido!",
+        description: "Seu documento foi enviado com sucesso.",
+      });
+      
+      if (document) {
+        onComplete(document.id);
+      }
+      
+      cleanup(); // Ensure interval is cleared
+      setUploadProgress(100);
+      
+    } catch (error: any) {
+      console.error('❌ Erro no upload:', error);
+      
+      setMessages(prev => [...prev, {
+        type: 'assistant',
+        content: `Ocorreu um erro ao enviar o arquivo: ${error.message}. Por favor, tente novamente.`
+      }]);
+      
+      toast({
+        title: "Erro no upload",
+        description: `Erro ao enviar o documento: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
   
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
     
-    setIsUploading(true);
-    setUploadedFile(file);
-    
-    // Add message that file is being uploaded
-    setMessages(prev => [...prev, {
-      type: 'user',
-      content: `Enviando arquivo: ${file.name}`
-    }]);
-    
-    // Simulate upload progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsUploading(false);
-        
-        // Add confirmation message from the assistant
-        setMessages(prev => [...prev, {
-          type: 'assistant',
-          content: `Recebi seu arquivo ${file.name}. Obrigado! Você pode prosseguir para o próximo documento ou concluir este.`
-        }]);
-        
-        toast({
-          title: "✅ Documento recebido!",
-          description: "Seu documento foi enviado com sucesso.",
-        });
-        
-        if (document) {
-          onComplete(document.id);
-        }
-      }
-    }, 200);
+    processDocumentUpload(file);
   };
   
   const triggerFileInput = () => {
