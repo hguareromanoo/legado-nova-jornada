@@ -58,9 +58,9 @@ const updateUserStateInDb = async (userId: string, state: UserState) => {
     console.log(`[UserContext] Updating user state in DB to ${state} for user ${userId}`);
     
     const { error } = await supabase
-      .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
+      .from('user_profiles')
       .update({ user_state: state, updated_at: new Date().toISOString() })
-      .eq('user_id', userId);  // Changed from 'id' to 'user_id'
+      .eq('user_id', userId);
     
     if (error) {
       console.error('[UserContext] Error updating user state:', error);
@@ -104,7 +104,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setUserRole(profileData.role || 'user');
       
       // Set user state with fallback
-      setUserState(profileData.user_state || 'onboarding_started');
+      if (profileData.user_state) {
+        setUserState(profileData.user_state);
+      } else {
+        // Use type assertion to fix TypeScript error
+        setUserState('onboarding_started' as UserState);
+      }
       
       // Update hasCompletedOnboarding based on user state
       setHasCompletedOnboarding(profileData.user_state === 'holding_opened');
@@ -114,7 +119,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       console.error('[UserContext] Error initializing user profile:', error);
       // Set default values on error to avoid null states
       setUserRole('user');
-      setUserState('onboarding_started');
+      // Use type assertion to fix TypeScript error
+      setUserState('onboarding_started' as UserState);
       setHasCompletedOnboarding(false);
       return null;
     } finally {
@@ -217,54 +223,63 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setHasCompletedOnboarding(false);
   };
   
-  const updateUserState = async (state: UserState) => {
+  const updateUserState = async (state: UserState): Promise<void> => {
     if (!user?.id) {
       console.error('[UserContext] Cannot update user state: No user ID');
-      return { success: false, error: 'No user ID available' };
-    }
-    
-    console.log(`[UserContext] Attempting to update user state to ${state}`);
-    const result = await updateUserStateInDb(user.id, state);
-    
-    if (result.success) {
-      console.log(`[UserContext] User state successfully updated to ${state} in database`);
-      setUserState(state);
-      
-      if (state === 'holding_opened') {
-        setHasCompletedOnboarding(true);
-      }
-      
-      return { success: true };
-    } else {
-      console.error(`[UserContext] Failed to update user state: ${result.error}`);
       toast({
         title: "Erro ao atualizar estado",
-        description: "Não foi possível atualizar seu progresso no sistema.",
+        description: "Não foi possível identificar seu usuário.",
         variant: "destructive",
       });
+      return;
+    }
+    
+    try {
+      console.log(`[UserContext] Attempting to update user state to ${state}`);
+      const result = await updateUserStateInDb(user.id, state);
       
-      return { success: false, error: result.error };
+      if (result.success) {
+        console.log(`[UserContext] User state successfully updated to ${state} in database`);
+        setUserState(state);
+        
+        if (state === 'holding_opened') {
+          setHasCompletedOnboarding(true);
+        }
+      } else {
+        console.error(`[UserContext] Failed to update user state: ${result.error}`);
+        toast({
+          title: "Erro ao atualizar estado",
+          description: "Não foi possível atualizar seu progresso no sistema.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('[UserContext] Exception in updateUserState:', error);
+      toast({
+        title: "Erro ao atualizar estado",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
     }
   };
   
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (): Promise<void> => {
     setHasCompletedOnboarding(true);
+    localStorage.setItem('holdingSetupCompleted', 'true');
     
     // Update user state to holding_opened
-    const result = await updateUserState('holding_opened');
-    
-    // Only store in localStorage if the database update was successful
-    if (result.success) {
-      localStorage.setItem('holdingSetupCompleted', 'true');
-    }
-    
-    return result;
+    await updateUserState('holding_opened' as UserState);
   };
   
-  const updateUser = async (data: Partial<UserData>) => {
+  const updateUser = async (data: Partial<UserData>): Promise<void> => {
     if (!user?.id) {
       console.error('[UserContext] Cannot update user: No user ID');
-      return { success: false, error: 'No user ID available' };
+      toast({
+        title: "Erro ao atualizar perfil",
+        description: "Não foi possível identificar seu usuário.",
+        variant: "destructive",
+      });
+      return;
     }
     
     try {
@@ -285,16 +300,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       if (error) {
         console.error('[UserContext] Error updating user:', error);
-        return { success: false, error: error.message };
+        toast({
+          title: "Erro ao atualizar perfil",
+          description: "Não foi possível atualizar suas informações.",
+          variant: "destructive",
+        });
       }
-      
-      return { success: true };
     } catch (error) {
       console.error('[UserContext] Exception in updateUser:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      toast({
+        title: "Erro ao atualizar perfil",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
     }
   };
   
