@@ -77,13 +77,13 @@ export const updateUserStateInDb = async (userId: string, state: UserState) => {
       // Criar perfil se não existir
       const { error: insertError } = await supabase
         .from('user_profiles')
-        .insert({
+        .insert([{
           id: userId,
           role: 'client',
           user_state: state,
-          created_at: new Date(),
-          updated_at: new Date()
-        });
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
         
       if (insertError) {
         console.error('Error creating user profile:', insertError);
@@ -95,7 +95,7 @@ export const updateUserStateInDb = async (userId: string, state: UserState) => {
         .from('user_profiles')
         .update({ 
           user_state: state,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', userId);
         

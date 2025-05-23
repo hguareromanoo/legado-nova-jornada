@@ -5,16 +5,22 @@ import { useUser } from "@/contexts/UserContext";
 import { useState, useEffect } from "react";
 
 const PublicRoute = () => {
-  const { isLoggedIn, hasCompletedOnboarding, userRole, userState } = useUser();
+  const { isLoggedIn, hasCompletedOnboarding, userRole, userState, user } = useUser();
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    console.log('PublicRoute - Initial state:', { isLoggedIn, userRole, userState });
+    console.log('[PublicRoute] Initial state:', { 
+      isLoggedIn, 
+      userRole, 
+      userState, 
+      userId: user?.id,
+      hasUser: !!user
+    });
     
     // Simple loading state management with a maximum wait time
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.log('PublicRoute - Forced loading state to complete after timeout');
+        console.log('[PublicRoute] Forced loading state to complete after timeout');
         setLoading(false);
       }
     }, 2000);
@@ -22,16 +28,16 @@ const PublicRoute = () => {
     // User role/state condition check
     if (isLoggedIn !== undefined) {
       if (isLoggedIn && userRole !== null && userState !== null) {
-        console.log('PublicRoute - User state loaded:', userState);
+        console.log('[PublicRoute] User state loaded:', userState);
         setLoading(false);
       } else if (!isLoggedIn) {
-        console.log('PublicRoute - User not logged in');
+        console.log('[PublicRoute] User not logged in');
         setLoading(false);
       }
     }
     
     return () => clearTimeout(timeoutId);
-  }, [isLoggedIn, userRole, userState, loading]);
+  }, [isLoggedIn, userRole, userState, loading, user]);
   
   if (loading) {
     return (
@@ -43,17 +49,17 @@ const PublicRoute = () => {
   
   // Se o usuário está autenticado, redirecione com base no estado
   if (isLoggedIn) {
-    console.log('PublicRoute - User is logged in with state:', userState);
+    console.log('[PublicRoute] User is logged in with state:', userState);
     
     // Se o usuário é um consultor, redirecione para o dashboard do consultor
     if (userRole === 'consultant') {
-      console.log("User is a consultant, redirecting to consultant dashboard");
+      console.log("[PublicRoute] User is a consultant, redirecting to consultant dashboard");
       return <Navigate to="/consultant" replace />;
     }
     
     // Special case for welcome page - allow access to welcome page when in first_access state
     if (window.location.pathname === '/welcome' && userState === 'first_access') {
-      console.log("User is in first_access state on welcome page, allowing access");
+      console.log("[PublicRoute] User is in first_access state on welcome page, allowing access");
       return (
         <PublicLayout>
           <Outlet />
@@ -64,33 +70,33 @@ const PublicRoute = () => {
     // Redirecionamento baseado no estado do usuário
     switch (userState) {
       case 'first_access':
-        console.log("User is in first_access state, redirecting to welcome page");
+        console.log("[PublicRoute] User is in first_access state, redirecting to welcome page");
         return <Navigate to="/welcome" replace />;
         
       case 'onboarding_ai':
-        console.log("User is in onboarding_ai state, redirecting to AI onboarding");
+        console.log("[PublicRoute] User is in onboarding_ai state, redirecting to AI onboarding");
         return <Navigate to="/onboarding/chat" replace />;
         
       case 'onboarding_human':
-        console.log("User is in onboarding_human state, redirecting to human onboarding");
+        console.log("[PublicRoute] User is in onboarding_human state, redirecting to human onboarding");
         return <Navigate to="/onboarding/human/schedule" replace />;
         
       case 'holding_setup':
-        console.log("User is in holding_setup state, redirecting to holding setup");
+        console.log("[PublicRoute] User is in holding_setup state, redirecting to holding setup");
         return <Navigate to="/holding-setup" replace />;
         
       case 'holding_opened':
-        console.log("User is in holding_opened state, redirecting to members page");
+        console.log("[PublicRoute] User is in holding_opened state, redirecting to members page");
         return <Navigate to="/members" replace />;
         
       default:
         // Fallback para o estado de acesso inicial
-        console.log("User state unknown, redirecting to welcome page as fallback");
+        console.log("[PublicRoute] User state unknown, redirecting to welcome page as fallback");
         return <Navigate to="/welcome" replace />;
     }
   }
   
-  console.log("User is not logged in, showing public content");
+  console.log("[PublicRoute] User is not logged in, showing public content");
   // Se não estiver autenticado, renderizar a rota pública
   return (
     <PublicLayout>

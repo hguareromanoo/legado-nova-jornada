@@ -20,7 +20,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userState, setUserState] = useState<UserState | null>(null);
-  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
   const { toast } = useToast();
   const { login: authLogin, signUp: authSignUp, logout: authLogout } = useAuth();
   
@@ -28,10 +28,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const initUserProfile = async (userId: string) => {
     try {
       setIsRoleLoading(true);
-      console.log(`Initializing user profile for ${userId}`);
+      console.log(`[UserContext] Initializing user profile for ${userId}`);
       const profileData = await fetchUserProfile(userId);
       
-      console.log('Profile data loaded:', profileData);
+      console.log('[UserContext] Profile data loaded:', profileData);
       setUserRole(profileData.role);
       setUserState(profileData.user_state);
       
@@ -41,6 +41,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       } else {
         setHasCompletedOnboarding(false);
       }
+    } catch (error) {
+      console.error('[UserContext] Error initializing user profile:', error);
     } finally {
       setIsRoleLoading(false);
     }
@@ -48,12 +50,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   
   // Configure Supabase auth state listener and check for existing session
   useEffect(() => {
-    console.log('Setting up auth state listener');
+    console.log('[UserContext] Setting up auth state listener');
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('Auth state changed:', event);
+        console.log('[UserContext] Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoggedIn(!!currentSession);
@@ -80,8 +82,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     // THEN check for existing session
     const checkExistingSession = async () => {
-      console.log('Checking for existing session');
+      console.log('[UserContext] Checking for existing session');
       const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      console.log('[UserContext] Existing session check result:', currentSession ? 'Found session' : 'No session');
       
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -90,6 +94,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Fetch user profile if logged in
       if (currentSession?.user) {
         await initUserProfile(currentSession.user.id);
+      } else {
+        setIsRoleLoading(false);
       }
     };
     
@@ -101,7 +107,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [toast]);
   
   const login = async (email: string, password: string) => {
-    return await authLogin(email, password);
+    const result = await authLogin(email, password);
+    return result;
   };
   
   const signUp = async (email: string, password: string, userData: Partial<UserData>) => {
@@ -120,22 +127,22 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   
   const updateUserState = async (state: UserState) => {
     if (!user?.id) {
-      console.error('Cannot update user state: No user ID');
+      console.error('[UserContext] Cannot update user state: No user ID');
       return;
     }
     
-    console.log(`Attempting to update user state to ${state}`);
+    console.log(`[UserContext] Attempting to update user state to ${state}`);
     const result = await updateUserStateInDb(user.id, state);
     
     if (result.success) {
-      console.log(`User state successfully updated to ${state} in database`);
+      console.log(`[UserContext] User state successfully updated to ${state} in database`);
       setUserState(state);
       
       if (state === 'holding_opened') {
         setHasCompletedOnboarding(true);
       }
     } else {
-      console.error(`Failed to update user state: ${result.error}`);
+      console.error(`[UserContext] Failed to update user state: ${result.error}`);
       toast({
         title: "Erro ao atualizar estado",
         description: "Não foi possível atualizar seu progresso no sistema.",
@@ -155,9 +162,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const updateUser = (data: Partial<UserData>) => {
     if (user) {
       // Here we could update user metadata in Supabase
-      console.log('Updating user data:', data);
+      console.log('[UserContext] Updating user data:', data);
     }
   };
+  
+  // Log the current state for debugging
+  useEffect(() => {
+    console.log('[UserContext] Current state:', { 
+      isLoggedIn,
+      userRole,
+      userState,
+      hasCompletedOnboarding,
+      isRoleLoading
+    });
+  }, [isLoggedIn, userRole, userState, hasCompletedOnboarding, isRoleLoading]);
   
   return (
     <UserContext.Provider
