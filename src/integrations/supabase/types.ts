@@ -317,6 +317,78 @@ export type Database = {
           },
         ]
       }
+      document_roadmap: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          document_key: string
+          estimated_cost: string | null
+          group_id: string | null
+          how_to_obtain: string | null
+          id: string
+          is_mandatory: boolean
+          item_description: string | null
+          item_index: number | null
+          item_type: string | null
+          name: string
+          priority: number
+          processing_time: string | null
+          reason: string | null
+          recommendation_id: string
+          related_to: string | null
+          sent: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          document_key: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          id?: string
+          is_mandatory?: boolean
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
+          name: string
+          priority?: number
+          processing_time?: string | null
+          reason?: string | null
+          recommendation_id: string
+          related_to?: string | null
+          sent?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          document_key?: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          id?: string
+          is_mandatory?: boolean
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
+          name?: string
+          priority?: number
+          processing_time?: string | null
+          reason?: string | null
+          recommendation_id?: string
+          related_to?: string | null
+          sent?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           bucket_name: string

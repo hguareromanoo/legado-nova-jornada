@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { DocumentRecommendation } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from '@supabase/gotrue-js/dist/module/lib/helpers';
 
 interface DocumentUploadProps {
   document: DocumentRecommendation;
@@ -29,22 +30,118 @@ const DocumentUpload = ({
 }: DocumentUploadProps) => {
   const { toast } = useToast();
 
-  // Function to handle document upload
-  const handleDocumentUpload = (documentKey: string, recommendationId: string) => {
-    // Using window.document instead of just document to avoid confusion with the prop named document
-    const fileInput = window.document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
-    fileInput.multiple = false;
+  // Ensure we have a valid recommendation_id
+  const ensureRecommendationId = async (document: DocumentRecommendation) => {
+    if (!document.recommendation_id) {
+      // Generate a new UUID for this recommendation
+      const generatedId = uuidv4();
+      
+      // Store document details in document_roadmap table
+      await storeDocumentRoadmap({
+        ...document,
+        recommendation_id: generatedId
+      });
+      
+      return generatedId;
+    }
     
-    fileInput.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        await uploadDocument(file, documentKey, recommendationId);
+    return document.recommendation_id;
+  };
+
+  // Function to store document details in document_roadmap table
+  const storeDocumentRoadmap = async (doc: DocumentRecommendation) => {
+    try {
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      console.log('📋 Salvando detalhes do documento na roadmap:', doc);
+      
+      // Check if entry already exists
+      const { data: existingData } = await supabase
+        .from('document_roadmap')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('document_key', doc.document_key)
+        .maybeSingle();
+      
+      if (existingData) {
+        console.log('Documento já existe na roadmap, atualizando...');
+        await supabase
+          .from('document_roadmap')
+          .update({
+            recommendation_id: doc.recommendation_id,
+            name: doc.name,
+            description: doc.description,
+            category: doc.category,
+            priority: doc.priority,
+            is_mandatory: doc.is_mandatory,
+            item_description: doc.item_description,
+            item_type: doc.item_type,
+            item_index: doc.item_index || null,
+            group_id: doc.group_id,
+            how_to_obtain: doc.how_to_obtain,
+            processing_time: doc.processing_time,
+            estimated_cost: doc.estimated_cost,
+            reason: doc.reason,
+            related_to: doc.related_to,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingData.id);
+      } else {
+        // Insert new entry
+        await supabase.from('document_roadmap').insert({
+          recommendation_id: doc.recommendation_id,
+          user_id: userId,
+          document_key: doc.document_key,
+          name: doc.name,
+          description: doc.description,
+          category: doc.category,
+          priority: doc.priority,
+          is_mandatory: doc.is_mandatory,
+          item_description: doc.item_description,
+          item_type: doc.item_type,
+          item_index: doc.item_index || null,
+          group_id: doc.group_id,
+          how_to_obtain: doc.how_to_obtain,
+          processing_time: doc.processing_time,
+          estimated_cost: doc.estimated_cost,
+          reason: doc.reason,
+          related_to: doc.related_to,
+          sent: false
+        });
       }
-    };
-    
-    fileInput.click();
+    } catch (error) {
+      console.error('Erro ao salvar documento na roadmap:', error);
+    }
+  };
+
+  // Function to handle document upload
+  const handleDocumentUpload = async (documentKey: string) => {
+    try {
+      // Ensure we have a valid recommendation_id
+      const recommendationId = await ensureRecommendationId(document);
+      
+      // Using window.document instead of just document to avoid confusion with the prop named document
+      const fileInput = window.document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+      fileInput.multiple = false;
+      
+      fileInput.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+          await uploadDocument(file, documentKey, recommendationId);
+        }
+      };
+      
+      fileInput.click();
+    } catch (error) {
+      console.error('Erro ao preparar upload:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível preparar o upload do documento.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Upload document with base64 encoding directly to database
@@ -90,6 +187,14 @@ const DocumentUpload = ({
       }
       
       console.log('✅ Documento salvo com sucesso:', data);
+      
+      // Update document_roadmap to mark this document as sent
+      await supabase
+        .from('document_roadmap')
+        .update({ sent: true, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('document_key', documentKey);
+      
       onStatusChange(documentKey, 'uploaded');
       
       toast({
@@ -215,7 +320,7 @@ const DocumentUpload = ({
           
           <div className="flex items-center gap-2 ml-4">
             <Button
-              onClick={() => handleDocumentUpload(document.document_key, document.recommendation_id)}
+              onClick={() => handleDocumentUpload(document.document_key)}
               disabled={uploadStatus === 'uploading'}
               variant={uploadStatus === 'uploaded' ? "outline" : "default"}
               size="sm"
