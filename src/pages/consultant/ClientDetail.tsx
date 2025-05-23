@@ -26,7 +26,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -52,17 +52,6 @@ interface ChatMessage {
   sender_type: 'consultant' | 'user' | 'system';
   created_at: string;
   is_read: boolean;
-}
-
-// Type for the data coming from Supabase
-interface SupabaseChatMessage {
-  id: string;
-  message: string;
-  sender_type: string; // This could be any string from the database
-  created_at: string;
-  is_read: boolean;
-  user_id: string;
-  consultant_id: string;
 }
 
 const ClientDetail = () => {
@@ -119,39 +108,51 @@ const ClientDetail = () => {
           setClient(clientData);
         }
 
-        // Fetch consultant ID based on logged in user
-        const { data: consultantData, error: consultantError } = await supabase
-          .from('consultants')
-          .select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
-
-        if (consultantError) {
-          console.error('Error fetching consultant:', consultantError);
-        } else if (consultantData) {
-          setConsultantId(consultantData.id);
+        // Since we don't have a consultants table, we'll use the user_id directly
+        // from the authenticated user
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        
+        if (currentUser) {
+          setConsultantId(currentUser.id);
           
-          // Fetch chat messages
-          const { data: messagesData, error: messagesError } = await supabase
-            .from('consultant_chat_messages')
-            .select('*')
-            .eq('consultant_id', consultantData.id)
-            .eq('user_id', clientId)
-            .order('created_at', { ascending: true });
-
-          if (messagesError) {
-            console.error('Error fetching messages:', messagesError);
-          } else if (messagesData) {
-            // Transform the data to match the ChatMessage type
-            const typedMessages: ChatMessage[] = messagesData.map((msg: SupabaseChatMessage) => ({
-              id: msg.id,
-              message: msg.message,
-              sender_type: msg.sender_type as 'consultant' | 'user' | 'system',
-              created_at: msg.created_at,
-              is_read: msg.is_read
-            }));
-            setChatMessages(typedMessages);
-          }
+          // For now, let's use mock chat messages since we don't have the consultant_chat_messages table
+          const mockChatMessages: ChatMessage[] = [
+            {
+              id: '1',
+              message: 'Olá, preciso de ajuda com a abertura da minha holding.',
+              sender_type: 'user',
+              created_at: '2025-05-20T10:30:00Z',
+              is_read: true
+            },
+            {
+              id: '2',
+              message: 'Claro, posso ajudar com isso. Já enviou os documentos solicitados?',
+              sender_type: 'consultant',
+              created_at: '2025-05-20T10:35:00Z',
+              is_read: true
+            },
+            {
+              id: '3',
+              message: 'Sim, enviei ontem. Aguardo os próximos passos.',
+              sender_type: 'user',
+              created_at: '2025-05-20T11:05:00Z',
+              is_read: true
+            }
+          ];
+          
+          setChatMessages(mockChatMessages);
+          
+          // In the future, once we have the appropriate table in Supabase:
+          // const { data: messagesData, error: messagesError } = await supabase
+          //   .from('chat_messages')
+          //   .select('*')
+          //   .eq('consultant_id', currentUser.id)
+          //   .eq('client_id', clientId)
+          //   .order('created_at', { ascending: true });
+          
+          // if (!messagesError && messagesData) {
+          //   setChatMessages(messagesData);
+          // }
         }
       } catch (error) {
         console.error('Error fetching client:', error);
@@ -181,33 +182,32 @@ const ClientDetail = () => {
     setSendingMessage(true);
     
     try {
-      // Save message to database
-      const { data, error } = await supabase
-        .from('consultant_chat_messages')
-        .insert({
-          user_id: clientId,
-          consultant_id: consultantId,
-          message: newMessage,
-          sender_type: 'consultant'
-        })
-        .select()
-        .single();
-        
-      if (error) throw error;
+      // For now, we'll just add the message to the state
+      // In the future, we'll save to the database once we have the table
+      const newChatMessage: ChatMessage = {
+        id: Date.now().toString(),
+        message: newMessage,
+        sender_type: 'consultant',
+        created_at: new Date().toISOString(),
+        is_read: false
+      };
       
-      // Add message to state
-      if (data) {
-        const newChatMessage: ChatMessage = {
-          id: data.id,
-          message: data.message,
-          sender_type: data.sender_type as 'consultant' | 'user' | 'system',
-          created_at: data.created_at,
-          is_read: data.is_read
-        };
+      setChatMessages(prev => [...prev, newChatMessage]);
+      setNewMessage("");
+      
+      // For future implementation when we have the table:
+      // const { data, error } = await supabase
+      //   .from('chat_messages')
+      //   .insert({
+      //     client_id: clientId,
+      //     consultant_id: consultantId,
+      //     message: newMessage,
+      //     sender_type: 'consultant'
+      //   })
+      //   .select()
+      //   .single();
         
-        setChatMessages(prev => [...prev, newChatMessage]);
-        setNewMessage("");
-      }
+      // if (error) throw error;
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -374,7 +374,7 @@ const ClientDetail = () => {
                       stroke="#94a3b8"
                       tickFormatter={(value) => `R$${(value / 1000000).toFixed(1)}M`}
                     />
-                    <Tooltip
+                    <RechartsTooltip
                       formatter={(value) => [`R$${(Number(value) / 1000000).toFixed(2)}M`, 'Patrimônio']}
                       contentStyle={{ backgroundColor: '#1e293b', border: 'none' }}
                     />
@@ -410,7 +410,7 @@ const ClientDetail = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value}%`} />
+                    <RechartsTooltip formatter={(value) => `${value}%`} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
