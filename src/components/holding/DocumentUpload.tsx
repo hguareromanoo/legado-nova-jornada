@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DocumentRecommendation } from '@/types/chat';
+import { DocumentRecommendation } from '@/types/chat'; // Assuming updated type
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs for uploaded files
 
 interface DocumentUploadProps {
   document: DocumentRecommendation;
@@ -34,24 +34,12 @@ const DocumentUpload = ({
     try {
       if (!userId) throw new Error('Usuário não autenticado');
       
-      // Get recommendation_id from document_roadmap 
-      const { data: roadmapEntry, error: roadmapError } = await supabase
-        .from('document_roadmap')
-        .select('recommendation_id')
-        .eq('user_id', userId)
-        .eq('document_key', documentKey)
-        .maybeSingle();
+      // The document prop now contains the recommendation_id from the 'recommendations' table directly as 'id'
+      const recommendationId = document.id; 
       
-      if (roadmapError) {
-        console.error('Error fetching document roadmap:', roadmapError);
-        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
+      if (!recommendationId) {
+        throw new Error('ID da recomendação é obrigatório.');
       }
-      
-      if (!roadmapEntry) {
-        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
-      }
-      
-      const recommendationId = roadmapEntry.recommendation_id;
       
       // Using window.document instead of just document to avoid confusion with the prop named document
       const fileInput = window.document.createElement('input');
@@ -77,56 +65,71 @@ const DocumentUpload = ({
     }
   };
 
-  // Upload document with base64 encoding directly to database
+  // Upload document to Supabase Storage and save metadata to 'uploaded_documents' table
   const uploadDocument = async (file: File, documentKey: string, recommendationId: string) => {
     try {
       if (!userId) throw new Error('Usuário não autenticado');
       if (!file) throw new Error('Nenhum arquivo selecionado');
       if (!recommendationId) throw new Error('ID da recomendação é obrigatório');
-      if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande. Máximo 10MB.');
+      if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande. Máximo 10MB.'); // 10MB limit
       
       onStatusChange(documentKey, 'uploading');
       
-      // Convert to base64
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const fileExtension = file.name.split('.').pop();
+      const uniqueFileName = `${documentKey}_${Date.now()}.${fileExtension}`;
+      const storagePath = `user_uploads/${userId}/${recommendationId}/${uniqueFileName}`;
+
+      // 1. Upload file to Supabase Storage
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('documents') // Assuming your storage bucket is named 'documents'
+        .upload(storagePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (storageError) {
+        console.error('Supabase Storage Error:', storageError);
+        throw new Error(`Erro ao enviar arquivo para o armazenamento: ${storageError.message}`);
+      }
       
-      // Save directly to documents table
-      const { data, error } = await supabase
-        .from('documents')
+      console.log('✅ Arquivo enviado para Supabase Storage:', storageData.path);
+
+      // 2. Insert metadata into 'uploaded_documents' table
+      const { data: dbData, error: dbError } = await supabase
+        .from('uploaded_documents') // New table name
         .insert({
           user_id: userId,
           recommendation_id: recommendationId,
-          bucket_name: 'local_storage',
-          object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
           file_type: file.type,
           file_size: file.size,
-          file_data: base64Data,
-          document_key: documentKey,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          storage_path: storageData.path, // Save the path from storage
         })
         .select()
         .single();
       
-      if (error) {
-        console.error('Database error:', error);
-        throw new Error(`Erro ao salvar: ${error.message}`);
+      if (dbError) {
+        console.error('Database Error (uploaded_documents):', dbError);
+        throw new Error(`Erro ao salvar metadados do documento: ${dbError.message}`);
       }
       
-      console.log('✅ Documento salvo com sucesso:', data);
+      console.log('✅ Metadados do documento salvos com sucesso:', dbData);
       
-      // Update document_roadmap to mark this document as sent
-      await supabase
+      // 3. Update 'document_roadmap' to mark this document as sent
+      // Note: 'document_roadmap' is now a separate table tracking the recommendation fulfillment,
+      // not directly storing file data. Its 'sent' status indicates the recommendation is fulfilled.
+      const { error: roadmapUpdateError } = await supabase
         .from('document_roadmap')
         .update({ sent: true, updated_at: new Date().toISOString() })
         .eq('user_id', userId)
-        .eq('document_key', documentKey);
+        .eq('document_key', documentKey); // Using document_key to identify the roadmap entry
+
+      if (roadmapUpdateError) {
+        console.error('Error updating document roadmap:', roadmapUpdateError);
+        // Decide whether to throw an error or just log, based on criticality.
+        // For now, it's critical for progress tracking.
+        throw new Error(`Erro ao atualizar o status da recomendação: ${roadmapUpdateError.message}`);
+      }
       
       onStatusChange(documentKey, 'uploaded');
       
@@ -135,7 +138,7 @@ const DocumentUpload = ({
         description: `${file.name} foi enviado e salvo.`,
       });
       
-      return data;
+      return dbData;
       
     } catch (error: any) {
       console.error('❌ Erro no upload:', error);
@@ -150,26 +153,36 @@ const DocumentUpload = ({
     }
   };
 
-  // Function to download a document
-  const downloadDocument = async (documentId: string, fileName?: string) => {
+  // Function to download a document from Supabase Storage
+  const downloadDocument = async (storagePath: string, fileName: string) => {
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('file_data, file_name, user_id')
-        .eq('document_id', documentId)
-        .single();
-      
-      if (error) throw error;
-      if (!data?.file_data) throw new Error('Arquivo não encontrado');
-      if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo');
-      
-      // Use window.document to avoid confusion with the prop named document
+      if (!userId) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase.storage
+        .from('documents') // Your storage bucket name
+        .download(storagePath);
+
+      if (error) {
+        console.error('Supabase Storage Download Error:', error);
+        throw new Error(`Erro ao baixar o arquivo: ${error.message}`);
+      }
+
+      if (!data) throw new Error('Arquivo não encontrado no armazenamento.');
+
+      const url = URL.createObjectURL(data);
       const link = window.document.createElement('a');
-      link.href = data.file_data;
-      link.download = fileName || data.file_name;
+      link.href = url;
+      link.download = fileName;
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up the URL object
+      
+      toast({
+        title: "Download iniciado!",
+        description: `O download de ${fileName} foi iniciado.`,
+      });
+
     } catch (error: any) {
       console.error('Erro ao baixar documento:', error);
       toast({

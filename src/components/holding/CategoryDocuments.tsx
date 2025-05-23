@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { FileText, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +6,7 @@ import DocumentUpload from './DocumentUpload';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { DocumentRoadmap } from '@/types/document';
+import { DocumentRoadmap } from '@/types/document'; // Assuming this type is consistent with the database roadmap
 
 interface CategoryDocumentsProps {
   category: string;
@@ -49,6 +48,7 @@ const CategoryDocuments = ({
   };
 
   // Initialize document roadmap entries for all documents in this category
+  // This ensures a record exists in 'document_roadmap' for every recommended document.
   useEffect(() => {
     const initializeDocumentRoadmap = async () => {
       if (!userId || !documents.length) return;
@@ -56,10 +56,10 @@ const CategoryDocuments = ({
       console.log(`Initializing document roadmap for ${documents.length} documents in ${category} category`);
       
       try {
-        // Check which documents already exist in the roadmap
+        // 1. Check which documents already exist in the 'document_roadmap' table
         const { data: existingEntries, error } = await supabase
           .from('document_roadmap')
-          .select('document_key, recommendation_id')
+          .select('document_key, recommendation_id, sent') // Also fetch 'sent' status
           .eq('user_id', userId)
           .in('document_key', documents.map(doc => doc.document_key));
         
@@ -68,11 +68,14 @@ const CategoryDocuments = ({
           return;
         }
         
-        // Create a map for quick lookups
+        // Create a map for quick lookups of existing entries and their 'sent' status
         const existingMap = new Map();
         if (existingEntries) {
           existingEntries.forEach(entry => {
-            existingMap.set(entry.document_key, entry.recommendation_id);
+            existingMap.set(entry.document_key, {
+              recommendation_id: entry.recommendation_id,
+              sent: entry.sent
+            });
           });
         }
         
@@ -80,10 +83,11 @@ const CategoryDocuments = ({
         const newEntries = documents
           .filter(doc => !existingMap.has(doc.document_key))
           .map(doc => {
-            const recommendationId = doc.recommendation_id || uuidv4();
+            // Use the recommendation_id from the DocumentRecommendation type if available, otherwise generate a new UUID
+            const recommendationId = doc.id || uuidv4(); 
             
             return {
-              recommendation_id: recommendationId,
+              recommendation_id: recommendationId, // This is now the 'id' from DocumentRecommendation
               user_id: userId,
               document_key: doc.document_key,
               name: doc.name,
@@ -100,7 +104,7 @@ const CategoryDocuments = ({
               estimated_cost: doc.estimated_cost || null,
               reason: doc.reason || null,
               related_to: (doc as any).related_to || null,
-              sent: false
+              sent: false // Initially not sent
             };
           });
         
@@ -117,28 +121,41 @@ const CategoryDocuments = ({
           }
         }
         
-        // Check document upload status using a separate query to avoid race conditions
-        setTimeout(async () => {
-          if (existingEntries && existingEntries.length > 0) {
-            // Query which documents have been uploaded already
-            const { data: uploadedDocs } = await supabase
-              .from('documents')
-              .select('document_key')
-              .eq('user_id', userId)
-              .in('document_key', documents.map(doc => doc.document_key));
-            
-            // Update local status for any documents that are already uploaded
-            if (uploadedDocs && uploadedDocs.length > 0) {
-              uploadedDocs.forEach(doc => {
-                if (doc.document_key) {
-                  onStatusChange(doc.document_key, 'uploaded');
+        // 2. Check document upload status from 'uploaded_documents' table 
+        // and update local state to reflect already uploaded documents
+        const { data: uploadedDocs, error: uploadedDocsError } = await supabase
+          .from('uploaded_documents') // Query the new uploaded_documents table
+          .select('document_key') // Select the document_key
+          .eq('user_id', userId)
+          .in('recommendation_id', documents.map(doc => doc.id)); // Link to the recommendation ID
+
+        if (uploadedDocsError) {
+          console.error('Error fetching uploaded documents from uploaded_documents:', uploadedDocsError);
+          return;
+        }
+
+        if (uploadedDocs && uploadedDocs.length > 0) {
+            uploadedDocs.forEach(uploadedDoc => {
+                // Find the corresponding document in the current list by document_key
+                const matchingDoc = documents.find(d => d.document_key === uploadedDoc.document_key);
+                if (matchingDoc) {
+                    onStatusChange(matchingDoc.document_key, 'uploaded');
                 }
-              });
-            }
-          }
-        }, 0);
+            });
+        }
+
+        // Also update the status for documents already marked as 'sent' in document_roadmap
+        // to ensure consistency if the uploaded_documents table isn't the only source of truth for 'sent' status
+        if (existingEntries && existingEntries.length > 0) {
+            existingEntries.forEach(entry => {
+                if (entry.sent && existingMap.has(entry.document_key)) {
+                    onStatusChange(entry.document_key, 'uploaded');
+                }
+            });
+        }
+
       } catch (error) {
-        console.error('Error initializing document roadmap:', error);
+        console.error('Error initializing document roadmap or checking uploads:', error);
       }
     };
 
