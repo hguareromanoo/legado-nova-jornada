@@ -317,6 +317,86 @@ export type Database = {
           },
         ]
       }
+      document_roadmap: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          document_key: string
+          estimated_cost: string | null
+          group_id: string | null
+          how_to_obtain: string | null
+          id: string
+          is_mandatory: boolean | null
+          item_description: string | null
+          item_index: number | null
+          item_type: string | null
+          name: string
+          priority: number | null
+          processing_time: string | null
+          reason: string | null
+          recommendation_id: string | null
+          related_to: string | null
+          sent: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_key: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
+          name: string
+          priority?: number | null
+          processing_time?: string | null
+          reason?: string | null
+          recommendation_id?: string | null
+          related_to?: string | null
+          sent?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_key?: string
+          estimated_cost?: string | null
+          group_id?: string | null
+          how_to_obtain?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          item_description?: string | null
+          item_index?: number | null
+          item_type?: string | null
+          name?: string
+          priority?: number | null
+          processing_time?: string | null
+          reason?: string | null
+          recommendation_id?: string | null
+          related_to?: string | null
+          sent?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_roadmap_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "document_recommendations"
+            referencedColumns: ["recommendation_id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           bucket_name: string

@@ -7,6 +7,7 @@ import DocumentUpload from './DocumentUpload';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { DocumentRoadmap } from '@/types/document';
 
 interface CategoryDocumentsProps {
   category: string;
@@ -56,17 +57,24 @@ const CategoryDocuments = ({
       
       try {
         // Check which documents already exist in the roadmap
-        const { data: existingEntries } = await supabase
+        const { data: existingEntries, error } = await supabase
           .from('document_roadmap')
           .select('document_key, recommendation_id')
           .eq('user_id', userId)
           .in('document_key', documents.map(doc => doc.document_key));
         
+        if (error) {
+          console.error('Error checking existing document roadmap entries:', error);
+          return;
+        }
+        
         // Create a map for quick lookups
         const existingMap = new Map();
-        existingEntries?.forEach(entry => {
-          existingMap.set(entry.document_key, entry.recommendation_id);
-        });
+        if (existingEntries) {
+          existingEntries.forEach(entry => {
+            existingMap.set(entry.document_key, entry.recommendation_id);
+          });
+        }
         
         // Prepare batch insert for documents that don't exist in the roadmap
         const newEntries = documents
@@ -98,12 +106,12 @@ const CategoryDocuments = ({
         
         // Insert new entries if any
         if (newEntries.length > 0) {
-          const { error } = await supabase
+          const { error: insertError } = await supabase
             .from('document_roadmap')
             .insert(newEntries);
             
-          if (error) {
-            console.error('Error creating document roadmap entries:', error);
+          if (insertError) {
+            console.error('Error creating document roadmap entries:', insertError);
           } else {
             console.log(`✅ Created ${newEntries.length} new document roadmap entries`);
           }

@@ -42,7 +42,12 @@ const DocumentUpload = ({
         .eq('document_key', documentKey)
         .maybeSingle();
       
-      if (roadmapError || !roadmapEntry) {
+      if (roadmapError) {
+        console.error('Error fetching document roadmap:', roadmapError);
+        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
+      }
+      
+      if (!roadmapEntry) {
         throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
       }
       

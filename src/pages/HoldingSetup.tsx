@@ -35,7 +35,7 @@ const HoldingSetup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, updateUserState, userState } = useUser();
   
   // Estados para documentos
   const [documentData, setDocumentData] = useState<DocumentRecommendationsResponse | null>(null);
@@ -152,12 +152,6 @@ const HoldingSetup = () => {
 
   if (!documentData) return null;
 
-  // Precisamos importar o hook useUser e a função updateUserState
-  import { useUser } from '@/contexts/UserContext';
-
-  // Dentro do componente HoldingSetup, adicione:
-  const { updateUserState, userState } = useUser();
-
   // Se necessário, atualize o estado do usuário quando a página for carregada
   useEffect(() => {
     const initializeUserState = async () => {
@@ -177,8 +171,6 @@ const HoldingSetup = () => {
     await updateUserState('holding_opened');
     navigate('/members');
   };
-
-  // Certifique-se de chamar handleCompleteSetup nos botões/ações relevantes
 
   return (
     <SidebarProvider>
