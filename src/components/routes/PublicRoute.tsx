@@ -9,15 +9,27 @@ const PublicRoute = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Simple loading state management with a maximum wait time
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.log('PublicRoute - Forced loading state to complete after timeout');
+        setLoading(false);
+      }
+    }, 2000);
+    
     // User role/state condition check
-    if (isLoggedIn && userRole !== null && userState !== null) {
-      console.log('PublicRoute - User state loaded:', userState);
-      setLoading(false);
-    } else if (!isLoggedIn) {
-      console.log('PublicRoute - User not logged in');
-      setLoading(false);
+    if (isLoggedIn !== undefined) {
+      if (isLoggedIn && userRole !== null && userState !== null) {
+        console.log('PublicRoute - User state loaded:', userState);
+        setLoading(false);
+      } else if (!isLoggedIn) {
+        console.log('PublicRoute - User not logged in');
+        setLoading(false);
+      }
     }
-  }, [isLoggedIn, userRole, userState]);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoggedIn, userRole, userState, loading]);
   
   if (loading) {
     return (
@@ -29,6 +41,8 @@ const PublicRoute = () => {
   
   // Se o usuário está autenticado, redirecione com base no estado
   if (isLoggedIn) {
+    console.log('PublicRoute - User is logged in with state:', userState);
+    
     // Se o usuário é um consultor, redirecione para o dashboard do consultor
     if (userRole === 'consultant') {
       console.log("User is a consultant, redirecting to consultant dashboard");

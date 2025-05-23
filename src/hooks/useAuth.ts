@@ -30,12 +30,17 @@ export const useAuth = () => {
       
       console.log('Login successful, user:', data.user?.id);
       
+      // Store user ID for later use
+      if (data.user) {
+        localStorage.setItem('currentUserId', data.user.id);
+      }
+      
       // Set default onboarding step if not set
       if (!localStorage.getItem('onboardingStep')) {
         localStorage.setItem('onboardingStep', 'selection');
       }
       
-      return {};
+      return { success: true };
     } catch (error) {
       console.error('Error during login:', error);
       return { error: 'Erro ao fazer login' };

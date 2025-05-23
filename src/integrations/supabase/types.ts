@@ -259,6 +259,7 @@ export type Database = {
           reason: string | null
           recommendation_id: string
           related_to: string | null
+          sent: boolean | null
           updated_at: string
         }
         Insert: {
@@ -282,6 +283,7 @@ export type Database = {
           reason?: string | null
           recommendation_id?: string
           related_to?: string | null
+          sent?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -305,6 +307,7 @@ export type Database = {
           reason?: string | null
           recommendation_id?: string
           related_to?: string | null
+          sent?: boolean | null
           updated_at?: string
         }
         Relationships: [
