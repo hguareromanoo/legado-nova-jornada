@@ -3,9 +3,27 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { UserContextType, UserData, UserState } from '@/types/user';
+import { UserData, UserState } from '@/types/user';
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+// Define the context type directly to avoid deep type instantiation
+interface UserContextValue {
+  isLoggedIn: boolean;
+  user: User | null;
+  session: Session | null;
+  hasCompletedOnboarding: boolean;
+  userRole: string | null;
+  userState: UserState | null;
+  isRoleLoading?: boolean;
+  login: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<any>;
+  logout: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
+  updateUser: (data: Partial<UserData>) => Promise<void>;
+  updateUserState: (state: UserState) => Promise<void>;
+}
+
+// Create the context with the inline type definition
+const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 interface UserProviderProps {
   children: ReactNode;
@@ -353,7 +371,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   );
 };
 
-export const useUser = (): UserContextType => {
+export const useUser = (): UserContextValue => {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
