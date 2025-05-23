@@ -117,7 +117,7 @@ const CategoryDocuments = ({
           }
         }
         
-        // Check document upload status using a separate query
+        // Check document upload status using a separate query to avoid race conditions
         setTimeout(async () => {
           if (existingEntries && existingEntries.length > 0) {
             // Query which documents have been uploaded already
