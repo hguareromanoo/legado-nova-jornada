@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { DocumentRecommendation } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from '@supabase/gotrue-js/dist/module/lib/helpers';
+import { v4 as uuidv4 } from 'uuid';
 
 interface DocumentUploadProps {
   document: DocumentRecommendation;
@@ -74,15 +74,16 @@ const DocumentUpload = ({
             category: doc.category,
             priority: doc.priority,
             is_mandatory: doc.is_mandatory,
-            item_description: doc.item_description,
-            item_type: doc.item_type,
-            item_index: doc.item_index || null,
-            group_id: doc.group_id,
-            how_to_obtain: doc.how_to_obtain,
-            processing_time: doc.processing_time,
-            estimated_cost: doc.estimated_cost,
-            reason: doc.reason,
-            related_to: doc.related_to,
+            item_description: doc.item_description || null,
+            // Add optional properties with fallbacks
+            item_type: (doc as any).item_type || null,
+            item_index: (doc as any).item_index || null,
+            group_id: (doc as any).group_id || null,
+            how_to_obtain: doc.how_to_obtain || null,
+            processing_time: doc.processing_time || null,
+            estimated_cost: doc.estimated_cost || null,
+            reason: doc.reason || null,
+            related_to: (doc as any).related_to || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingData.id);
@@ -97,15 +98,16 @@ const DocumentUpload = ({
           category: doc.category,
           priority: doc.priority,
           is_mandatory: doc.is_mandatory,
-          item_description: doc.item_description,
-          item_type: doc.item_type,
-          item_index: doc.item_index || null,
-          group_id: doc.group_id,
-          how_to_obtain: doc.how_to_obtain,
-          processing_time: doc.processing_time,
-          estimated_cost: doc.estimated_cost,
-          reason: doc.reason,
-          related_to: doc.related_to,
+          item_description: doc.item_description || null,
+          // Add optional properties with fallbacks
+          item_type: (doc as any).item_type || null,
+          item_index: (doc as any).item_index || null,
+          group_id: (doc as any).group_id || null,
+          how_to_obtain: doc.how_to_obtain || null,
+          processing_time: doc.processing_time || null,
+          estimated_cost: doc.estimated_cost || null,
+          reason: doc.reason || null,
+          related_to: (doc as any).related_to || null,
           sent: false
         });
       }
