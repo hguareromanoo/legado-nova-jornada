@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DocumentRecommendationsResponse } from '@/types/chat';
@@ -6,7 +7,6 @@ import CategoryDocuments from './CategoryDocuments';
 import DocumentSummary from './DocumentSummary';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types'; // Import Tables type
 
 interface DocumentsTabProps {
   documentData: DocumentRecommendationsResponse;
@@ -30,33 +30,33 @@ const DocumentsTab = ({
   const { user } = useUser();
   const uploadedCount = Object.values(uploadStatus).filter(status => status === 'uploaded').length;
   
-  // Fetch already uploaded documents on mount from the 'documents' table
+  // Fetch already uploaded documents on mount
   useEffect(() => {
     const fetchUploadedDocuments = async () => {
       if (!userId) return;
       
       try {
-        // Query 'documents' table to find which files are already uploaded for this user
-        // We select 'document_key' as it links to the recommendation in our local state
-        const { data: uploadedFiles, error } = await supabase
-          .from('documents') // Correct table name
-          .select('document_key'); // Assuming document_key exists in 'documents' table
+        // Query document_roadmap to find which documents are already marked as sent
+        const { data: sentDocuments, error } = await supabase
+          .from('document_roadmap')
+          .select('document_key')
+          .eq('user_id', userId)
+          .eq('sent', true);
         
         if (error) {
-          console.error('Error fetching uploaded documents from "documents" table:', error);
+          console.error('Error fetching uploaded documents:', error);
           return;
         }
         
-        // Update the upload status for documents that are already uploaded
-        if (uploadedFiles && uploadedFiles.length > 0) {
-          uploadedFiles.forEach((file: Tables<'documents'>) => {
-            // Ensure document_key exists before attempting to update status
-            if (file.document_key) {
-              onStatusChange(file.document_key, 'uploaded');
+        // Update the upload status for documents that are already sent
+        if (sentDocuments && sentDocuments.length > 0) {
+          sentDocuments.forEach(doc => {
+            if (doc.document_key) {
+              onStatusChange(doc.document_key, 'uploaded');
             }
           });
           
-          console.log(`✅ Found ${uploadedFiles.length} documents already uploaded`);
+          console.log(`✅ Found ${sentDocuments.length} documents already uploaded`);
         }
       } catch (error) {
         console.error('Error checking uploaded documents:', error);
