@@ -30,21 +30,51 @@ const DocumentUpload = ({
   const { toast } = useToast();
 
   // Function to handle document upload
-  const handleDocumentUpload = (documentKey: string, recommendationId: string) => {
-    // Using window.document instead of just document to avoid confusion with the prop named document
-    const fileInput = window.document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
-    fileInput.multiple = false;
-    
-    fileInput.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        await uploadDocument(file, documentKey, recommendationId);
+  const handleDocumentUpload = async (documentKey: string) => {
+    try {
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      // Get recommendation_id from document_roadmap 
+      const { data: roadmapEntry, error: roadmapError } = await supabase
+        .from('document_roadmap')
+        .select('recommendation_id')
+        .eq('user_id', userId)
+        .eq('document_key', documentKey)
+        .maybeSingle();
+      
+      if (roadmapError) {
+        console.error('Error fetching document roadmap:', roadmapError);
+        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
       }
-    };
-    
-    fileInput.click();
+      
+      if (!roadmapEntry) {
+        throw new Error('Documento não encontrado na roadmap. Tente recarregar a página.');
+      }
+      
+      const recommendationId = roadmapEntry.recommendation_id;
+      
+      // Using window.document instead of just document to avoid confusion with the prop named document
+      const fileInput = window.document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+      fileInput.multiple = false;
+      
+      fileInput.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+          await uploadDocument(file, documentKey, recommendationId);
+        }
+      };
+      
+      fileInput.click();
+    } catch (error: any) {
+      console.error('Erro ao preparar upload:', error);
+      toast({
+        title: "Erro",
+        description: `Não foi possível preparar o upload do documento: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Upload document with base64 encoding directly to database
@@ -69,8 +99,8 @@ const DocumentUpload = ({
       const { data, error } = await supabase
         .from('documents')
         .insert({
-          user_id: userId,                     // Use user_id instead of profile_id
-          recommendation_id: recommendationId, // Link with document_recommendation
+          user_id: userId,
+          recommendation_id: recommendationId,
           bucket_name: 'local_storage',
           object_key: `${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           file_name: file.name,
@@ -90,6 +120,14 @@ const DocumentUpload = ({
       }
       
       console.log('✅ Documento salvo com sucesso:', data);
+      
+      // Update document_roadmap to mark this document as sent
+      await supabase
+        .from('document_roadmap')
+        .update({ sent: true, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('document_key', documentKey);
+      
       onStatusChange(documentKey, 'uploaded');
       
       toast({
@@ -109,43 +147,6 @@ const DocumentUpload = ({
         variant: "destructive",
       });
       throw error;
-    }
-  };
-
-  // Helper function to list user documents
-  const listUserDocuments = async (documentKey: string, recommendationId: string | null = null) => {
-    try {
-      if (!userId) throw new Error('Usuário não autenticado');
-      
-      let query = supabase
-        .from('documents')
-        .select(`
-          document_id, 
-          document_key, 
-          file_name, 
-          file_type, 
-          file_size, 
-          created_at,
-          recommendation_id
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (recommendationId) {
-        query = query.eq('recommendation_id', recommendationId);
-      }
-      
-      if (documentKey) {
-        query = query.eq('document_key', documentKey);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Erro ao listar documentos:', error);
-      return [];
     }
   };
 
@@ -215,7 +216,7 @@ const DocumentUpload = ({
           
           <div className="flex items-center gap-2 ml-4">
             <Button
-              onClick={() => handleDocumentUpload(document.document_key, document.recommendation_id)}
+              onClick={() => handleDocumentUpload(document.document_key)}
               disabled={uploadStatus === 'uploading'}
               variant={uploadStatus === 'uploaded' ? "outline" : "default"}
               size="sm"

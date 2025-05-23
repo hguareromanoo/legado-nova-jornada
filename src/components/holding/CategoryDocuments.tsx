@@ -1,9 +1,13 @@
 
+import { useEffect } from 'react';
 import { FileText, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DocumentRecommendation } from '@/types/chat';
 import DocumentUpload from './DocumentUpload';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { DocumentRoadmap } from '@/types/document';
 
 interface CategoryDocumentsProps {
   category: string;
@@ -43,6 +47,106 @@ const CategoryDocuments = ({
       icon: FileText 
     };
   };
+
+  // Initialize document roadmap entries for all documents in this category
+  useEffect(() => {
+    const initializeDocumentRoadmap = async () => {
+      if (!userId || !documents.length) return;
+      
+      console.log(`Initializing document roadmap for ${documents.length} documents in ${category} category`);
+      
+      try {
+        // Check which documents already exist in the roadmap
+        const { data: existingEntries, error } = await supabase
+          .from('document_roadmap')
+          .select('document_key, recommendation_id')
+          .eq('user_id', userId)
+          .in('document_key', documents.map(doc => doc.document_key));
+        
+        if (error) {
+          console.error('Error checking existing document roadmap entries:', error);
+          return;
+        }
+        
+        // Create a map for quick lookups
+        const existingMap = new Map();
+        if (existingEntries) {
+          existingEntries.forEach(entry => {
+            existingMap.set(entry.document_key, entry.recommendation_id);
+          });
+        }
+        
+        // Prepare batch insert for documents that don't exist in the roadmap
+        const newEntries = documents
+          .filter(doc => !existingMap.has(doc.document_key))
+          .map(doc => {
+            const recommendationId = doc.recommendation_id || uuidv4();
+            
+            return {
+              recommendation_id: recommendationId,
+              user_id: userId,
+              document_key: doc.document_key,
+              name: doc.name,
+              description: doc.description,
+              category: doc.category,
+              priority: doc.priority,
+              is_mandatory: doc.is_mandatory,
+              item_description: doc.item_description || null,
+              item_type: (doc as any).item_type || null,
+              item_index: (doc as any).item_index || null,
+              group_id: (doc as any).group_id || null,
+              how_to_obtain: doc.how_to_obtain || null,
+              processing_time: doc.processing_time || null,
+              estimated_cost: doc.estimated_cost || null,
+              reason: doc.reason || null,
+              related_to: (doc as any).related_to || null,
+              sent: false
+            };
+          });
+        
+        // Insert new entries if any
+        if (newEntries.length > 0) {
+          const { error: insertError } = await supabase
+            .from('document_roadmap')
+            .insert(newEntries);
+            
+          if (insertError) {
+            console.error('Error creating document roadmap entries:', insertError);
+          } else {
+            console.log(`✅ Created ${newEntries.length} new document roadmap entries`);
+          }
+        }
+        
+        // Check document upload status using a separate query to avoid race conditions
+        setTimeout(async () => {
+          if (existingEntries && existingEntries.length > 0) {
+            // Query which documents have been uploaded already
+            const { data: uploadedDocs } = await supabase
+              .from('documents')
+              .select('document_key')
+              .eq('user_id', userId)
+              .in('document_key', documents.map(doc => doc.document_key));
+            
+            // Update local status for any documents that are already uploaded
+            if (uploadedDocs && uploadedDocs.length > 0) {
+              uploadedDocs.forEach(doc => {
+                if (doc.document_key) {
+                  onStatusChange(doc.document_key, 'uploaded');
+                }
+              });
+            }
+          }
+        }, 0);
+      } catch (error) {
+        console.error('Error initializing document roadmap:', error);
+      }
+    };
+
+    // Use setTimeout to avoid React state update loops
+    setTimeout(() => {
+      initializeDocumentRoadmap();
+    }, 0);
+  }, [userId, documents, category, onStatusChange]);
 
   const categoryInfo = getCategoryInfo(category);
   const categoryUploaded = documents.filter(doc => uploadStatus[doc.document_key] === 'uploaded').length;
