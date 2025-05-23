@@ -1,281 +1,328 @@
 
-import { useState } from 'react';
-import { Upload, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Para o botão de Upload
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import type { CollapsibleProps as RadixCollapsibleProps } from '@radix-ui/react-collapsible';
-import { DocumentRecommendation } from '@/types/chat';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useRef } from 'react';
+import { CheckCircle2, Upload, X, ChevronRight, ChevronLeft, Folder } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Document, Directory, DocumentType } from '@/pages/Documents';
 
-interface DocumentUploadProps {
-  document: DocumentRecommendation;
-  uploadStatus: 'pending' | 'uploading' | 'uploaded' | 'error';
-  isExpanded: boolean;
-  userId: string | undefined;
-  onToggleExpand: (documentKey: string) => void;
-  onStatusChange: (documentKey: string, status: 'pending' | 'uploading' | 'uploaded' | 'error') => void;
+interface DocumentUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (document: Omit<Document, 'id' | 'createdAt'>) => void;
+  directories: Directory[];
 }
 
-const DocumentUpload = ({
-  document,
-  uploadStatus,
-  isExpanded,
-  userId,
-  onToggleExpand,
-  onStatusChange
-}: DocumentUploadProps) => {
-  const { toast } = useToast();
-
-  const handleDocumentUpload = async (documentKey: string) => {
-    try {
-      if (!userId) throw new Error('Usuário não autenticado');
-      const recommendationId = document.recommendation_id;
-      if (!recommendationId) {
-        console.error('Error: recommendation_id não encontrado no objeto document.', document);
-        throw new Error('ID da recomendação não encontrado. Verifique os dados da recomendação.');
+const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  directories
+}) => {
+  const [step, setStep] = useState(1);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentName, setDocumentName] = useState('');
+  const [documentType, setDocumentType] = useState<DocumentType>('other');
+  const [directoryId, setDirectoryId] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadComplete, setUploadComplete] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const resetState = () => {
+    setStep(1);
+    setUploadProgress(0);
+    setSelectedFile(null);
+    setDocumentName('');
+    setDocumentType('other');
+    setDirectoryId('');
+    setUploadComplete(false);
+  };
+  
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+  
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
+      setDocumentName(file.name);
+      simulateUpload();
+    }
+  };
+  
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setDocumentName(file.name);
+      simulateUpload();
+    }
+  };
+  
+  const simulateUpload = () => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      
+      if (progress >= 100) {
+        clearInterval(interval);
+        setUploadComplete(true);
+        setTimeout(() => {
+          setStep(2);
+        }, 500);
       }
-      const fileInput = window.document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx';
-      fileInput.multiple = false;
-      fileInput.onchange = async (event) => {
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-          await uploadDocument(file, documentKey, recommendationId);
-        }
-      };
-      fileInput.click();
-    } catch (error: any) {
-      console.error('Erro ao preparar upload:', error);
-      toast({
-        title: "Erro",
-        description: `Não foi possível preparar o upload do documento: ${error.message}`,
-        variant: "destructive",
-      });
-      onStatusChange(documentKey, 'error');
-    }
+    }, 200);
   };
-
-  const uploadDocument = async (file: File, documentKey: string, recommendationId: string) => {
-    try {
-      if (!userId) throw new Error('Usuário não autenticado');
-      if (!file) throw new Error('Nenhum arquivo selecionado');
-      if (!recommendationId) throw new Error('ID da recomendação é obrigatório');
-      if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande. Máximo 10MB.');
-      
-      onStatusChange(documentKey, 'uploading');
-      
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (_errorEvent) => reject(new Error(`Erro ao ler o arquivo: ${reader.error?.message || 'Erro desconhecido'}`));
-        reader.readAsDataURL(file);
-      });
-      
-      const timestamp = new Date().toISOString();
-
-      const { data: documentData, error: documentsError } = await supabase
-        .from('documents')
-        .insert({
-          user_id: userId,
-          recommendation_id: recommendationId,
-          bucket_name: 'database_storage',
-          object_key: `${userId}/${documentKey}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-          file_name: file.name,
-          file_type: file.type,
-          file_size: file.size,
-          file_data: base64Data,
-          document_key: documentKey,
-          created_at: timestamp,
-          updated_at: timestamp
-        })
-        .select()
-        .single();
-      
-      if (documentsError) {
-        console.error('Erro ao salvar na tabela documents:', documentsError);
-        throw new Error(`Erro ao salvar documento: ${documentsError.message}`);
-      }
-      
-      console.log('✅ Documento salvo com sucesso na tabela documents:', documentData);
-      
-      const { error: recommendationUpdateError } = await supabase
-        .from('document_recommendations')
-        .update({ 
-            sent: true,
-            updated_at: timestamp 
-        })
-        .eq('recommendation_id', recommendationId);
-      
-      if (recommendationUpdateError) {
-        console.error('Erro ao atualizar a coluna sent em document_recommendations:', recommendationUpdateError);
-        throw new Error(`Documento salvo, mas falha ao atualizar o status (sent) da recomendação: ${recommendationUpdateError.message}`);
-      }
-      
-      console.log('✅ Coluna sent da recomendação atualizada para true.');
-      onStatusChange(documentKey, 'uploaded');
-      
-      toast({
-        title: "Documento enviado com sucesso!",
-        description: `${file.name} foi enviado e o status da recomendação foi atualizado.`,
-      });
-      
-      return documentData;
-      
-    } catch (error: any) {
-      console.error('❌ Erro no upload:', error);
-      onStatusChange(documentKey, 'error');
-      
-      toast({
-        title: "Erro no upload",
-        description: `Erro ao processar o documento: ${error.message}`,
-        variant: "destructive",
-      });
-    }
+  
+  const handleSubmit = () => {
+    if (!selectedFile || !documentName || !documentType) return;
+    
+    const newDoc: Omit<Document, 'id' | 'createdAt'> = {
+      name: documentName,
+      type: documentType,
+      path: `/documents/${directoryId}/${documentName}`,
+      directory: directoryId || directories[0]?.id || '',
+      size: formatFileSize(selectedFile.size),
+      lastModified: new Date(selectedFile.lastModified)
+    };
+    
+    onSave(newDoc);
+    handleClose();
   };
-
-  // downloadDocument e getStatusIcon permanecem os mesmos...
-  const downloadDocument = async (documentId: string, fileName?: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('file_data, file_name, user_id')
-        .eq('id', documentId) 
-        .single();
-      
-      if (error) throw error;
-      if (!data?.file_data) throw new Error('Arquivo não encontrado ou dados do arquivo ausentes.');
-      if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo.');
-      
-      const link = window.document.createElement('a');
-      link.href = data.file_data;
-      link.download = fileName || data.file_name || 'downloaded_file';
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
-      link.remove();
-
-    } catch (error: any) {
-      console.error('Erro ao baixar documento:', error);
-      toast({
-        title: "Erro ao baixar documento",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'uploaded': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'uploading': return <Clock className="w-5 h-5 text-blue-500 animate-spin" />;
-      case 'error': return <AlertCircle className="w-5 h-5 text-red-500" />;
-      default: return <Upload className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-
-  const handleOpenChange: RadixCollapsibleProps['onOpenChange'] = (_open) => {
-    onToggleExpand(document.document_key);
-  };
+  
+  const documentTypes: { value: DocumentType; label: string }[] = [
+    { value: 'identification', label: 'Documentos de Identificação' },
+    { value: 'financial', label: 'Documentos Financeiros' },
+    { value: 'legal', label: 'Documentos Legais' },
+    { value: 'property', label: 'Documentos de Imóveis' },
+    { value: 'investment', label: 'Documentos de Investimentos' },
+    { value: 'insurance', label: 'Documentos de Seguros' },
+    { value: 'other', label: 'Outros' }
+  ];
 
   return (
-    <Card key={document.document_key} className="bg-gray-800/50 border-gray-700/50">
-      <CardContent className="p-4">
-        {/* Esta é a linha 146 ou próxima dela onde o erro TS2589 ocorre */}
-        <Collapsible 
-          open={isExpanded} 
-          onOpenChange={handleOpenChange}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              {getStatusIcon(uploadStatus)}
-              <div className="flex-1 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-white truncate" title={document.name}>{document.name}</h4>
-                  <Badge 
-                    variant={document.priority >= 5 ? "destructive" : document.priority >= 4 ? "default" : "secondary"}
-                    className="flex-shrink-0"
-                  >
-                    {'★'.repeat(document.priority)}{'☆'.repeat(Math.max(0, 5 - document.priority))}
-                  </Badge>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white">
+        <DialogHeader>
+          <DialogTitle className="text-xl text-white">
+            {step === 1 ? 'Carregar Documento' : 'Detalhes do Documento'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        {/* Step indicators */}
+        <div className="flex items-center justify-center mb-6">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            step === 1 ? 'bg-blue-600' : 'bg-blue-600/40'
+          } mr-2`}>
+            1
+          </div>
+          <div className="h-1 w-8 bg-gray-600"></div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            step === 2 ? 'bg-blue-600' : 'bg-gray-600'
+          }`}>
+            2
+          </div>
+        </div>
+        
+        {/* Step 1: File Upload */}
+        {step === 1 && (
+          <div className="space-y-4">
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center ${
+                isDragging ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600'
+              }`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {selectedFile && uploadProgress < 100 ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-300">Carregando arquivo...</p>
+                  <Progress value={uploadProgress} className="h-2" />
+                  <p className="text-xs text-gray-400">{uploadProgress}%</p>
                 </div>
-                <p className="text-sm text-gray-300 truncate" title={document.description}>{document.description}</p>
-                {document.item_description && (
-                  <p className="text-sm text-blue-400 mt-1 truncate" title={document.item_description}>
-                    <strong>Item específico:</strong> {document.item_description}
+              ) : selectedFile && uploadComplete ? (
+                <div className="space-y-4">
+                  <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
+                  <p className="text-sm text-gray-300">Arquivo carregado com sucesso!</p>
+                  <p className="text-xs text-gray-400">{selectedFile.name}</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-300">
+                    Arraste e solte seu arquivo aqui ou
                   </p>
-                )}
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="mt-2 bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    Selecione um arquivo
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <p className="mt-2 text-xs text-gray-400">
+                    Formatos suportados: PDF, JPG, PNG, DOC, DOCX
+                  </p>
+                </>
+              )}
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => selectedFile && uploadComplete && setStep(2)}
+                disabled={!selectedFile || !uploadComplete}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Próximo
+                <ChevronRight size={16} className="ml-1" />
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+        
+        {/* Step 2: Document Details */}
+        {step === 2 && (
+          <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="document-name" className="text-sm font-medium text-gray-300">
+                  Nome do Documento
+                </label>
+                <Input
+                  id="document-name"
+                  value={documentName}
+                  onChange={(e) => setDocumentName(e.target.value)}
+                  placeholder="Ex: Contrato de Aluguel"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="document-type" className="text-sm font-medium text-gray-300">
+                  Tipo de Documento
+                </label>
+                <Select value={documentType} onValueChange={(value) => setDocumentType(value as DocumentType)}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="document-directory" className="text-sm font-medium text-gray-300">
+                  Pasta
+                </label>
+                <Select value={directoryId} onValueChange={setDirectoryId}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="Selecione a pasta" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    {directories.map((directory) => (
+                      <SelectItem key={directory.id} value={directory.id} className="flex items-center">
+                        <div className="flex items-center">
+                          <Folder className="mr-2 h-4 w-4 text-yellow-400" />
+                          {directory.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+            <DialogFooter className="mt-6">
               <Button
-                onClick={() => handleDocumentUpload(document.document_key)}
-                disabled={uploadStatus === 'uploading'}
-                variant={uploadStatus === 'uploaded' ? "outline" : "default"}
-                size="sm"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
               >
-                {uploadStatus === 'uploaded' ? 'Enviado' :
-                 uploadStatus === 'uploading' ? 'Enviando...' :
-                 uploadStatus === 'error' ? 'Tentar Novamente' :
-                 'Enviar'}
+                <ChevronLeft size={16} className="mr-1" />
+                Voltar
               </Button>
-              
-              {/* ETAPA DE DIAGNÓSTICO: CollapsibleTrigger simplificado */}
-              <CollapsibleTrigger>
-                {/* Substitua o Button anterior por um div simples para teste */}
-                {/* Adicione classes para estilização básica, se necessário para visualização */}
-                <div className="p-1.5 rounded-md hover:bg-gray-700 cursor-pointer flex items-center justify-center w-9 h-9"> {/* Ajuste o padding/size conforme o Button original */}
-                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </div>
-              </CollapsibleTrigger>
-            </div>
+              <Button
+                onClick={handleSubmit}
+                disabled={!documentName || !documentType || !directoryId}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Salvar Documento
+              </Button>
+            </DialogFooter>
           </div>
-          
-          <CollapsibleContent className="mt-4 pt-4 border-t border-gray-700/50">
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              {document.how_to_obtain && (
-                <div>
-                  <strong className="text-gray-300">Como obter:</strong>
-                  <p className="text-gray-400 mt-1 whitespace-pre-wrap">{document.how_to_obtain}</p>
-                </div>
-              )}
-              {document.processing_time && (
-                <div>
-                  <strong className="text-gray-300">Prazo:</strong>
-                  <p className="text-gray-400 mt-1">{document.processing_time}</p>
-                </div>
-              )}
-              {document.estimated_cost && (
-                <div>
-                  <strong className="text-gray-300">Custo estimado:</strong>
-                  <p className="text-gray-400 mt-1">{document.estimated_cost}</p>
-                </div>
-              )}
-              <div>
-                <strong className="text-gray-300">ID da Recomendação:</strong>
-                <p className="text-gray-400 mt-1 font-mono text-xs">{document.recommendation_id}</p>
-              </div>
-              <div>
-                <strong className="text-gray-300">Chave do Documento:</strong>
-                <p className="text-gray-400 mt-1 font-mono text-xs">{document.document_key}</p>
-              </div>
-            </div>
-            {document.reason && (
-              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
-                <strong className="text-blue-400">Por que é necessário:</strong>
-                <p className="text-blue-300 mt-1 whitespace-pre-wrap">{document.reason}</p>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      </CardContent>
-    </Card>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 
-export default DocumentUpload;
+export default DocumentUploadModal;
