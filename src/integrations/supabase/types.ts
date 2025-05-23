@@ -424,66 +424,6 @@ export type Database = {
         }
         Relationships: []
       }
-      documents: {
-        Row: {
-          bucket_name: string
-          created_at: string | null
-          document_id: string
-          document_key: string | null
-          file_data: string | null
-          file_name: string
-          file_size: number | null
-          file_type: string | null
-          object_key: string
-          recommendation_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          bucket_name: string
-          created_at?: string | null
-          document_id?: string
-          document_key?: string | null
-          file_data?: string | null
-          file_name: string
-          file_size?: number | null
-          file_type?: string | null
-          object_key: string
-          recommendation_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          bucket_name?: string
-          created_at?: string | null
-          document_id?: string
-          document_key?: string | null
-          file_data?: string | null
-          file_name?: string
-          file_size?: number | null
-          file_type?: string | null
-          object_key?: string
-          recommendation_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_recommendation_id_fkey"
-            columns: ["recommendation_id"]
-            isOneToOne: false
-            referencedRelation: "document_recommendations"
-            referencedColumns: ["recommendation_id"]
-          },
-          {
-            foreignKeyName: "documents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       family_members: {
         Row: {
           age: number | null
@@ -587,6 +527,50 @@ export type Database = {
             foreignKeyName: "personal_info_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "client_profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
+      processed_documents: {
+        Row: {
+          document_id: string
+          document_key: string
+          extraction_result: Json | null
+          file_content_base64: string | null
+          file_name: string | null
+          processed_at: string
+          profile_id: string
+          user_id: string
+          vectorized: boolean | null
+        }
+        Insert: {
+          document_id: string
+          document_key: string
+          extraction_result?: Json | null
+          file_content_base64?: string | null
+          file_name?: string | null
+          processed_at?: string
+          profile_id: string
+          user_id: string
+          vectorized?: boolean | null
+        }
+        Update: {
+          document_id?: string
+          document_key?: string
+          extraction_result?: Json | null
+          file_content_base64?: string | null
+          file_name?: string | null
+          processed_at?: string
+          profile_id?: string
+          user_id?: string
+          vectorized?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_profile"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "client_profiles"
             referencedColumns: ["profile_id"]
           },
