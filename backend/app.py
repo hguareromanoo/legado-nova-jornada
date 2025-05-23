@@ -662,10 +662,142 @@ async def consultant_chatbot(request: ChatbotRequest):
         logger.error(f"Erro no endpoint /chatbot/consultant: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro interno no servidor: {str(e)}")
 
+
+# --- CÓDIGO ADICIONADO AO FINAL PARA /documents/uploads --- #
+
+# Imports adicionais (verificar se já existem no topo do arquivo original)
+from typing import Dict, Any, Optional # Certificar que Dict, Any, Optional estão importados
+
+# Importar a função de extração (assumindo que está em extractors.py)
+try:
+    from services.data_extractor import run_data_extraction_process
+except ImportError:
+    logger.error("Falha ao importar run_data_extraction_process de extractors.py")
+    # Definir um stub se a importação falhar para evitar erros de runtime no endpoint
+    async def run_data_extraction_process(user_id: str, doc_id: str, doc_type: str, path: str):
+        logger.error("run_data_extraction_process não pôde ser importado. Usando stub.")
+        raise RuntimeError("Função de extração não disponível.")
+
+# Modelos Pydantic para o endpoint /documents/uploads
+# Renomeado para evitar conflito com DocumentUploadRequest existente no app.py original
+class UploadEndpointRequest(BaseModel):
+    user_id: str # Recebido como string, será validado como UUID
+    encoding: str # Conteúdo do arquivo PDF em base64
+    document_key: str # Tipo do documento
+
+class UploadEndpointResponse(BaseModel):
+    success: bool
+    message: str
+    document_id: Optional[str] = None
+    extraction_result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+# Endpoint /documents/uploads
+@app.post("/documents/uploads", response_model=UploadEndpointResponse)
+async def upload_document_endpoint(request: UploadEndpointRequest):
+    """
+    Recebe um documento PDF em base64 via /documents/uploads, salva temporariamente,
+    registra no banco, executa a extração de dados e retorna o resultado.
+    """
+    temp_file_path = None
+    try:
+        # 1. Validar user_id como UUID
+        try:
+            user_uuid = UUID(request.user_id)
+        except ValueError:
+            logger.error(f"user_id inválido para /documents/uploads: {request.user_id}")
+            raise HTTPException(status_code=400, detail="user_id deve ser um UUID válido.")
+
+        # 2. Decodificar o conteúdo base64
+        try:
+            pdf_bytes = base64.b64decode(request.encoding)
+            # Opcional: Validar magic number %PDF
+            if not pdf_bytes.startswith(b'%PDF'):
+                 logger.warning(f"Arquivo para user_id {user_uuid} em /documents/uploads não parece ser um PDF válido.")
+                 # Considerar lançar erro 400 se a validação for estrita
+        except base64.binascii.Error as e:
+            logger.error(f"Erro ao decodificar base64 para user_id {user_uuid} em /documents/uploads: {e}")
+            raise HTTPException(status_code=400, detail=f"Erro na decodificação base64: {e}")
+
+        # 3. Salvar o arquivo PDF temporariamente
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf", prefix=f"upload_{user_uuid}_") as temp_pdf:
+            temp_pdf.write(pdf_bytes)
+            temp_file_path = temp_pdf.name
+            logger.info(f"Arquivo temporário salvo em: {temp_file_path} para user_id {user_uuid} via /documents/uploads")
+
+        # 4. Inserir registro na tabela 'documents' do Supabase
+        document_id = uuid4() # Gerar novo UUID para o documento
+        try:
+            insert_data = {
+                "document_id": str(document_id),
+                "profile_id": str(user_uuid), # Usar o user_id recebido
+                "document_encode": request.encoding, # Salvar o base64 original
+                "document_type": request.document_key,
+            }
+            insert_result = await db_manager.insert(table="documents", data=insert_data)
+            logger.info(f"Registro inserido no Supabase para document_id: {document_id} via /documents/uploads")
+
+        except Exception as db_error:
+            logger.error(f"Erro ao inserir no Supabase para user_id {user_uuid} via /documents/uploads: {db_error}")
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.remove(temp_file_path)
+                    logger.info(f"Arquivo temporário {temp_file_path} removido devido a erro no DB.")
+                except OSError as remove_error:
+                    logger.error(f"Erro ao remover arquivo temporário {temp_file_path} após erro no DB: {remove_error}")
+            raise HTTPException(status_code=500, detail=f"Erro de banco de dados ao registrar documento: {db_error}")
+
+        # 5. Chamar a função de extração de dados
+        try:
+            extraction_result = await run_data_extraction_process(
+                user_id=str(user_uuid),
+                doc_id=str(document_id),
+                doc_type=request.document_key,
+                path=temp_file_path # Passar o caminho do arquivo temporário
+            )
+            logger.info(f"Extração de dados concluída para document_id: {document_id} via /documents/uploads")
+
+            # 6. Retornar sucesso com o resultado da extração
+            return UploadEndpointResponse(
+                success=True,
+                message="Documento recebido e processado com sucesso via /documents/uploads.",
+                document_id=str(document_id),
+                extraction_result=extraction_result
+            )
+
+        except Exception as extraction_error:
+            logger.error(f"Erro durante a extração de dados para document_id {document_id} via /documents/uploads: {extraction_error}")
+            return UploadEndpointResponse(
+                success=False,
+                message="Documento recebido e registrado, mas falha durante a extração de dados.",
+                document_id=str(document_id),
+                error=f"Erro na extração: {extraction_error}"
+            )
+
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Erro inesperado no endpoint /documents/uploads: {e}", exc_info=True)
+        return UploadEndpointResponse(
+            success=False,
+            message="Erro interno no servidor durante o processamento do documento via /documents/uploads.",
+            error=str(e)
+        )
+    finally:
+        # 7. Remover o arquivo temporário SEMPRE que ele for criado
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+                logger.info(f"Arquivo temporário removido: {temp_file_path}")
+            except OSError as remove_error:
+                logger.error(f"Erro ao remover arquivo temporário {temp_file_path}: {remove_error}")
+
+# --- FIM DO CÓDIGO ADICIONADO --- #
+
+
+
 if __name__ == "__main__":
     print("\n🏢 Iniciando API do Chat Onboarding para Consultoria Patrimonial...\n")
     print("A API estará disponível em http://localhost:8000")
     print("Acesse a documentação em http://localhost:8000/docs\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
