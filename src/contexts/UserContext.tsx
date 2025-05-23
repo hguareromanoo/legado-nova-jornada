@@ -5,25 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { UserData, UserState } from '@/types/user';
 
-// Define the context type directly to avoid deep type instantiation
-interface UserContextValue {
-  isLoggedIn: boolean;
-  user: User | null;
-  session: Session | null;
-  hasCompletedOnboarding: boolean;
-  userRole: string | null;
-  userState: UserState | null;
-  isRoleLoading?: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<any>;
-  logout: () => Promise<void>;
-  completeOnboarding: () => Promise<void>;
-  updateUser: (data: Partial<UserData>) => Promise<void>;
-  updateUserState: (state: UserState) => Promise<void>;
-}
-
-// Create the context with the inline type definition
-const UserContext = createContext<UserContextValue | undefined>(undefined);
+// Create a context with a simplified type using type assertion
+// This breaks potential circular references
+const UserContext = createContext<any>(undefined);
 
 interface UserProviderProps {
   children: ReactNode;
@@ -349,32 +333,48 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     });
   }, [isLoggedIn, userRole, userState, hasCompletedOnboarding, isRoleLoading]);
   
+  // Create the context value object
+  const contextValue = {
+    isLoggedIn,
+    user,
+    session,
+    hasCompletedOnboarding,
+    userRole,
+    userState,
+    login,
+    signUp,
+    logout,
+    completeOnboarding,
+    updateUser,
+    updateUserState
+  };
+  
   return (
-    <UserContext.Provider
-      value={{
-        isLoggedIn,
-        user,
-        session,
-        hasCompletedOnboarding,
-        userRole,
-        userState,
-        login,
-        signUp,
-        logout,
-        completeOnboarding,
-        updateUser,
-        updateUserState
-      }}
-    >
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );
 };
 
-export const useUser = (): UserContextValue => {
+// Use type assertion in the hook to provide proper typing
+export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
   }
-  return context;
+  // Return the context with type assertion to match expected interface
+  return context as {
+    isLoggedIn: boolean;
+    user: User | null;
+    session: Session | null;
+    hasCompletedOnboarding: boolean;
+    userRole: string | null;
+    userState: UserState | null;
+    login: (email: string, password: string) => Promise<any>;
+    signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<any>;
+    logout: () => Promise<void>;
+    completeOnboarding: () => Promise<void>;
+    updateUser: (data: Partial<UserData>) => Promise<void>;
+    updateUserState: (state: UserState) => Promise<void>;
+  };
 };
