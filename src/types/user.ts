@@ -1,5 +1,4 @@
 
-// src/types/user.ts
 import { User, Session } from '@supabase/supabase-js';
 
 // Define user state types
@@ -24,7 +23,7 @@ export interface UserContextType {
   login: (email: string, password: string) => Promise<{error?: string}>;
   signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{error?: string; needsEmailConfirmation?: boolean}>;
   logout: () => Promise<void>;
-  completeOnboarding: () => Promise<{ success: boolean; error?: string }>; // Updated return type
-  updateUser: (data: Partial<UserData>) => Promise<{ success: boolean; error?: string }>; // Updated return type
-  updateUserState: (state: UserState) => Promise<{ success: boolean; error?: string }>; // Ensure this matches provider
+  completeOnboarding: () => void;
+  updateUser: (data: Partial<UserData>) => void;
+  updateUserState: (state: UserState) => Promise<void>;
 }
