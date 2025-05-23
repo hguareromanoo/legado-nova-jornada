@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DocumentRecommendationsResponse } from '@/types/chat';
@@ -29,33 +30,33 @@ const DocumentsTab = ({
   const { user } = useUser();
   const uploadedCount = Object.values(uploadStatus).filter(status => status === 'uploaded').length;
   
-  // Fetch already uploaded documents on mount from the new 'uploaded_documents' table
+  // Fetch already uploaded documents on mount
   useEffect(() => {
     const fetchUploadedDocuments = async () => {
       if (!userId) return;
       
       try {
-        // Query 'uploaded_documents' to find which documents are already uploaded for this user
-        const { data: uploadedDocs, error } = await supabase
-          .from('uploaded_documents') // New table
-          .select('document_key') // Assuming document_key exists in uploaded_documents for linking
-          .eq('user_id', userId);
+        // Query document_roadmap to find which documents are already marked as sent
+        const { data: sentDocuments, error } = await supabase
+          .from('document_roadmap')
+          .select('document_key')
+          .eq('user_id', userId)
+          .eq('sent', true);
         
         if (error) {
-          console.error('Error fetching uploaded documents from uploaded_documents table:', error);
+          console.error('Error fetching uploaded documents:', error);
           return;
         }
         
         // Update the upload status for documents that are already sent
-        if (uploadedDocs && uploadedDocs.length > 0) {
-          uploadedDocs.forEach(doc => {
-            // Check if doc.document_key is not null before updating status
+        if (sentDocuments && sentDocuments.length > 0) {
+          sentDocuments.forEach(doc => {
             if (doc.document_key) {
               onStatusChange(doc.document_key, 'uploaded');
             }
           });
           
-          console.log(`✅ Found ${uploadedDocs.length} documents already uploaded`);
+          console.log(`✅ Found ${sentDocuments.length} documents already uploaded`);
         }
       } catch (error) {
         console.error('Error checking uploaded documents:', error);
