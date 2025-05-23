@@ -1,10 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchUserProfile, updateUserStateInDb } from '@/utils/userUtils';
 import { UserContextType, UserData, UserState } from '@/types/user';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -12,6 +10,73 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 interface UserProviderProps {
   children: ReactNode;
 }
+
+// Improved fetchUserProfile function that directly queries the database
+const fetchUserProfile = async (userId: string) => {
+  try {
+    console.log(`[UserContext] Fetching user profile for ${userId}`);
+    
+    // Query the user_profiles table to get user role and state
+    // Logging the query details for debugging
+    console.log(`[UserContext] Querying user_profiles table with user_id = ${userId}`);
+    
+    const { data, error } = await supabase
+      .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
+      .select('user_role, user_state')  // Changed from 'role' to 'user_role'
+      .eq('user_id', userId)  // Changed from 'id' to 'user_id'
+      .single();
+    
+    if (error) {
+      console.error('[UserContext] Error fetching user profile:', error);
+      console.error('[UserContext] Error details:', JSON.stringify(error));
+      throw error;
+    }
+    
+    if (!data) {
+      console.error('[UserContext] No profile data found for user:', userId);
+      throw new Error('No profile data found');
+    }
+    
+    console.log('[UserContext] Profile data retrieved:', JSON.stringify(data));
+    return {
+      role: data.user_role || 'user', // Changed from data.role to data.user_role
+      user_state: data.user_state || 'onboarding_started'
+    };
+  } catch (error) {
+    console.error('[UserContext] Error in fetchUserProfile:', error);
+    // Return default values instead of throwing to prevent crashing
+    return {
+      role: 'user',
+      user_state: 'onboarding_started'
+    };
+  }
+};
+
+// Improved updateUserStateInDb function
+const updateUserStateInDb = async (userId: string, state: UserState) => {
+  try {
+    console.log(`[UserContext] Updating user state in DB to ${state} for user ${userId}`);
+    
+    const { error } = await supabase
+      .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
+      .update({ user_state: state, updated_at: new Date().toISOString() })
+      .eq('user_id', userId);  // Changed from 'id' to 'user_id'
+    
+    if (error) {
+      console.error('[UserContext] Error updating user state:', error);
+      console.error('[UserContext] Error details:', JSON.stringify(error));
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('[UserContext] Exception in updateUserStateInDb:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -24,26 +89,36 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { toast } = useToast();
   const { login: authLogin, signUp: authSignUp, logout: authLogout } = useAuth();
   
-  // Initialize user profile data
+  // Improved user profile initialization
   const initUserProfile = async (userId: string) => {
     try {
       setIsRoleLoading(true);
       console.log(`[UserContext] Initializing user profile for ${userId}`);
+      
+      // Use the local fetchUserProfile function instead of imported one
       const profileData = await fetchUserProfile(userId);
       
-      console.log('[UserContext] Profile data loaded:', profileData);
-      setUserRole(profileData.role);
-      setUserState(profileData.user_state);
+      console.log('[UserContext] Profile data loaded:', JSON.stringify(profileData));
+      
+      // Set role with fallback
+      setUserRole(profileData.role || 'user');
+      
+      // Set user state with fallback
+      setUserState(profileData.user_state || 'onboarding_started');
       
       // Update hasCompletedOnboarding based on user state
-      if (profileData.user_state === 'holding_opened') {
-        setHasCompletedOnboarding(true);
-      } else {
-        setHasCompletedOnboarding(false);
-      }
+      setHasCompletedOnboarding(profileData.user_state === 'holding_opened');
+      
+      return profileData;
     } catch (error) {
       console.error('[UserContext] Error initializing user profile:', error);
+      // Set default values on error to avoid null states
+      setUserRole('user');
+      setUserState('onboarding_started');
+      setHasCompletedOnboarding(false);
+      return null;
     } finally {
+      // Ensure isRoleLoading is set to false even if there's an error
       setIsRoleLoading(false);
     }
   };
@@ -93,7 +168,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       // Fetch user profile if logged in
       if (currentSession?.user) {
-        await initUserProfile(currentSession.user.id);
+        try {
+          // Set a timeout to ensure the initialization doesn't hang indefinitely
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Profile initialization timed out')), 10000);
+          });
+          
+          // Try to initialize profile with timeout
+          const profilePromise = initUserProfile(currentSession.user.id);
+          
+          await Promise.race([profilePromise, timeoutPromise]);
+        } catch (error) {
+          console.error('[UserContext] Error during profile initialization:', error);
+          // Set default values if initialization fails
+          setUserRole('user');
+          setUserState('onboarding_started');
+          setHasCompletedOnboarding(false);
+          setIsRoleLoading(false);
+        }
       } else {
         setIsRoleLoading(false);
       }
@@ -128,7 +220,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const updateUserState = async (state: UserState) => {
     if (!user?.id) {
       console.error('[UserContext] Cannot update user state: No user ID');
-      return;
+      return { success: false, error: 'No user ID available' };
     }
     
     console.log(`[UserContext] Attempting to update user state to ${state}`);
@@ -141,6 +233,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       if (state === 'holding_opened') {
         setHasCompletedOnboarding(true);
       }
+      
+      return { success: true };
     } else {
       console.error(`[UserContext] Failed to update user state: ${result.error}`);
       toast({
@@ -148,21 +242,51 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         description: "Não foi possível atualizar seu progresso no sistema.",
         variant: "destructive",
       });
+      
+      return { success: false, error: result.error };
     }
   };
   
   const completeOnboarding = async () => {
     setHasCompletedOnboarding(true);
-    localStorage.setItem('holdingSetupCompleted', 'true');
     
     // Update user state to holding_opened
-    await updateUserState('holding_opened');
+    const result = await updateUserState('holding_opened');
+    
+    // Only store in localStorage if the database update was successful
+    if (result.success) {
+      localStorage.setItem('holdingSetupCompleted', 'true');
+    }
+    
+    return result;
   };
   
-  const updateUser = (data: Partial<UserData>) => {
-    if (user) {
-      // Here we could update user metadata in Supabase
+  const updateUser = async (data: Partial<UserData>) => {
+    if (!user?.id) {
+      console.error('[UserContext] Cannot update user: No user ID');
+      return { success: false, error: 'No user ID available' };
+    }
+    
+    try {
       console.log('[UserContext] Updating user data:', data);
+      
+      const { error } = await supabase
+        .from('user_profiles')  // Changed from 'profiles' to 'user_profiles'
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);  // Changed from 'id' to 'user_id'
+      
+      if (error) {
+        console.error('[UserContext] Error updating user:', error);
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('[UserContext] Exception in updateUser:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
     }
   };
   
