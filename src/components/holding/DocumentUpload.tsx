@@ -162,12 +162,13 @@ const DocumentUpload = ({
       if (!data?.file_data) throw new Error('Arquivo não encontrado');
       if (data.user_id !== userId) throw new Error('Você não tem permissão para baixar este arquivo');
       
-      const link = document.createElement('a');
+      // Use window.document to avoid confusion with the prop named document
+      const link = window.document.createElement('a');
       link.href = data.file_data;
       link.download = fileName || data.file_name;
-      document.body.appendChild(link);
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
     } catch (error: any) {
       console.error('Erro ao baixar documento:', error);
       toast({
