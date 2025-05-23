@@ -38,7 +38,28 @@ class SupabaseManager:
         if not self.url or not self.key:
             logger.error("Credenciais do Supabase não configuradas. Verifique as variáveis de ambiente.")
     
-   # Ajuste no método initialize
+    def sanitize_for_db(self, value: Any) -> Any:
+        """
+        Sanitiza valores para garantir compatibilidade com o banco de dados,
+        removendo caracteres problemáticos como \u0000.
+        
+        Args:
+            value: Valor a ser sanitizado
+            
+        Returns:
+            Valor sanitizado
+        """
+        if isinstance(value, str):
+            # Remove null characters and other problematic Unicode characters
+            return value.replace('\u0000', '')
+        elif isinstance(value, dict):
+            return {k: self.sanitize_for_db(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [self.sanitize_for_db(item) for item in value]
+        else:
+            return value
+            
+    # Ajuste no método initialize
     async def initialize(self) -> None:
         """Inicializa a conexão com o Supabase."""
         if not self.url or not self.key:
@@ -134,7 +155,9 @@ class SupabaseManager:
             query = self.client.table(table).select(columns)
             
             if filters:
-                for key, value in filters.items():
+                # Sanitize filter values
+                sanitized_filters = self.sanitize_for_db(filters)
+                for key, value in sanitized_filters.items():
                     query = query.eq(key, value)
             
             if order:
@@ -164,7 +187,9 @@ class SupabaseManager:
             Registro inserido
         """
         async def _operation():
-            response = self.client.table(table).insert(data).execute()
+            # Sanitize data before inserting
+            sanitized_data = self.sanitize_for_db(data)
+            response = self.client.table(table).insert(sanitized_data).execute()
             
             if hasattr(response, 'error') and response.error:
                 raise Exception(f"Erro na inserção: {response.error.message}")
@@ -186,9 +211,13 @@ class SupabaseManager:
             Registros atualizados
         """
         async def _operation():
-            query = self.client.table(table).update(data)
+            # Sanitize both data and filters
+            sanitized_data = self.sanitize_for_db(data)
+            sanitized_filters = self.sanitize_for_db(filters)
             
-            for key, value in filters.items():
+            query = self.client.table(table).update(sanitized_data)
+            
+            for key, value in sanitized_filters.items():
                 query = query.eq(key, value)
             
             response = query.execute()
@@ -212,9 +241,12 @@ class SupabaseManager:
             Registros excluídos
         """
         async def _operation():
+            # Sanitize filters
+            sanitized_filters = self.sanitize_for_db(filters)
+            
             query = self.client.table(table).delete()
             
-            for key, value in filters.items():
+            for key, value in sanitized_filters.items():
                 query = query.eq(key, value)
             
             response = query.execute()
@@ -238,7 +270,10 @@ class SupabaseManager:
             Resultado da função
         """
         async def _operation():
-            response = self.client.rpc(function_name, params).execute()
+            # Sanitize RPC parameters
+            sanitized_params = self.sanitize_for_db(params)
+            
+            response = self.client.rpc(function_name, sanitized_params).execute()
             
             if hasattr(response, 'error') and response.error:
                 raise Exception(f"Erro na execução da função RPC: {response.error.message}")
@@ -261,6 +296,3 @@ class SupabaseManager:
         except Exception as e:
             logger.error(f"Erro ao verificar conexão: {str(e)}")
             return False
-        
-
-

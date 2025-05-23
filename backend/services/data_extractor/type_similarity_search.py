@@ -1,5 +1,5 @@
 from sentence_transformers import CrossEncoder
-from templates import prompts_dict
+from services.data_extractor.templates import prompts_dict
 from functools import lru_cache
 
 

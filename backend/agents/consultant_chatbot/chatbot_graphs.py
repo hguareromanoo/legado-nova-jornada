@@ -10,7 +10,6 @@ from typing_extensions import TypedDict
 from enum import Enum
 from agents.consultant_chatbot.sections_semantic_search import search_sections
 from database.manager import SupabaseManager
-from services.profile_service import ProfileService
 
 llm = init_chat_model(
     "gpt-4o",
@@ -393,6 +392,7 @@ def get_section(state: State):
 
 
 async def get_ops(state: State):
+    from services.profile_service import ProfileService
     user_profile = await ProfileService(state["database"]).get_complete_profile(state["client_id"])
     state["extracted_data"]["OPERATIONAL"] = user_profile
 

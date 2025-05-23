@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -48,12 +48,182 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Inicializar serviços
 db_manager = SupabaseManager()
 profile_service = ProfileService(db_manager)
 session_service = SessionService(db_manager, profile_service)
 
+# Importações adicionais para o novo endpoint
+from uuid import uuid4
+import base64
+import os
+import tempfile
+import json
+from services.document_service import DocumentService
+
+# Model para upload de documento
+class DocumentUploadRequest(BaseModel):
+    user_id: str
+    document_key: str
+    file_content_base64: str
+    file_name: Optional[str] = None
+
+# Inicializar serviço de documentos
+document_service = DocumentService(db_manager)
+
+# Endpoint para processamento de documentos
+@app.post("/documents/process")
+async def process_document(request: DocumentUploadRequest):
+    """
+    Processa um documento enviado em base64, realiza extração de dados e vetorização.
+    
+    Args:
+        request: Request contendo user_id, document_key e arquivo em base64
+        
+    Returns:
+        Detalhes do processamento do documento e dados extraídos
+    """
+    try:
+        # Converter user_id para UUID
+        user_id = UUID(request.user_id)
+        
+        logger.info(f"Iniciando processamento de documento para usuário {user_id}")
+        
+        # Verificar se existe uma sessão ativa para o usuário
+        session = await session_service.session_repo.get_active_session(user_id)
+        if not session:
+            logger.error(f"Nenhuma sessão ativa encontrada para o usuário {user_id}")
+            raise HTTPException(
+                status_code=400,
+                detail="Você precisa ter uma sessão ativa para processar documentos. Inicie o onboarding primeiro."
+            )
+        
+        # Utiliza o serviço de documentos para processamento
+        result = await document_service.process_document(
+            user_id=user_id,
+            document_key=request.document_key,
+            file_content_base64=request.file_content_base64,
+            file_name=request.file_name
+        )
+        
+        return result
+        
+    except ValueError as e:
+        logger.error(f"Erro de validação: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Erro ao processar documento: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para listar documentos de um usuário
+@app.get("/users/{user_id}/documents")
+async def get_user_documents(user_id: UUID):
+    """
+    Obtém a lista de documentos processados para um usuário.
+    
+    Args:
+        user_id: ID do usuário
+        
+    Returns:
+        Lista de documentos processados
+    """
+    try:
+        logger.info(f"Buscando documentos processados para usuário {user_id}")
+        
+        documents = await document_service.get_user_documents(user_id)
+        
+        return {
+            "success": True,
+            "user_id": str(user_id),
+            "document_count": len(documents),
+            "documents": documents
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar documentos para usuário {user_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para obter um documento específico
+@app.get("/documents/{document_id}")
+async def get_document(document_id: UUID):
+    """
+    Obtém detalhes de um documento processado.
+    
+    Args:
+        document_id: ID do documento
+        
+    Returns:
+        Detalhes do documento processado
+    """
+    try:
+        logger.info(f"Buscando documento {document_id}")
+        
+        document = await document_service.get_document(document_id)
+        
+        return {
+            "success": True,
+            "document": document
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Erro ao buscar documento {document_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para pesquisa semântica em documentos
+@app.post("/documents/search")
+async def search_documents(user_id: UUID, query: str = Body(..., embed=True), limit: int = 5):
+    """
+    Realiza uma pesquisa semântica nos documentos vetorizados de um usuário.
+    
+    Args:
+        user_id: ID do usuário
+        query: Texto da consulta
+        limit: Número máximo de resultados
+        
+    Returns:
+        Resultados da pesquisa semântica
+    """
+    try:
+        logger.info(f"Realizando pesquisa semântica para usuário {user_id}: '{query}'")
+        
+        results = await document_service.semantic_search(
+            user_id=user_id,
+            query=query,
+            limit=limit
+        )
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Erro ao realizar pesquisa semântica: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para excluir um documento
+@app.delete("/documents/{document_id}")
+async def delete_document(document_id: UUID):
+    """
+    Exclui um documento processado.
+    
+    Args:
+        document_id: ID do documento
+        
+    Returns:
+        Status da operação
+    """
+    try:
+        logger.info(f"Excluindo documento {document_id}")
+        
+        result = await document_service.delete_document(document_id)
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Erro ao excluir documento {document_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 # Inicializar banco de dados na inicialização do app
 @app.on_event("startup")
 async def startup_event():
@@ -426,13 +596,15 @@ async def get_document_keys():
             "note": "Chaves numeradas substituem X pelo número do item (ex: matricula_imovel_1, matricula_imovel_2)",
             "total_possible_combinations": "Ilimitado (baseado no número de itens do cliente)"
         }
-        
+   
     except Exception as e:
         logger.error(f"Erro ao listar chaves de documentos: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 if __name__ == "__main__":
     print("\n🏢 Iniciando API do Chat Onboarding para Consultoria Patrimonial...\n")
     print("A API estará disponível em http://localhost:8000")
     print("Acesse a documentação em http://localhost:8000/docs\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
